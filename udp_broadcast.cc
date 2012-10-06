@@ -71,6 +71,10 @@ UDP_Broadcast::UDP_Broadcast(Logging* log) throw (UDP_Broadcast::IOError)
         perror("could not create socket\n");
         throw UDP_Broadcast::IOError("Could not create socket", errno);
     }
+
+    // permit broadcasts
+    static const int one = 1;
+    setsockopt( sock, SOL_SOCKET, SO_BROADCAST, &one, sizeof(one) );
 }
 
 UDP_Broadcast::~UDP_Broadcast()
