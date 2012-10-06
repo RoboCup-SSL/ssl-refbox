@@ -31,7 +31,6 @@
 #include <string>
 
 class Settings;
-class Serial;
 class UDP_Broadcast;
 
 // structure for determining what buttons are useable
@@ -237,7 +236,6 @@ public:
 
   Logging* log;
   Settings* settings;
-  Serial* serial;
 
   /** Constructor */
   GameControl();
@@ -248,10 +246,6 @@ public:
 
 private:
   std::string savename;
-
-  //serial interface
-  std::string serdev;
-
 
   //ethernet interface
   std::string mc_addr;
@@ -271,13 +265,12 @@ private:
   // incremented if a new command was sent.
   unsigned int lastCommandCounter;    
 
-  // log commands, send them over serial and change game state    
+  // log commands, send them over UDP and change game state
   void sendCommand(const char cmd, const char *msg);
   void ethernetSendCommand(const char cmd, const unsigned int counter);
   char *concatTeam(char *msg, const char *msgpart, Team team);
 
   bool enabled;
-  bool has_serial;
 
 
 public:

@@ -3,7 +3,6 @@
 #include "dialog_gameover.h"
 #include "frame_log.h"
 #include "refereemm.h"
-#include "serial.h"
 #include "gamecontrol.h"
 #include "gameinfo.h"
 #include "sound.h"

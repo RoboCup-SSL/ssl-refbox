@@ -39,7 +39,6 @@
 
 #include "commands.h"
 #include "gamecontrol.h"
-#include "serial.h"
 #include "udp_broadcast.h"
 #include "settings.h"
 #include "logging.h"
@@ -54,7 +53,6 @@ GameControl::GameControl()
 {
     log = new Logging();
     settings = new Settings(log);
-    serial = new Serial(log);
     broadcast = new UDP_Broadcast(log);
 }
 
@@ -62,7 +60,6 @@ GameControl::GameControl()
 GameControl::~GameControl()
 {
     delete settings;
-    delete serial;
     delete broadcast;
     delete log;
 }
@@ -75,13 +72,6 @@ bool GameControl::init(const std::string& configfile, const char *logfname, bool
     lastCommandCounter = 0;
 
     enabled = true;
-    has_serial = false; //will be set to true if found.
-    // default serial device
-#ifdef WIN32
-    serdev = "COM1:";
-#else
-    serdev = "/dev/ttyS0";
-#endif
 
     // default multicast address
     mc_addr = "224.5.29.1";
@@ -102,16 +92,6 @@ bool GameControl::init(const std::string& configfile, const char *logfname, bool
     // a little user output
     print();
 
-    /* open the serial port */
-    log->add("Serial: Opening Serial Connection on device %s ...",
-             serdev.c_str());
-    if (!serial->Open(serdev, COMM_BAUD_RATE)) {
-        log->add("ERROR: Cannot open serial connection.");
-        //return (false);
-    } else {
-        log->add("Serial: using device \"%s\".", serdev.c_str());
-        has_serial = true;
-    }
     // intialize the timer
     gameinfo.resetTimer();
     tlast = getTime();
@@ -133,7 +113,6 @@ bool GameControl::init(const std::string& configfile, const char *logfname, bool
 void GameControl::close() 
 {
     gameinfo.closeLog();
-    serial->Close();
 }
 
 void GameControl::print(FILE *f) 
@@ -161,7 +140,7 @@ void GameControl::print(FILE *f)
 
 /////////////////////////////
 // send commands
-// log commands, send them over serial and change game state
+// log commands, send them over UDP and change game state
 // increment command counter
 void GameControl::sendCommand(char cmd, const char *msg) 
 {
@@ -172,11 +151,6 @@ void GameControl::sendCommand(char cmd, const char *msg)
     gameinfo.writeLog("Sending %c: %s", cmd, msg);
 
     ethernetSendCommand(cmd, lastCommandCounter);
-    
-    if (has_serial)
-    {
-        serial->WriteByte(cmd);
-    }
 }
 
 
@@ -249,7 +223,6 @@ bool GameControl::readSettings(const std::string& configfile)
     settings->readFile(configfile);
 
     settings->get("SAVENAME", savename);
-    settings->get("SERIALDEVICE", serdev);
     settings->get("MULTICASTADDRESS", mc_addr);
     settings->get("MULTICASTPORT", mc_port);
 
