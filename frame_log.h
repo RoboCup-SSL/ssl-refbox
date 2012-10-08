@@ -5,21 +5,21 @@
 
 namespace Gtk
 {
-    class ListViewText;
+	class ListViewText;
 };
 
 class Logging;
 
 class Frame_Log: public Gtk::ScrolledWindow
 {
-public:
-    Frame_Log(Logging &log);
-    bool update();
+	public:
+		Frame_Log(Logging& log);
+		bool update();
 
-protected:
-    Logging &log;
-    size_t last_number;
-    Gtk::ListViewText list;
+	protected:
+		Logging& log;
+		size_t last_number;
+		Gtk::ListViewText list;
 };
 
 

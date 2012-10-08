@@ -7,15 +7,15 @@ class GameInfo;
 
 class Dialog_Gameover
 {
-public:
-    Dialog_Gameover(Gtk::Window &parent);
+	public:
+		Dialog_Gameover(Gtk::Window& parent);
 
-    bool update_from_gameinfo(const GameInfo &);
+		bool update_from_gameinfo(const GameInfo&);
 
-    void show();
+		void show();
 
-protected:
-    Gtk::MessageDialog dialog;
+	protected:
+		Gtk::MessageDialog dialog;
 };
 
 #endif

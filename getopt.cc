@@ -58,7 +58,7 @@ char	*optarg;		/* argument associated with option */
 char *index(char *s, int c); 
 char *rindex(char *s, int c);       
 
-int
+	int
 getopt(int nargc, char * const *nargv, char *ostr)
 {
 	static char *place = EMSG;		/* option letter processing */
@@ -77,7 +77,7 @@ getopt(int nargc, char * const *nargv, char *ostr)
 		}
 	}					/* option letter okay? */
 	if ((optopt = (int)*place++) == (int)':' ||
-	    !(oli = index(ostr, optopt))) {
+			!(oli = index(ostr, optopt))) {
 		/*
 		 * if the user didn't specify '-' as an option,
 		 * assume it means EOF.
@@ -92,7 +92,7 @@ getopt(int nargc, char * const *nargv, char *ostr)
 			else
 				++p;
 			(void)fprintf(stderr, "%s: illegal option -- %c\n",
-			    p, optopt);
+					p, optopt);
 		}
 		return(BADCH);
 	}
@@ -112,11 +112,11 @@ getopt(int nargc, char * const *nargv, char *ostr)
 				++p;
 			if (opterr)
 				(void)fprintf(stderr,
-				    "%s: option requires an argument -- %c\n",
-				    p, optopt);
+						"%s: option requires an argument -- %c\n",
+						p, optopt);
 			return(BADCH);
 		}
-	 	else				/* white space */
+		else				/* white space */
 			optarg = nargv[optind];
 		place = EMSG;
 		++optind;
