@@ -31,7 +31,7 @@ public:
         virtual ~IOError() throw() {};
     };
     
-    UDP_Broadcast(Logging* log) throw (IOError);
+    UDP_Broadcast(Logging& log) throw (IOError);
     ~UDP_Broadcast();
 
     /** TODO */
@@ -42,7 +42,7 @@ public:
     void send(const std::string& buffer) throw (IOError);
     void send(const void* buffer, const size_t buflen) throw (IOError);    
 protected:
-    Logging* log;
+    Logging& log;
     struct sockaddr_in addr;
     int ifacenum;
     struct in_addr ifaddr[32];

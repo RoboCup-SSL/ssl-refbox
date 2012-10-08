@@ -11,7 +11,6 @@ class Refereemm_Main_Window : public Gtk::Window
 {
 public:
    Refereemm_Main_Window(GameControl&);
-   virtual ~Refereemm_Main_Window();
    
    // signale
    virtual void on_exit_clicked();
@@ -74,8 +73,8 @@ protected:
    GameControl& gamecontrol;
 
    // Dialog Windows
-   Dialog_Gameover *dialog_gameover;
-   Frame_Log *frame_log;
+   Dialog_Gameover dialog_gameover;
+   Frame_Log frame_log;
 
    // Elements
    Gtk::CheckButton enable_commands_but;

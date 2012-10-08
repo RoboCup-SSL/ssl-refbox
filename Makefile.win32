@@ -58,7 +58,7 @@ LIBS = \
 LDFLAGS=
 
 OBJS = gameinfo.o refereemm.o gamecontrol.o udp_broadcast.o \
-       dialog_gameover.o sound.o
+       dialog_gameover.o
 
 %.o: %.cc 
 	$(CC) -mms-bitfields -c $(CFLAGS) $(DEFS) -o $@ $<

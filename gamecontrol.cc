@@ -49,19 +49,10 @@
 #define CHOOSETEAM(t, blue, yel) (((t) == Blue) ? (blue) : (yel))
 
 
-GameControl::GameControl()
+GameControl::GameControl() :
+	settings(log),
+	broadcast(log)
 {
-    log = new Logging();
-    settings = new Settings(log);
-    broadcast = new UDP_Broadcast(log);
-}
-
-
-GameControl::~GameControl()
-{
-    delete settings;
-    delete broadcast;
-    delete log;
 }
 
 
@@ -77,16 +68,16 @@ bool GameControl::init(const std::string& configfile, const char *logfname, bool
     mc_addr = "224.5.29.1";
     mc_port = 10001;
   
-    log->add("reading config file...");
+    log.add("reading config file...");
     readSettings(configfile);
-    log->add("config file read.\n");
+    log.add("config file read.\n");
 
     try {
-        broadcast->set_destination(mc_addr, mc_port);
+        broadcast.set_destination(mc_addr, mc_port);
     }
     catch (UDP_Broadcast::IOError& e)
     {
-        log->add("Ethernet failed: %s\n", e.what().c_str());
+        log.add("Ethernet failed: %s\n", e.what().c_str());
     }
 
     // a little user output
@@ -97,7 +88,7 @@ bool GameControl::init(const std::string& configfile, const char *logfname, bool
     tlast = getTime();
 
     if (!gameinfo.openLog(logfname)) {
-        log->add("ERROR: Cannot open log file \"%s\"..", logfname);
+        log.add("ERROR: Cannot open log file \"%s\"..", logfname);
         return (false);
     }
 
@@ -147,7 +138,7 @@ void GameControl::sendCommand(char cmd, const char *msg)
     lastCommand = cmd;
     lastCommandCounter++;
 
-    log->add("Sending '%c': %s", cmd, msg);
+    log.add("Sending '%c': %s", cmd, msg);
     gameinfo.writeLog("Sending %c: %s", cmd, msg);
 
     ethernetSendCommand(cmd, lastCommandCounter);
@@ -167,7 +158,7 @@ void GameControl::ethernetSendCommand(const char cmd, const unsigned int counter
 
     try
     {
-        broadcast->send(&p,sizeof(p));
+        broadcast.send(&p,sizeof(p));
     }
     catch (UDP_Broadcast::IOError& e)
     {
@@ -220,41 +211,41 @@ void GameControl::stepTime()
 // read a config file to fill in parameters
 bool GameControl::readSettings(const std::string& configfile) 
 {
-    settings->readFile(configfile);
+    settings.readFile(configfile);
 
-    settings->get("SAVENAME", savename);
-    settings->get("MULTICASTADDRESS", mc_addr);
-    settings->get("MULTICASTPORT", mc_port);
+    settings.get("SAVENAME", savename);
+    settings.get("MULTICASTADDRESS", mc_addr);
+    settings.get("MULTICASTPORT", mc_port);
 
     int timeout_seconds;
-    settings->get("TIMEOUT_LIMIT", timeout_seconds);
+    settings.get("TIMEOUT_LIMIT", timeout_seconds);
     gameinfo.data.timeouts[(int)Blue] = timeout_seconds;
     gameinfo.data.timeouts[(int)Yellow] = timeout_seconds;
 
     int timeout_number;
-    settings->get("NR_TIMEOUTS", timeout_number);
+    settings.get("NR_TIMEOUTS", timeout_number);
     gameinfo.data.nrtimeouts[(int)Blue] = timeout_number;
     gameinfo.data.nrtimeouts[(int)Yellow] = timeout_number;
 
     int timelimit_firsthalf;
-    settings->get("FIRST_HALF", timelimit_firsthalf);
+    settings.get("FIRST_HALF", timelimit_firsthalf);
     gameinfo.data.timelimits[FIRST_HALF] = timelimit_firsthalf;
 
     int timelimit_halftime;
-    settings->get("HALF_TIME", timelimit_halftime);
+    settings.get("HALF_TIME", timelimit_halftime);
     gameinfo.data.timelimits[HALF_TIME] = timelimit_halftime;
 
     int timelimit_secondhalf;
-    settings->get("SECOND_HALF", timelimit_secondhalf);
+    settings.get("SECOND_HALF", timelimit_secondhalf);
     gameinfo.data.timelimits[SECOND_HALF] = timelimit_secondhalf;
 
     int timelimit_overtime;
-    settings->get("OVER_TIME", timelimit_overtime);
+    settings.get("OVER_TIME", timelimit_overtime);
     gameinfo.data.timelimits[OVER_TIME1] = timelimit_overtime;
     gameinfo.data.timelimits[OVER_TIME2] = timelimit_overtime;
 
     int timelimit_yellowcard;
-    settings->get("YELLOWCARD_TIME", timelimit_yellowcard);
+    settings.get("YELLOWCARD_TIME", timelimit_yellowcard);
     gameinfo.data.yellowcard_time = timelimit_yellowcard;
 
     return (true);

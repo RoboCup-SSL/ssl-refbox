@@ -13,14 +13,13 @@ class Logging;
 class Frame_Log: public Gtk::ScrolledWindow
 {
 public:
-    Frame_Log(Logging* log);
-    ~Frame_Log();
+    Frame_Log(Logging &log);
     bool update();
 
 protected:
-    Logging* log;
+    Logging &log;
     size_t last_number;
-    Gtk::ListViewText *list;
+    Gtk::ListViewText list;
 };
 
 

@@ -11,7 +11,6 @@ set(SOURCES
     gamecontrol.cc
     gameinfo.cc
     udp_broadcast.cc
-    sound.c
     dialog_gameover.cc
     settings.cc
     logging.cc

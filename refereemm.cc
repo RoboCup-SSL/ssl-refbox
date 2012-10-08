@@ -5,7 +5,6 @@
 #include "refereemm.h"
 #include "gamecontrol.h"
 #include "gameinfo.h"
-#include "sound.h"
 #ifdef WIN32
 #include "getopt.h"
 #endif
@@ -13,6 +12,8 @@
 Refereemm_Main_Window::Refereemm_Main_Window(GameControl& gc_): 
     Gtk::Window(),
     gamecontrol(gc_),
+    dialog_gameover(*this),
+    frame_log(gamecontrol.log),
     start_but("Force Start (KP_5)"),
     stop_but("Stop Game (KP_0)"),
     game_status_label("Stopped"),
@@ -74,10 +75,6 @@ Refereemm_Main_Window::Refereemm_Main_Window(GameControl& gc_):
 {
    set_default_size(600,700);
    set_title("Small Size League - Referee Box");
-
-   // create dialogs
-   dialog_gameover = new Dialog_Gameover(this);
-   frame_log = new Frame_Log(gamecontrol.log);
    
    // Add Accelerator Buttons
    stop_but.add_accelerator( "activate",get_accel_group(),
@@ -310,8 +307,8 @@ Refereemm_Main_Window::Refereemm_Main_Window(GameControl& gc_):
    if (show_log)
    {
        big_hbox.pack_start(big_vbox, Gtk::PACK_SHRINK );
-       big_hbox.add (*frame_log);
-       frame_log->show();
+       big_hbox.add (frame_log);
+       frame_log.show();
        add(big_hbox);
    }
    else
@@ -320,10 +317,6 @@ Refereemm_Main_Window::Refereemm_Main_Window(GameControl& gc_):
    }
 
    show_all();
-}
-
-Refereemm_Main_Window::~Refereemm_Main_Window()
-{
 }
 
 // signale
@@ -474,7 +467,6 @@ void Refereemm_Main_Window::on_blue_timeout_stop()
 
 void Refereemm_Main_Window::on_teamname_yellow()
 {
-    //sound_play("info.wav");
     std::string name(teamname_yellow.get_text());
     
     // no ',' allowed in teamname
@@ -489,7 +481,6 @@ void Refereemm_Main_Window::on_teamname_yellow()
 
 void Refereemm_Main_Window::on_teamname_blue()
 {
-    //sound_play("info.wav");
     std::string name(teamname_blue.get_text());
     
     // no ',' allowed in teamname
@@ -536,8 +527,8 @@ void Refereemm_Main_Window::on_gameover_start()
 {
 //    assert(dialog_gameover);
     GameInfo info = gamecontrol.getGameInfo();
-    dialog_gameover->update_from_gameinfo(&info);
-    dialog_gameover->show();
+    dialog_gameover.update_from_gameinfo(info);
+    dialog_gameover.show();
 }
 
 
@@ -678,7 +669,7 @@ void Refereemm_Main_Window::idle()
    set_widget_colors(gi.data.state, gi.data.stage);
 
    //display new log messages
-   frame_log->update();
+   frame_log.update();
 
    #ifdef WIN32
    Sleep(50);
@@ -732,10 +723,8 @@ int main(int argc, char* argv[])
    }
 
    // setup the GUI
-   Refereemm_Main_Window* main;
-   main = new Refereemm_Main_Window(gamecontrol);
-   kit.run(*main);
-   delete main;
+   Refereemm_Main_Window main(gamecontrol);
+   kit.run(main);
    gamecontrol.close();
    return 0;
 }

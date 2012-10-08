@@ -11,7 +11,7 @@ class Settings
 {
 public:
     /** Constructor with Filename */
-    Settings(Logging* log);
+    Settings(Logging& log);
 
     ~Settings();
 
@@ -25,7 +25,7 @@ public:
     bool readFile(const std::string& filename);
 protected:
 
-    Logging* log;
+    Logging& log;
     //bool writeFile(const std::string& filename);
 
     std::map<std::string, int> dataInt;

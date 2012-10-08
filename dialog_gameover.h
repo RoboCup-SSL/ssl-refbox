@@ -1,26 +1,21 @@
 #ifndef DIALOG_GAMEOVER_H
 #define DIALOG_GAMEOVER_H
 
-namespace Gtk
-{
-    class MessageDialog;
-    class Window;
-};
+#include <gtkmm.h>
 
 class GameInfo;
 
 class Dialog_Gameover
 {
 public:
-    Dialog_Gameover(Gtk::Window *parent);
-    ~Dialog_Gameover();
+    Dialog_Gameover(Gtk::Window &parent);
 
-    bool update_from_gameinfo(const GameInfo*);
+    bool update_from_gameinfo(const GameInfo &);
 
     void show();
 
 protected:
-    Gtk::MessageDialog *dialog;
+    Gtk::MessageDialog dialog;
 };
 
 #endif

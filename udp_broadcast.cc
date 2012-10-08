@@ -21,7 +21,7 @@
 #define IPPROTO_UDP 0
 #endif
 
-UDP_Broadcast::UDP_Broadcast(Logging* log) throw (UDP_Broadcast::IOError)
+UDP_Broadcast::UDP_Broadcast(Logging& log) throw (UDP_Broadcast::IOError)
     : log(log)
 {
 #ifdef WIN32
@@ -39,7 +39,7 @@ UDP_Broadcast::UDP_Broadcast(Logging* log) throw (UDP_Broadcast::IOError)
     struct ifaddrs *ifap = 0;
     if (-1 == getifaddrs(&ifap))
     {
-        log->add("could not get list of network interfaces");
+        log.add("could not get list of network interfaces");
         throw UDP_Broadcast::IOError("Could not get list of network interfaces", errno);
     }
     struct ifaddrs *it = ifap;
@@ -51,7 +51,7 @@ UDP_Broadcast::UDP_Broadcast(Logging* log) throw (UDP_Broadcast::IOError)
            && std::string("lo") != it->ifa_name)
         {
             ifaddr[ifacenum]=((struct sockaddr_in*)(it->ifa_addr))->sin_addr;
-            log->add("IPv4_Multicast: Interface found: %s (%s)", it->ifa_name, inet_ntoa(ifaddr[ifacenum]));
+            log.add("IPv4_Multicast: Interface found: %s (%s)", it->ifa_name, inet_ntoa(ifaddr[ifacenum]));
             ++ifacenum;
         }
 

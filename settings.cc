@@ -5,7 +5,7 @@
 #include "logging.h"
 #include "gamecontrol.h"
 
-Settings::Settings(Logging* log): log(log)
+Settings::Settings(Logging& log): log(log)
 {
 }
 
@@ -81,13 +81,13 @@ bool Settings::readFile(const std::string& filename)
     {
         if (result == 2)
         {
-            log->add("Settings: %s = %s", tmp_name, tmp_strvalue);
+            log.add("Settings: %s = %s", tmp_name, tmp_strvalue);
             set(tmp_name, tmp_strvalue);
 
             int tmp_intvalue;
             if (1 == sscanf(tmp_strvalue, "%i", &tmp_intvalue) )
             {
-                log->add("Settings: \"%s\" has integer value %i.", tmp_name, tmp_intvalue);
+                log.add("Settings: \"%s\" has integer value %i.", tmp_name, tmp_intvalue);
                 set(tmp_name, tmp_intvalue);
             } 
         }

@@ -31,7 +31,7 @@ BINFILES := $(usr/bin)sslrefbox
 ETCFILES := $(etc)/sslrefbox/referee.conf
 DESKTOPFILES := $(usr/share/applications)/sslrefbox.desktop
 
-SRCS= refereemm.cc gamecontrol.cc gameinfo.cc udp_broadcast.cc sound.c dialog_gameover.cc settings.cc logging.cc frame_log.cc
+SRCS= refereemm.cc gamecontrol.cc gameinfo.cc udp_broadcast.cc dialog_gameover.cc settings.cc logging.cc frame_log.cc
 
 OBJS= $(SRCS:.cc=.o) \
 #DEPENDS := $(SRCS:%.cc=.%.dep)

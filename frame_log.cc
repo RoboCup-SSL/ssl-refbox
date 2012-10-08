@@ -1,30 +1,30 @@
 #include <gtkmm.h>
 #include "gameinfo.h"
-#include "sound.h"
 #include "logging.h"
 #include "frame_log.h"
 
-Frame_Log::Frame_Log(Logging* log): Gtk::ScrolledWindow(),
-                                        log(log),
-                                        last_number(0)
+Frame_Log::Frame_Log(Logging &log) :
+	Gtk::ScrolledWindow(),
+	log(log),
+    last_number(0),
+    list(1, false, Gtk::SELECTION_NONE)
 {
-    list = new Gtk::ListViewText(1, false, Gtk::SELECTION_NONE);
 
-    list->set_column_title(0, "");
-    list->set_size_request(400,300);
+    list.set_column_title(0, "");
+    list.set_size_request(400,300);
 
-    add(*list);
+    add(list);
 
-    size_t len = log->get_number_of_messages();
+    size_t len = log.get_number_of_messages();
     for(size_t i=0; i<len; ++i)
     {
-        list->append_text(log->get_message(i));
+        list.append_text(log.get_message(i));
     }
 }
 
 bool Frame_Log::update()
 {
-    size_t len = log->get_number_of_messages();
+    size_t len = log.get_number_of_messages();
     
     if (last_number == (len-1))
     {
@@ -33,7 +33,7 @@ bool Frame_Log::update()
 
     for(size_t i = last_number; i<len; ++i)
     {
-        list->append_text(log->get_message(i));
+        list.append_text(log.get_message(i));
     }
  
     last_number = len-1;
@@ -43,10 +43,5 @@ bool Frame_Log::update()
     get_vadjustment()->set_value(upper + 1000);
 
     return true; //has new data
-}
-
-Frame_Log::~Frame_Log()
-{
-    delete list;
 }
 

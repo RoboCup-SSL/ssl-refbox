@@ -27,11 +27,10 @@
 #include "gameinfo.h"
 #include "commands.h"
 #include "logging.h"
+#include "settings.h"
+#include "udp_broadcast.h"
 
 #include <string>
-
-class Settings;
-class UDP_Broadcast;
 
 // structure for determining what buttons are useable
 class EnableState {
@@ -234,14 +233,11 @@ public:
     unsigned short time_remaining; // seconds remaining for current game stage
   };
 
-  Logging* log;
-  Settings* settings;
+  Logging log;
+  Settings settings;
 
   /** Constructor */
   GameControl();
-
-  /** Destructor */
-  ~GameControl();
 
 
 private:
@@ -250,7 +246,7 @@ private:
   //ethernet interface
   std::string mc_addr;
   int mc_port;
-  UDP_Broadcast *broadcast;
+  UDP_Broadcast broadcast;
 
   GameInfo gameinfo;
   double tlast;
@@ -295,11 +291,11 @@ public:
 
   void toggleEnable() {
     enabled = !enabled;
-    log->add("enabled %i\n", enabled);
+    log.add("enabled %i\n", enabled);
   }
   void setEnable(bool en = true) {
     enabled = en;
-    log->add("setting enabled %i\n", enabled);
+    log.add("setting enabled %i\n", enabled);
   }
 
   EnableState getEnableState() {
