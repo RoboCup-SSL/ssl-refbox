@@ -1,3 +1,6 @@
 build/
 *.o
+gamecontrol
+referee.sav
 sslrefbox
+tags
