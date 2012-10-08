@@ -1,19 +1,16 @@
-#include <cmath>
-#include <iostream>
-#include "dialog_gameover.h"
-#include "frame_log.h"
 #include "refereemm.h"
+#include "dialog_gameover.h"
 #include "gamecontrol.h"
 #include "gameinfo.h"
 #ifdef WIN32
 #include "getopt.h"
 #endif
+#include <cmath>
 
 Refereemm_Main_Window::Refereemm_Main_Window(GameControl& gc_): 
 	Gtk::Window(),
 	gamecontrol(gc_),
 	dialog_gameover(*this),
-	frame_log(gamecontrol.log),
 	start_but("Force Start (KP_5)"),
 	stop_but("Stop Game (KP_0)"),
 	game_status_label("Stopped"),
@@ -302,19 +299,7 @@ Refereemm_Main_Window::Refereemm_Main_Window(GameControl& gc_):
 	big_vbox.pack_start( game_control_frame, Gtk::PACK_SHRINK, 10 );
 	big_vbox.pack_start( team_hbox, Gtk::PACK_SHRINK, 10);
 
-	//TODO: scroll to end
-	bool show_log = false;
-	if (show_log)
-	{
-		big_hbox.pack_start(big_vbox, Gtk::PACK_SHRINK );
-		big_hbox.add (frame_log);
-		frame_log.show();
-		add(big_hbox);
-	}
-	else
-	{
-		add(big_vbox);
-	}
+	add(big_vbox);
 
 	show_all();
 }
@@ -525,18 +510,11 @@ void Refereemm_Main_Window::on_penaltyshootout_start()
 
 void Refereemm_Main_Window::on_gameover_start()
 {
-	//    assert(dialog_gameover);
-	GameInfo info = gamecontrol.getGameInfo();
+	const GameInfo &info = gamecontrol.getGameInfo();
 	dialog_gameover.update_from_gameinfo(info);
 	dialog_gameover.show();
 }
 
-
-void Refereemm_Main_Window::set_widget_colors(const GameState state,
-		const GameStage stage)
-{
-	//TODO
-}
 
 void Refereemm_Main_Window::set_active_widgets(const EnableState& es)
 {
@@ -584,9 +562,7 @@ void Refereemm_Main_Window::idle()
 	// First get new time step
 	gamecontrol.stepTime();
 	char str[1024];
-	GameInfo gi = gamecontrol.getGameInfo();
-
-	//   std::cout << gi.data << std::endl;
+	const GameInfo &gi = gamecontrol.getGameInfo();
 
 	// Update the Gui
 	game_status_label.set_text( gi.getStateString() );
@@ -666,10 +642,6 @@ void Refereemm_Main_Window::idle()
 	}
 
 	set_active_widgets(gamecontrol.getEnableState());
-	set_widget_colors(gi.data.state, gi.data.stage);
-
-	//display new log messages
-	frame_log.update();
 
 #ifdef WIN32
 	Sleep(50);
@@ -682,7 +654,7 @@ void Refereemm_Main_Window::idle()
 
 int main(int argc, char* argv[])
 {
-	char c;
+	int c;
 #ifndef WIN32
 	std::string configfile = "/etc/sslrefbox/referee.conf";
 #else
@@ -714,18 +686,11 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	GameControl gamecontrol;
-
-	// load everything
-	if (!gamecontrol.init(configfile, logfile.c_str(), restart)) {
-		fprintf(stderr, "ERROR: Cannot intialize game controller\n");
-		return (1);
-	}
+	GameControl gamecontrol(configfile, logfile, restart);
 
 	// setup the GUI
 	Refereemm_Main_Window main(gamecontrol);
 	kit.run(main);
-	gamecontrol.close();
 	return 0;
 }
 

@@ -21,8 +21,8 @@
 
 */
 
-#ifndef __COMMANDS_H__
-#define __COMMANDS_H__
+#ifndef COMMANDS_H
+#define COMMANDS_H
 
 // play commands
 #define COMM_STOP 'S'
@@ -78,5 +78,5 @@
 // acceptable referee commands
 #define COMM_CMD_STRING "iIfFpPkKnrRyYdDgGcztTaoO2h1 HsS"
 
-#endif /* __COMMANDS_H__ */
+#endif
 

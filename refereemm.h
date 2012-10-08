@@ -1,11 +1,9 @@
-#ifndef REFEREEMM_MAIN_WINDOW
-#define REFEREEMM_MAIN_WINDOW
+#ifndef REFEREEMM_H
+#define REFEREEMM_H
 
-#include <gtkmm.h>
+#include "dialog_gameover.h"
 #include "gamecontrol.h"
-
-class Dialog_Gameover;
-class Frame_Log;
+#include <gtkmm.h>
 
 class Refereemm_Main_Window : public Gtk::Window
 {
@@ -64,9 +62,6 @@ class Refereemm_Main_Window : public Gtk::Window
 		// Gui Sensitive
 		void set_active_widgets(const EnableState&);
 
-		// Modify background color to highlight active state.
-		void set_widget_colors(const GameState, const GameStage);
-
 
 	protected:
 		// Non GUI Elements
@@ -74,7 +69,6 @@ class Refereemm_Main_Window : public Gtk::Window
 
 		// Dialog Windows
 		Dialog_Gameover dialog_gameover;
-		Frame_Log frame_log;
 
 		// Elements
 		Gtk::CheckButton enable_commands_but;
@@ -160,7 +154,6 @@ class Refereemm_Main_Window : public Gtk::Window
 
 		// Arrange Widget
 		Gtk::VBox big_vbox;
-		Gtk::HBox big_hbox;
 
 		Gtk::HBox halt_stop_hbox;
 		Gtk::HBox start_ready_hbox;
@@ -172,7 +165,4 @@ class Refereemm_Main_Window : public Gtk::Window
 };
 
 #endif
-
-
-
 

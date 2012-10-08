@@ -1,3 +1,5 @@
+#include "udp_broadcast.h"
+#include "logging.h"
 #ifndef WIN32
 # include <errno.h>
 # include <sys/types.h>
@@ -11,11 +13,6 @@
 #endif
 #include <cstdio>
 #include <cstring>
-#include <iostream>
-#include "logging.h"
-#include "udp_broadcast.h"
-
-
 
 #ifndef IPPROTO_UDP
 #define IPPROTO_UDP 0
@@ -39,7 +36,7 @@ UDP_Broadcast::UDP_Broadcast(Logging& log) throw (UDP_Broadcast::IOError) :
 	struct ifaddrs *ifap = 0;
 	if (-1 == getifaddrs(&ifap))
 	{
-		log.add("could not get list of network interfaces");
+		log.add(u8"could not get list of network interfaces");
 		throw UDP_Broadcast::IOError("Could not get list of network interfaces", errno);
 	}
 	struct ifaddrs *it = ifap;
@@ -51,7 +48,7 @@ UDP_Broadcast::UDP_Broadcast(Logging& log) throw (UDP_Broadcast::IOError) :
 				&& std::string("lo") != it->ifa_name)
 		{
 			ifaddr[ifacenum]=((struct sockaddr_in*)(it->ifa_addr))->sin_addr;
-			log.add("IPv4_Multicast: Interface found: %s (%s)", it->ifa_name, inet_ntoa(ifaddr[ifacenum]));
+			log.add(Glib::ustring::compose(u8"IPv4_Multicast: Interface found: %1 (%2)", it->ifa_name, inet_ntoa(ifaddr[ifacenum])));
 			++ifacenum;
 		}
 
@@ -60,7 +57,7 @@ UDP_Broadcast::UDP_Broadcast(Logging& log) throw (UDP_Broadcast::IOError) :
 	}
 
 #else
-	log->add("ERROR(WIN32): Can not get list of network interfaces. "
+	log.add(u8"ERROR(WIN32): Can not get list of network interfaces. "
 			"NOT IMPLEMENTED YET!");
 #endif
 

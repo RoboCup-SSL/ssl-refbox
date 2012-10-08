@@ -20,67 +20,42 @@
 
 */
 
-#ifndef __GAME_INFO_H__
-#define __GAME_INFO_H__
+#ifndef GAMEINFO_H
+#define GAMEINFO_H
 
-#include <cstring> //memset, memcpy
+#include <algorithm>
+#include <chrono>
+#include <cmath>
+#include <ctime>
+#include <glibmm.h>
 #include <string>
-#include <sstream>
-#include <cstdarg>  //va_list
-#include <cstdio>
-#include <time.h>
-#ifdef WIN32
-#include <sys/timeb.h>
-#else
-#include <sys/time.h>
-#endif
-#include <math.h>
+#include <fstream>
 
-#define MAX(a, b)  (((a) > (b)) ? (a) : (b))
-
-
-#define MIN2SEC(t) ((t) * 60.0)
-#define SEC2MIN(t) (t / 60.0)
-
-#define DISP_MIN(t)  (((t) <= 0) ? 0 : (int) floor((t) / 60.0))
-#define DISP_SEC(t)  (((t) <= 0) ? 0 : fmod((t), 60.0))
-
-// time function
-static double getTime() {
-#ifdef WIN32
-	struct timeb curr;
-	ftime(&curr);
-	return (curr.time + curr.millitm / 1000.0);
-#else
-	struct timeval curr;
-	gettimeofday(&curr, NULL);
-	return (curr.tv_sec + curr.tv_usec / 1000000.0);
-#endif
-}
-
-
+#define DISP_MIN(t) ((t) <= 0.0 ? 0 : static_cast<unsigned int>(std::floor((t) / 60.0)))
+#define DISP_SEC(t) ((t) <= 0.0 ? 0.0 : std::fmod((t), 60.0))
 
 #define NUM_TEAMS 2
-enum Team {Blue = 0, Yellow};
+enum Team {Blue, Yellow};
+extern const char* str_Team[NUM_TEAMS];
 
 /* game stage and status enums */
-enum GameState {HALTED = 0, STOPPED, TIMEOUT, PRESTART, RUNNING};
-enum GameStage {PREGAME = 0, FIRST_HALF, HALF_TIME, PRESECONDHALF, SECOND_HALF, 
+enum GameState {HALTED, STOPPED, TIMEOUT, PRESTART, RUNNING};
+enum GameStage {PREGAME, FIRST_HALF, HALF_TIME, PRESECONDHALF, SECOND_HALF, 
 	PREOVERTIME1, OVER_TIME1, PREOVERTIME2, OVER_TIME2, PENALTY_SHOOTOUT};
-#define NR_GAME_STAGES (((int) PENALTY_SHOOTOUT) + 1)
-enum GameRestart {NEUTRAL = 0, DIRECT, INDIRECT, PENALTY, KICKOFF};
+#define NR_GAME_STAGES (static_cast<unsigned int>(PENALTY_SHOOTOUT) + 1)
+enum GameRestart {NEUTRAL, DIRECT, INDIRECT, PENALTY, KICKOFF};
 
 class GameInfo {
 	public:
 		struct Data {
 			//keep switchColors() in gamecontrol.cc in sync with team data variables!
-			char teamnames[NUM_TEAMS][64];
+			Glib::ustring teamnames[NUM_TEAMS];
 			GameRestart restart;
 			GameState state;
 			GameStage stage;
 			GameState laststate;
 
-			time_t gamestart; // time game started
+			std::time_t gamestart; // time game started
 			double gametime; // time of the game
 
 			double time_taken;
@@ -88,8 +63,8 @@ class GameInfo {
 			double timelimits[NR_GAME_STAGES];
 
 			double timeouts[NUM_TEAMS];
-			int    nrtimeouts[NUM_TEAMS];
-			int    timeoutteam;
+			int nrtimeouts[NUM_TEAMS];
+			int timeoutteam;
 			double timeoutstarttime;
 
 			int goals[NUM_TEAMS];
@@ -101,64 +76,22 @@ class GameInfo {
 			int penalties[NUM_TEAMS];
 			int freekicks[NUM_TEAMS];
 			int restarts;
+
+			Data();
+			void save(std::ostream &ofs) const;
+			void load(std::istream &ifs);
 		};        
 
 		Data data;
-		FILE *logfile;
+		std::ofstream logfile;
 
+		GameInfo(const std::string& logfname);
 
-		GameInfo() {
-			memset(&data, 0, sizeof(data));
-			data.gamestart = time(NULL);
-			data.gametime = getTime();
-		}
+		void save(const std::string& fname) const;
 
+		void load(const std::string& fname);
 
-		bool openLog(const char *fname) {
-			if ((logfile = fopen(fname, "w")) == NULL)
-				return (false);
-			fprintf(logfile, "%f ", data.gametime);
-			fprintf(logfile, "Game log for %s\n", ctime(&data.gamestart));
-			return (true); 
-		}
-
-
-		void closeLog() {
-			fclose(logfile);
-		}
-
-
-		bool save(const std::string& fname) {
-			FILE *f;
-			if ((f = fopen(fname.c_str(), "w")) == NULL)
-				return (false);
-			bool rval = (fwrite(&data, sizeof(data), 1, f) == sizeof(data));
-			fclose(f);
-			return (rval);
-		}
-
-
-		bool load(const std::string& fname) {
-			FILE *f;
-			if ((f = fopen(fname.c_str(), "r")) == NULL)
-				return (false);
-			bool rval = (fread(&data, sizeof(data), 1, f) == sizeof(data));
-			data.state = HALTED;
-			fclose(f);
-			return (rval);
-		}
-
-
-		void writeLog(const char* fmt, ...) {
-			va_list varg;
-			va_start(varg, fmt);
-			fprintf(logfile, "%f ", data.gametime);
-			fprintf(logfile, "\t%s\t%s\t", getStageString().c_str(), getStateString().c_str());
-			fprintf(logfile, "%f ", data.time_taken);
-			vfprintf(logfile, fmt, varg);
-			fprintf(logfile, "\n");
-			va_end(varg);
-		}
+		void logCommand(char cmd, const Glib::ustring& msg);
 
 
 		std::string getStateString() const {
@@ -199,51 +132,56 @@ class GameInfo {
 			}
 		}
 
-		bool isTimeComplete() {
-			return (data.time_taken >= data.timelimits[(int) data.stage]);
+		bool isTimeComplete() const {
+			return (data.time_taken >= data.timelimits[static_cast<unsigned int>(data.stage)]);
 		}
 
-		double timeRemaining() {
-			return (MAX(0, data.timelimits[(int) data.stage] - data.time_taken));
+		double timeRemaining() const {
+			return (std::max(0.0, data.timelimits[static_cast<unsigned int>(data.stage)] - data.time_taken));
 		}
-		double timeTaken() {
+
+		double timeTaken() const {
 			return (data.time_taken);
 		}
 
-		bool isTimeout() {
+		bool isTimeout() const {
 			return (data.state == TIMEOUT);
 		}
-		bool isHalted() {
+
+		bool isHalted() const {
 			return (data.state == HALTED);
 		}
-		bool isStopped() {
+
+		bool isStopped() const {
 			return (data.state == STOPPED);
 		}
-		bool isPrestart() {
+
+		bool isPrestart() const {
 			return (data.state == PRESTART);
 		}
-		bool isRunning() {
+
+		bool isRunning() const {
 			return (data.state == RUNNING);
 		}
 
-		bool isGeneralPlay() {
+		bool isGeneralPlay() const {
 			return (data.stage == FIRST_HALF || data.stage == SECOND_HALF 
 					|| data.stage == OVER_TIME1 || data.stage == OVER_TIME2);
 		}
 
-		bool isGameTied() {
+		bool isGameTied() const {
 			return (data.goals[Blue] == data.goals[Yellow]);
 		}
 
-		double timeoutRemaining(int team = -1) {
+		double timeoutRemaining(int team = -1) const {
 			return (data.timeouts[((team < 0) ? data.timeoutteam : team)]);
 		}
 
-		int nrTimeouts(int team = -1) {
+		int nrTimeouts(int team = -1) const {
 			return (data.nrtimeouts[((team < 0) ? data.timeoutteam : team)]);
 		}
 
-		bool isTimeoutComplete() {
+		bool isTimeoutComplete() const {
 			return (data.timeouts[data.timeoutteam] <= 0);
 		}
 
@@ -251,36 +189,32 @@ class GameInfo {
 			data.time_taken = 0;
 		}
 
-		bool canRestart() {
+		bool canRestart() const {
 			return (data.state == STOPPED);
 		}
 
 		void setRunning() {
 			data.state = RUNNING;
 		}
+
 		void setPrestart() {
 			data.state = PRESTART;
 		}
+
 		void setStopped() {
 			data.state = STOPPED;
 		}
 
-		void setTimelimits(double tlim[], double touts[], int ntouts) {
-			memcpy(data.timelimits, tlim, NR_GAME_STAGES * sizeof(double));
-			memcpy(data.timeouts, touts, NUM_TEAMS * sizeof(double));
-			data.nrtimeouts[0] = ntouts;
-			data.nrtimeouts[1] = ntouts;
+		void setTimelimits(const double *tlim, const double *touts, int ntouts) {
+			std::copy_n(tlim, NR_GAME_STAGES, data.timelimits);
+			std::copy_n(touts, NUM_TEAMS, data.timeouts);
+			std::fill_n(data.nrtimeouts, NUM_TEAMS, ntouts);
 		}
 
-		double penaltyTimeRemaining(int team = 0) {
+		double penaltyTimeRemaining(int team = 0) const {
 			return (data.timepenalty[team]);
 		}
 };
 
-
-// std::ostream& operator<<(std::ostream& s, const GameInfo& info);
-
 #endif
-
-
 

@@ -21,15 +21,16 @@
 
 */
 
-#ifndef __GAME_CONTROL_H__
-#define __GAME_CONTROL_H__
+#ifndef GAMECONTROL_H
+#define GAMECONTROL_H
 
-#include "gameinfo.h"
 #include "commands.h"
+#include "gameinfo.h"
 #include "logging.h"
-#include "settings.h"
 #include "udp_broadcast.h"
-
+#include <chrono>
+#include <glibmm.h>
+#include <stdint.h>
 #include <string>
 
 // structure for determining what buttons are useable
@@ -61,17 +62,6 @@ class EnableState {
 		bool direct[NUM_TEAMS];
 		bool indirect[NUM_TEAMS];
 		bool cards;
-
-		/*   EnableState() { */
-		/*     printf("DO NOT CALL THIS!\n"); */
-		/*     enable = halt = ready = stop = start = cancel = true; */
-		/*     endtimeout = true; */
-		/*     cards = true; */
-		/*     for (int t = 0; t < NUM_TEAMS; t++) { */
-		/*       timeout[t] = goal[t] = subgoal[t] = true; */
-		/*       kickoff[t] = penalty[t] = direct[t] = indirect[t] = true; */
-		/*     } */
-		/*   } */
 
 		void setEnabledStageControl(const GameState state, const GameStage stage,
 				const bool enabled)
@@ -109,20 +99,20 @@ class EnableState {
 				switch(stage)
 				{
 					case FIRST_HALF:
-						stage_halftime=true;
+						stage_halftime = true;
 						break;
 					case SECOND_HALF:
-						stage_overtime1=true;
-						stage_gameover=true;
+						stage_overtime1 = true;
+						stage_gameover = true;
 						break;
 					case OVER_TIME1:
-						stage_gameover=true;
-						stage_overtime2=true;
+						stage_gameover = true;
+						stage_overtime2 = true;
 						break;
 					case OVER_TIME2:
-						stage_penaltyshootout=true;
+						stage_penaltyshootout = true;
 					case PENALTY_SHOOTOUT:
-						stage_gameover=true;
+						stage_gameover = true;
 						break;
 					default:
 						;
@@ -199,7 +189,6 @@ class EnableState {
 		}
 
 		void setRestarts(bool en = true, bool kickoffonly = false) {
-
 			for (int t = 0; t < NUM_TEAMS; t++) {
 				kickoff[t] = en;
 				if (!kickoffonly) {
@@ -223,65 +212,48 @@ class EnableState {
 
 
 /* structure for encapsulating all the game control data */
-class  GameControl {
+class GameControl {
 	public:
-		struct GameStatePacket{
-			char cmd;                      // current referee command
-			unsigned char cmd_counter;     // increments each time new command is set
-			unsigned char goals_blue;      // current score for blue team
-			unsigned char goals_yellow;    // current score for yellow team
-			unsigned short time_remaining; // seconds remaining for current game stage
-		};
-
-		Logging log;
-		Settings settings;
-
 		/** Constructor */
-		GameControl();
+		GameControl(const std::string& configfile, const std::string& logfname, bool restart);
 
 
 	private:
+		Logging log;
+
 		std::string savename;
 
 		//ethernet interface
 		std::string mc_addr;
-		int mc_port;
+		uint16_t mc_port;
 		UDP_Broadcast broadcast;
 
 		GameInfo gameinfo;
-		double tlast;
+		std::chrono::high_resolution_clock::time_point tlast;
 
 		// configuration
 		// read a config file to fill in parameters
-		bool readSettings(const std::string& configfile);
+		void readSettings(const std::string& configfile);
 
 		// last Command sent.
-		char         lastCommand;
+		char lastCommand;
 
 		// incremented if a new command was sent.
 		unsigned int lastCommandCounter;    
 
 		// log commands, send them over UDP and change game state
-		void sendCommand(const char cmd, const char *msg);
-		void ethernetSendCommand(const char cmd, const unsigned int counter);
-		char *concatTeam(char *msg, const char *msgpart, Team team);
+		void sendCommand(const char cmd, const Glib::ustring& msg);
+		void ethernetSendCommand(const char cmd);
 
 		bool enabled;
 
 
 	public:
-		// initializes sets up everything
-		bool init(const std::string& confname,
-				const char *logfname,
-				bool restart = false);
-
-		void close();
-
 		// debugging printout
-		void print(FILE *f = stdout);
+		void print();
 
 		// get the info to display
-		GameInfo getGameInfo() {
+		const GameInfo &getGameInfo() {
 			return (gameinfo);
 		}
 
@@ -291,11 +263,11 @@ class  GameControl {
 
 		void toggleEnable() {
 			enabled = !enabled;
-			log.add("enabled %i\n", enabled);
+			log.add(Glib::ustring::compose(u8"enabled %1", enabled));
 		}
 		void setEnable(bool en = true) {
 			enabled = en;
-			log.add("setting enabled %i\n", enabled);
+			log.add(Glib::ustring::compose(u8"setting enabled %1", enabled));
 		}
 
 		EnableState getEnableState() {
@@ -303,7 +275,7 @@ class  GameControl {
 			return (es);
 		}
 
-		bool switchColors();
+		void switchColors();
 
 		/////////////////////////////
 		// send commands
@@ -328,11 +300,9 @@ class  GameControl {
 		bool setDirect(Team team);
 		bool setIndirect(Team team);
 
-		void setTeamName(Team team, const std::string& name)
+		void setTeamName(Team team, const Glib::ustring& name)
 		{
-			//max. 63 chars + null
-			strncpy(gameinfo.data.teamnames[team], name.c_str(), 63);
-			gameinfo.data.teamnames[team][63] = '\0';
+			gameinfo.data.teamnames[team] = name;
 		}  
 
 		bool setHalt();
@@ -348,6 +318,5 @@ class  GameControl {
 
 };
 
-
-
 #endif
+

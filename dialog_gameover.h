@@ -10,7 +10,7 @@ class Dialog_Gameover
 	public:
 		Dialog_Gameover(Gtk::Window& parent);
 
-		bool update_from_gameinfo(const GameInfo&);
+		void update_from_gameinfo(const GameInfo&);
 
 		void show();
 
@@ -19,3 +19,4 @@ class Dialog_Gameover
 };
 
 #endif
+

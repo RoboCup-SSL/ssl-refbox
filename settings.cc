@@ -1,9 +1,8 @@
-#include <cstdlib> //exit
-#include <cstdio>
-
 #include "settings.h"
-#include "logging.h"
 #include "gamecontrol.h"
+#include "logging.h"
+#include <cstdio>
+#include <cstdlib> //exit
 
 Settings::Settings(Logging& log): log(log)
 {
@@ -77,13 +76,13 @@ bool Settings::readFile(const std::string& filename)
 	{
 		if (result == 2)
 		{
-			log.add("Settings: %s = %s", tmp_name, tmp_strvalue);
+			log.add(Glib::ustring::compose(u8"Settings: %1 = %2", tmp_name, tmp_strvalue));
 			set(tmp_name, tmp_strvalue);
 
 			int tmp_intvalue;
 			if (1 == sscanf(tmp_strvalue, "%i", &tmp_intvalue) )
 			{
-				log.add("Settings: \"%s\" has integer value %i.", tmp_name, tmp_intvalue);
+				log.add(Glib::ustring::compose(u8"Settings: \"%1\" has integer value %2.", tmp_name, tmp_intvalue));
 				set(tmp_name, tmp_intvalue);
 			} 
 		}
@@ -91,3 +90,4 @@ bool Settings::readFile(const std::string& filename)
 
 	return true;
 }
+

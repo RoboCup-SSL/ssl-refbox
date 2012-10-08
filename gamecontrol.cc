@@ -21,7 +21,14 @@
 
 */
 
-#include <cstdio>
+#include "commands.h"
+#include "gamecontrol.h"
+#include "gameinfo.h"
+#include "logging.h"
+#include "settings.h"
+#include "udp_broadcast.h"
+#include <iostream>
+#include <iomanip>
 #include <time.h>
 #include <sys/time.h>
 #include <stdio.h>
@@ -29,7 +36,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <sstream>
-#include <iostream>
+#include <utility>
 
 #ifndef WIN32
 #  include <arpa/inet.h> //for htonl()
@@ -37,11 +44,6 @@
 #  include <winsock.h>
 #endif
 
-#include "commands.h"
-#include "gamecontrol.h"
-#include "udp_broadcast.h"
-#include "settings.h"
-#include "logging.h"
 
 
 #define MAX_LINE 256
@@ -49,15 +51,9 @@
 #define CHOOSETEAM(t, blue, yel) (((t) == Blue) ? (blue) : (yel))
 
 
-GameControl::GameControl() :
-	settings(log),
-	broadcast(log)
-{
-}
-
-
-// initializes sets up everything
-bool GameControl::init(const std::string& configfile, const char *logfname, bool restart) 
+GameControl::GameControl(const std::string& configfile, const std::string& logfname, bool restart) :
+	broadcast(log),
+	gameinfo(logfname)
 {
 	lastCommand = 'H'; //HALT
 	lastCommandCounter = 0;
@@ -68,16 +64,16 @@ bool GameControl::init(const std::string& configfile, const char *logfname, bool
 	mc_addr = "224.5.29.1";
 	mc_port = 10001;
 
-	log.add("reading config file...");
+	log.add(u8"reading config file...");
 	readSettings(configfile);
-	log.add("config file read.\n");
+	log.add(u8"config file read.");
 
 	try {
 		broadcast.set_destination(mc_addr, mc_port);
 	}
 	catch (UDP_Broadcast::IOError& e)
 	{
-		log.add("Ethernet failed: %s\n", e.what().c_str());
+		log.add(Glib::ustring::compose(u8"Ethernet failed: %1", e.what()));
 	}
 
 	// a little user output
@@ -85,92 +81,75 @@ bool GameControl::init(const std::string& configfile, const char *logfname, bool
 
 	// intialize the timer
 	gameinfo.resetTimer();
-	tlast = getTime();
-
-	if (!gameinfo.openLog(logfname)) {
-		log.add("ERROR: Cannot open log file \"%s\"..", logfname);
-		return (false);
-	}
+	tlast = std::chrono::high_resolution_clock::now();
 
 	// restart from saved state
 	if (restart) {
 		gameinfo.load(savename);
 	}
-
-	return (true);
 }
 
-
-void GameControl::close() 
-{
-	gameinfo.closeLog();
+namespace {
+	Glib::ustring format_time(double t) {
+		return Glib::ustring::compose(u8"%1:%2", DISP_MIN(t), Glib::ustring::format(std::setw(2), std::setfill(L'0'), static_cast<int>(DISP_SEC(t))));
+	}
 }
 
-void GameControl::print(FILE *f) 
+void GameControl::print() 
 {
-	fprintf(f, "Game Settings\n");
-	fprintf(f, "\ttimelimits : First Half %i:%02i\n",
-			DISP_MIN(gameinfo.data.timelimits[FIRST_HALF]), 
-			(int)DISP_SEC(gameinfo.data.timelimits[FIRST_HALF]));
-	fprintf(f, "\t\tHalf time %i:%02i\n",
-			DISP_MIN(gameinfo.data.timelimits[HALF_TIME]), 
-			(int)DISP_SEC(gameinfo.data.timelimits[HALF_TIME]));
-	fprintf(f, "\t\tSecond half %i:%02i\n",
-			DISP_MIN(gameinfo.data.timelimits[SECOND_HALF]), 
-			(int)DISP_SEC(gameinfo.data.timelimits[SECOND_HALF]));
-	fprintf(f, "\t\tOvertime %i:%02i\n",
-			DISP_MIN(gameinfo.data.timelimits[OVER_TIME1]),
-			(int)DISP_SEC(gameinfo.data.timelimits[OVER_TIME1]));
-	fprintf(f, "\t\tOvertime %i:%02i\n",
-			DISP_MIN(gameinfo.data.timelimits[OVER_TIME2]),
-			(int)DISP_SEC(gameinfo.data.timelimits[OVER_TIME2]));
-
-	fprintf(f, "\ttimeouts : number %i, total time %f\n",
-			gameinfo.data.nrtimeouts[0], SEC2MIN(gameinfo.data.timeouts[0]));
+	std::cout << "Game Settings\n";
+	std::cout << "\ttimelimits : First Half " << format_time(gameinfo.data.timelimits[FIRST_HALF]) << '\n';
+	std::cout << "\t\tHalf time " << format_time(gameinfo.data.timelimits[HALF_TIME]) << '\n';
+	std::cout << "\t\tSecond half " << format_time(gameinfo.data.timelimits[SECOND_HALF]) << '\n';
+	std::cout << "\t\tOvertime " << format_time(gameinfo.data.timelimits[OVER_TIME1]) << '\n';
+	std::cout << "\t\tOvertime " << format_time(gameinfo.data.timelimits[OVER_TIME2]) << '\n';
+	std::cout << "\ttimeouts : number " << gameinfo.data.nrtimeouts[0] << ", total time " << format_time(gameinfo.data.timeouts[0]) << '\n';
 }
 
 /////////////////////////////
 // send commands
 // log commands, send them over UDP and change game state
 // increment command counter
-void GameControl::sendCommand(char cmd, const char *msg) 
+void GameControl::sendCommand(char cmd, const Glib::ustring& msg) 
 {
 	lastCommand = cmd;
 	lastCommandCounter++;
 
-	log.add("Sending '%c': %s", cmd, msg);
-	gameinfo.writeLog("Sending %c: %s", cmd, msg);
+	log.add(Glib::ustring::compose(u8"Sending '%1': %2", cmd, msg));
+	gameinfo.logCommand(cmd, msg);
 
-	ethernetSendCommand(cmd, lastCommandCounter);
+	ethernetSendCommand(cmd);
 }
 
 
 /////////////////////////////
 // send command to ethernet clients.
-void GameControl::ethernetSendCommand(const char cmd, const unsigned int counter)
+void GameControl::ethernetSendCommand(const char cmd)
 {
-	GameStatePacket p;
-	p.cmd          = cmd;
-	p.cmd_counter  = lastCommandCounter & 0xFF;
-	p.goals_blue   = gameinfo.data.goals[Blue  ] & 0xFF;
-	p.goals_yellow = gameinfo.data.goals[Yellow] & 0xFF;
-	p.time_remaining = htons((int)floor(gameinfo.timeRemaining()));
+	unsigned int rem = static_cast<unsigned int>(std::floor(gameinfo.timeRemaining()));
+
+	uint8_t p[6];
+	p[0] = cmd;
+	p[1] = static_cast<uint8_t>(lastCommandCounter);
+	p[2] = static_cast<uint8_t>(gameinfo.data.goals[Blue]);
+	p[3] = static_cast<uint8_t>(gameinfo.data.goals[Yellow]);
+	p[4] = static_cast<uint8_t>(rem >> 8);
+	p[5] = static_cast<uint8_t>(rem);
 
 	try
 	{
-		broadcast.send(&p,sizeof(p));
+		broadcast.send(p,sizeof(p));
 	}
 	catch (UDP_Broadcast::IOError& e)
 	{
-		std::cerr << "!! UDP_Broadcast: " << e.what() << std::endl;
+		log.add(Glib::ustring::compose(u8"!! UDP_Broadcast: %1", e.what()));
 	}
-
 }
 
 void GameControl::stepTime() 
 {
-	double tnew = getTime();
-	double dt = tnew - tlast;
+	std::chrono::high_resolution_clock::time_point tnew = std::chrono::high_resolution_clock::now();
+	double dt = static_cast<double>(std::chrono::duration_cast<std::chrono::milliseconds>(tnew - tlast).count()) / 1000.0;
 	tlast = tnew;
 
 	//  printf("game state %i\n", gameinfo.data.state);
@@ -202,30 +181,34 @@ void GameControl::stepTime()
 	}
 
 	// repeat last command (if someone missed it)
-	ethernetSendCommand(lastCommand, lastCommandCounter);
+	ethernetSendCommand(lastCommand);
 }
 
 
 ////////////////////////////////////////
 // configuration
 // read a config file to fill in parameters
-bool GameControl::readSettings(const std::string& configfile) 
+void GameControl::readSettings(const std::string& configfile) 
 {
+	Settings settings(log);
+
 	settings.readFile(configfile);
 
 	settings.get("SAVENAME", savename);
 	settings.get("MULTICASTADDRESS", mc_addr);
-	settings.get("MULTICASTPORT", mc_port);
+	int temp_port;
+	settings.get("MULTICASTPORT", temp_port);
+	mc_port = static_cast<uint16_t>(temp_port);
 
 	int timeout_seconds;
 	settings.get("TIMEOUT_LIMIT", timeout_seconds);
-	gameinfo.data.timeouts[(int)Blue] = timeout_seconds;
-	gameinfo.data.timeouts[(int)Yellow] = timeout_seconds;
+	gameinfo.data.timeouts[Blue] = timeout_seconds;
+	gameinfo.data.timeouts[Yellow] = timeout_seconds;
 
 	int timeout_number;
 	settings.get("NR_TIMEOUTS", timeout_number);
-	gameinfo.data.nrtimeouts[(int)Blue] = timeout_number;
-	gameinfo.data.nrtimeouts[(int)Yellow] = timeout_number;
+	gameinfo.data.nrtimeouts[Blue] = timeout_number;
+	gameinfo.data.nrtimeouts[Yellow] = timeout_number;
 
 	int timelimit_firsthalf;
 	settings.get("FIRST_HALF", timelimit_firsthalf);
@@ -247,8 +230,6 @@ bool GameControl::readSettings(const std::string& configfile)
 	int timelimit_yellowcard;
 	settings.get("YELLOWCARD_TIME", timelimit_yellowcard);
 	gameinfo.data.yellowcard_time = timelimit_yellowcard;
-
-	return (true);
 }
 
 
@@ -422,293 +403,232 @@ bool GameControl::setStart()
 		}
 	}
 	return true;
-	}
+}
 
-	bool GameControl::setStop()
-	{ 
-		sendCommand(COMM_STOP, "Stopping robots");
+bool GameControl::setStop()
+{ 
+	sendCommand(COMM_STOP, "Stopping robots");
 
-		if (enabled) {
-			// progress out of half time if we hit stop
-			if (gameinfo.data.stage == HALF_TIME) {
-				//            beginSecondHalf();
-				gameinfo.setStopped();
-			} else {
-				gameinfo.setStopped();
-			}
+	if (enabled) {
+		// progress out of half time if we hit stop
+		if (gameinfo.data.stage == HALF_TIME) {
+			//            beginSecondHalf();
+			gameinfo.setStopped();
+		} else {
+			gameinfo.setStopped();
 		}
-		return (true);
 	}
+	return (true);
+}
 
-	// maybe deprecate
-	bool GameControl::setCancel()
-	{ 
-		sendCommand(COMM_CANCEL, "Sending cancel");
+// maybe deprecate
+bool GameControl::setCancel()
+{ 
+	sendCommand(COMM_CANCEL, "Sending cancel");
 
-		// reset timeout if it is canceled
-		if (gameinfo.data.state == TIMEOUT) {
-			gameinfo.data.nrtimeouts[gameinfo.data.timeoutteam]++;
-			gameinfo.data.timeouts[gameinfo.data.timeoutteam] = gameinfo.data.timeoutstarttime;
-			gameinfo.data.state = gameinfo.data.laststate;
-		}
-		else 
-		{
-			// reset yellow card if it is canceled
-			for (int x = 1; x < NUM_TEAMS; ++x)
-				if (gameinfo.data.timepenalty[x] > 0 && gameinfo.data.timepenalty[x] > gameinfo.data.timepenalty[x-1])
-					gameinfo.data.timepenalty[x] = 0.0;
-				else if (gameinfo.data.timepenalty[x-1] > 0)
-					gameinfo.data.timepenalty[x-1] = 0.0;
-		}
-		return (true);
+	// reset timeout if it is canceled
+	if (gameinfo.data.state == TIMEOUT) {
+		gameinfo.data.nrtimeouts[gameinfo.data.timeoutteam]++;
+		gameinfo.data.timeouts[gameinfo.data.timeoutteam] = gameinfo.data.timeoutstarttime;
+		gameinfo.data.state = gameinfo.data.laststate;
 	}
-
-	///////////////////
-	// timeout control
-	bool GameControl::beginTimeout(Team team)
+	else 
 	{
-		char msg[256];
-		sendCommand(CHOOSETEAM(team, COMM_TIMEOUT_BLUE, COMM_TIMEOUT_YELLOW), 
-				concatTeam(msg, "Timeout", team));
+		// reset yellow card if it is canceled
+		for (int x = 1; x < NUM_TEAMS; ++x)
+			if (gameinfo.data.timepenalty[x] > 0 && gameinfo.data.timepenalty[x] > gameinfo.data.timepenalty[x-1])
+				gameinfo.data.timepenalty[x] = 0.0;
+			else if (gameinfo.data.timepenalty[x-1] > 0)
+				gameinfo.data.timepenalty[x-1] = 0.0;
+	}
+	return (true);
+}
 
+///////////////////
+// timeout control
+bool GameControl::beginTimeout(Team team)
+{
+	sendCommand(CHOOSETEAM(team, COMM_TIMEOUT_BLUE, COMM_TIMEOUT_YELLOW), 
+			Glib::ustring::compose(u8"Timeout %1", str_Team[team]));
 
-		if (enabled) {
-			if ((gameinfo.nrTimeouts(team) <= 0) || (gameinfo.timeoutRemaining(team) <= 0)) {
-				return (false);
-			}
-			if (!gameinfo.isStopped() && !gameinfo.isHalted())
-				return (false);
-
-			gameinfo.data.laststate = gameinfo.data.state;
-			gameinfo.data.state = TIMEOUT;
-			gameinfo.data.nrtimeouts[(int)team]--;
-			gameinfo.data.timeoutteam = team;
-			gameinfo.data.timeoutstarttime = gameinfo.timeoutRemaining(team);
+	if (enabled) {
+		if ((gameinfo.nrTimeouts(team) <= 0) || (gameinfo.timeoutRemaining(team) <= 0)) {
+			return (false);
 		}
+		if (!gameinfo.isStopped() && !gameinfo.isHalted())
+			return (false);
 
-		return (true);
+		gameinfo.data.laststate = gameinfo.data.state;
+		gameinfo.data.state = TIMEOUT;
+		gameinfo.data.nrtimeouts[team]--;
+		gameinfo.data.timeoutteam = team;
+		gameinfo.data.timeoutstarttime = gameinfo.timeoutRemaining(team);
 	}
 
-	bool GameControl::stopTimeout()
-	{ 
-		sendCommand(COMM_TIMEOUT_END, "End Timeout");
+	return (true);
+}
+
+bool GameControl::stopTimeout()
+{ 
+	sendCommand(COMM_TIMEOUT_END, "End Timeout");
 
 
-		if (enabled) {
-			if (gameinfo.data.state != TIMEOUT)
-				return (false);
+	if (enabled) {
+		if (gameinfo.data.state != TIMEOUT)
+			return (false);
 
-			// necessary since we ignore halts for timeouts
-			gameinfo.data.state = HALTED;
-			setHalt();
+		// necessary since we ignore halts for timeouts
+		gameinfo.data.state = HALTED;
+		setHalt();
+	}
+	return (true);
+}
+
+
+// status commands
+bool GameControl::goalScored(Team team)
+{ 
+	sendCommand(CHOOSETEAM(team, COMM_GOAL_BLUE, COMM_GOAL_YELLOW), 
+			Glib::ustring::compose(u8"Goal scored %1", str_Team[team]));
+
+	if (enabled) {
+		if ( (!gameinfo.isStopped() && !gameinfo.isHalted()) ||
+				(gameinfo.data.stage == PREGAME))
+			return (false);
+
+		if (gameinfo.data.stage == PENALTY_SHOOTOUT) {
+			gameinfo.data.penaltygoals[team]++;
+		} else {
+			gameinfo.data.goals[team]++;
 		}
-		return (true);
 	}
 
+	return (true);
+}
 
-	// status commands
-	bool GameControl::goalScored(Team team)
-	{ 
-		char msg[256];
-		sendCommand(CHOOSETEAM(team, COMM_GOAL_BLUE, COMM_GOAL_YELLOW), 
-				concatTeam(msg, "Goal scored", team));
+bool GameControl::removeGoal(Team team)
+{ 
+	sendCommand(CHOOSETEAM(team, COMM_SUBGOAL_BLUE, COMM_SUBGOAL_YELLOW), 
+			Glib::ustring::compose(u8"Goal removed %1", str_Team[team]));
 
+	if (enabled) {
+		if ( (!gameinfo.isStopped() && !gameinfo.isHalted()) ||
+				(gameinfo.data.stage == PREGAME))
+			return (false);
 
-		if (enabled) {
-			if ( (!gameinfo.isStopped() && !gameinfo.isHalted()) ||
-					(gameinfo.data.stage == PREGAME))
-				return (false);
-
-			if (gameinfo.data.stage == PENALTY_SHOOTOUT) {
-				gameinfo.data.penaltygoals[(int) team]++;
-			} else {
-				gameinfo.data.goals[(int) team]++;
-			}
+		if (gameinfo.data.stage == PENALTY_SHOOTOUT) {
+			if (gameinfo.data.penaltygoals[team] > 0)
+				gameinfo.data.penaltygoals[team]--;
+		} else if (gameinfo.data.goals[team] > 0) {
+			gameinfo.data.goals[team]--;
 		}
-
-		return (true);
 	}
 
-	bool GameControl::removeGoal(Team team)
-	{ 
-		char msg[256];
-		sendCommand(CHOOSETEAM(team, COMM_SUBGOAL_BLUE, COMM_SUBGOAL_YELLOW), 
-				concatTeam(msg, "Goal removed", team));
+	return (true);
+}
 
+bool GameControl::awardYellowCard(Team team)
+{ 
+	sendCommand(CHOOSETEAM(team, COMM_YELLOWCARD_BLUE, COMM_YELLOWCARD_YELLOW), 
+			Glib::ustring::compose(u8"Yellow card awarded %1", str_Team[team]));
 
-		if (enabled) {
-			if ( (!gameinfo.isStopped() && !gameinfo.isHalted()) ||
-					(gameinfo.data.stage == PREGAME))
-				return (false);
-
-			if (gameinfo.data.stage == PENALTY_SHOOTOUT) {
-				if (gameinfo.data.penaltygoals[(int) team] > 0)
-					gameinfo.data.penaltygoals[(int) team]--;
-			} else if (gameinfo.data.goals[team] > 0) {
-				gameinfo.data.goals[(int) team]--;
-			}
-		}
-
-		return (true);
+	if (enabled) {
+		if (!gameinfo.isStopped())
+			return (false);
 	}
 
-	bool GameControl::awardYellowCard(Team team)
-	{ 
-		char msg[256];
-		sendCommand(CHOOSETEAM(team, COMM_YELLOWCARD_BLUE, COMM_YELLOWCARD_YELLOW), 
-				concatTeam(msg, "Yellow card awarded", team));
+	gameinfo.data.timepenalty[team] = gameinfo.data.yellowcard_time;
+
+	return (true);
+}
 
 
-		if (enabled) {
-			if (!gameinfo.isStopped())
-				return (false);
-		}
+void GameControl::switchColors()
+{
+	std::swap(gameinfo.data.teamnames[0], gameinfo.data.teamnames[1]);
+	std::swap(gameinfo.data.timeouts[0], gameinfo.data.timeouts[1]);
+	std::swap(gameinfo.data.nrtimeouts[0], gameinfo.data.nrtimeouts[1]);
+	std::swap(gameinfo.data.goals[0], gameinfo.data.goals[1]);
+	std::swap(gameinfo.data.penaltygoals[0], gameinfo.data.penaltygoals[1]);
+	std::swap(gameinfo.data.yellowcards[0], gameinfo.data.yellowcards[1]);
+	std::swap(gameinfo.data.timepenalty[0], gameinfo.data.timepenalty[1]);
+	std::swap(gameinfo.data.redcards[0], gameinfo.data.redcards[1]);
+	std::swap(gameinfo.data.penalties[0], gameinfo.data.penalties[1]);
+	std::swap(gameinfo.data.freekicks[0], gameinfo.data.freekicks[1]);
+}
 
-		gameinfo.data.timepenalty[team] = gameinfo.data.yellowcard_time;
 
-		return (true);
+bool GameControl::awardRedCard(Team team)
+{
+	if (enabled) {
+		if (!gameinfo.isStopped())
+			return (false);
 	}
 
+	gameinfo.data.timepenalty[team] = 0.0;
 
-	bool GameControl::switchColors()
-	{
-		int tmp_i;
-		double tmp_d;
-		char tmp_teamname[64];
+	++gameinfo.data.redcards[team];
 
-		strncpy(tmp_teamname, gameinfo.data.teamnames[0], 64);
-		strncpy(gameinfo.data.teamnames[0], gameinfo.data.teamnames[1], 64);
-		strncpy(gameinfo.data.teamnames[1], tmp_teamname, 64);
+	sendCommand(CHOOSETEAM(team, COMM_REDCARD_BLUE, COMM_REDCARD_YELLOW), 
+			Glib::ustring::compose(u8"Yellow card awarded %1", str_Team[team]));
+	return (true);
+}
 
-		tmp_d = gameinfo.data.timeouts[0];
-		gameinfo.data.timeouts[0] = gameinfo.data.timeouts[1];
-		gameinfo.data.timeouts[1] = tmp_d;
 
-		tmp_d = gameinfo.data.timepenalty[0];
-		gameinfo.data.timepenalty[0] = gameinfo.data.timepenalty[1];
-		gameinfo.data.timepenalty[1] = tmp_d;
+// game restart commands
+bool GameControl::setKickoff(Team team)
+{
+	sendCommand(CHOOSETEAM(team, COMM_KICKOFF_BLUE, COMM_KICKOFF_YELLOW), 
+			Glib::ustring::compose(u8"Kickoff %1", str_Team[team]));
 
-		tmp_i = gameinfo.data.nrtimeouts[0];
-		gameinfo.data.nrtimeouts[0] = gameinfo.data.nrtimeouts[1];
-		gameinfo.data.nrtimeouts[1] = tmp_i;
-
-		tmp_i = gameinfo.data.goals[0];
-		gameinfo.data.goals[0] = gameinfo.data.goals[1];
-		gameinfo.data.goals[1] = tmp_i;
-
-		tmp_i = gameinfo.data.penaltygoals[0];
-		gameinfo.data.penaltygoals[0] = gameinfo.data.penaltygoals[1];
-		gameinfo.data.penaltygoals[1] = tmp_i;
-
-		tmp_i = gameinfo.data.yellowcards[0];
-		gameinfo.data.yellowcards[0] = gameinfo.data.yellowcards[1];
-		gameinfo.data.yellowcards[1] = tmp_i;
-
-		tmp_i = gameinfo.data.redcards[0];
-		gameinfo.data.redcards[0] = gameinfo.data.redcards[1];
-		gameinfo.data.redcards[1] = tmp_i;
-
-		tmp_i = gameinfo.data.penalties[0];
-		gameinfo.data.penalties[0] = gameinfo.data.penalties[1];
-		gameinfo.data.penalties[1] = tmp_i;
-
-		tmp_i = gameinfo.data.freekicks[0];
-		gameinfo.data.freekicks[0] = gameinfo.data.freekicks[1];
-		gameinfo.data.freekicks[1] = tmp_i;
-		return true;
+	if (enabled) {
+		if (!gameinfo.isStopped() || !gameinfo.canRestart())
+			return (false);
+		gameinfo.setPrestart();
 	}
 
+	return (true);
+}
 
-	bool GameControl::awardRedCard(Team team)
-	{
-		if (enabled) {
-			if (!gameinfo.isStopped())
-				return (false);
-		}
+bool GameControl::setPenalty(Team team)
+{ 
+	sendCommand(CHOOSETEAM(team, COMM_PENALTY_BLUE, COMM_PENALTY_YELLOW), 
+			Glib::ustring::compose(u8"Penalty kick %1", str_Team[team]));
 
-		gameinfo.data.timepenalty[team] = 0.0;
+	if (enabled) {
+		if (!gameinfo.isStopped() || !gameinfo.canRestart())
+			return (false);
 
-		++gameinfo.data.redcards[team];
-
-		char msg[256];
-		sendCommand(CHOOSETEAM(team, COMM_REDCARD_BLUE, COMM_REDCARD_YELLOW), 
-				concatTeam(msg, "Yellow card awarded", team));
-		return (true);
+		gameinfo.setPrestart();
 	}
+	return (true);
+}
 
+bool GameControl::setDirect(Team team)
+{ 
+	sendCommand(CHOOSETEAM(team, COMM_DIRECT_BLUE, COMM_DIRECT_YELLOW), 
+			Glib::ustring::compose(u8"Direct freekick %1", str_Team[team]));
 
-	// game restart commands
-	bool GameControl::setKickoff(Team team)
-	{
-		char msg[256];
-		sendCommand(CHOOSETEAM(team, COMM_KICKOFF_BLUE, COMM_KICKOFF_YELLOW), 
-				concatTeam(msg, "Kickoff", team));
+	if (enabled) {
+		if (!gameinfo.isStopped() || !gameinfo.canRestart())
+			return (false);
 
-		if (enabled) {
-			if (!gameinfo.isStopped() || !gameinfo.canRestart())
-				return (false);
-			gameinfo.setPrestart();
-		}
-
-		return (true);
+		gameinfo.setRunning();
 	}
+	return (true);
+}
 
-	bool GameControl::setPenalty(Team team)
-	{ 
-		char msg[256];
-		sendCommand(CHOOSETEAM(team, COMM_PENALTY_BLUE, COMM_PENALTY_YELLOW), 
-				concatTeam(msg, "Penalty kick", team));
+bool GameControl::setIndirect(Team team)
+{ 
+	sendCommand(CHOOSETEAM(team, COMM_INDIRECT_BLUE, COMM_INDIRECT_YELLOW), 
+			Glib::ustring::compose(u8"Indirect freekick %1", str_Team[team]));
 
+	if (enabled) {
+		if (!gameinfo.isStopped() || !gameinfo.canRestart())
+			return (false);
 
-		if (enabled) {
-			if (!gameinfo.isStopped() || !gameinfo.canRestart())
-				return (false);
-
-			gameinfo.setPrestart();
-		}
-		return (true);
+		gameinfo.setRunning();
 	}
-
-	bool GameControl::setDirect(Team team)
-	{ 
-		char msg[256];
-		sendCommand(CHOOSETEAM(team, COMM_DIRECT_BLUE, COMM_DIRECT_YELLOW), 
-				concatTeam( msg, "Direct freekick", team));
-
-
-		if (enabled) {
-			if (!gameinfo.isStopped() || !gameinfo.canRestart())
-				return (false);
-
-			gameinfo.setRunning();
-		}
-		return (true);
-	}
-
-	bool GameControl::setIndirect(Team team)
-	{ 
-		char msg[256];
-		sendCommand(CHOOSETEAM(team, COMM_INDIRECT_BLUE, COMM_INDIRECT_YELLOW), 
-				concatTeam(msg, "Indirect freekick", team));
-
-
-		if (enabled) {
-			if (!gameinfo.isStopped() || !gameinfo.canRestart())
-				return (false);
-
-			gameinfo.setRunning();
-		}
-		return (true);
-	}
-
-
-	char *GameControl::concatTeam(char *msg, const char *msgpart, Team team)
-	{
-		strcpy(msg, msgpart);
-		if (team == Blue)
-			strcat(msg, " Blue");
-		else
-			strcat(msg, " Yellow");
-		return (msg);
-	}
+	return (true);
+}
 
