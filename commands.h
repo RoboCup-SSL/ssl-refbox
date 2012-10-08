@@ -2,8 +2,7 @@
  * TITLE:	Commands.h
  *
  * PURPOSE: This file contains the constants that define the various 
- *			serial commands the referee box can send to the operating
- *			computers.
+ *			commands the referee box can send to the operating computers.
  *
  * WRITTEN BY: Brett Browning
  */
@@ -24,9 +23,6 @@
 
 #ifndef __COMMANDS_H__
 #define __COMMANDS_H__
-
-/* Baud rate */
-#define COMM_BAUD_RATE			9600
 
 // play commands
 #define COMM_STOP		   'S'

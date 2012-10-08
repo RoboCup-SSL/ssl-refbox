@@ -10,7 +10,6 @@ set(SOURCES
     refereemm.cc
     gamecontrol.cc
     gameinfo.cc
-    serial.cc
     udp_broadcast.cc
     sound.c
     dialog_gameover.cc

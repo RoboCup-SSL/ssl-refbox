@@ -14,8 +14,6 @@ Compile the referee box:
 - Compile with Makefile.win32: "make -f Makefile.win32"
 
 Use it:
-- Edit referee.conv and replace the SERIALDEVICE entry "/dev/ttyS0" with 
-  "COM1:" for the first serial device.  
 - Start the program referee.exe. If it doesn't start, call it from a shell 
   to see the error message. 
  

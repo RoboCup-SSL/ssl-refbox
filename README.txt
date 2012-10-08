@@ -13,7 +13,7 @@ The referee box is aimed pushing the small size league towards full
 autonomy with little physical human contact with the robots. The
 referee box, which has been long talked about in the small size
 league, is a PC program designed to provide a GUI interface to the
-assistant referee and serial commands to the two competing teams. The
+assistant referee and UDP packets to the two competing teams. The
 referee box will keep a record of the timeouts, time remaining, score
 and penalties.
 
@@ -29,8 +29,7 @@ RoboCup 2003 rules can be found at
 To make the programs simply go to the main directory (ie ./referee-box
 after untarring it) and type make. This has been developed on a Debian
 linux system using GCC3.2, with GTKmm 2.0. Note that you need GCC 3.2
-in order for this to work. Finally, the refbox uses Jim Bruce's serial
-code library.
+in order for this to work.
 
 ========================================================================
   Running the System
@@ -41,8 +40,8 @@ To fully understand the running of the referee box you must know the RoboCup
 
 Basic operation of the referee box is as follows:
 
-The assistant referee runs the referee box (a laptop with split serial
-cables) and the referee just does his/her usual thing. The referee box
+The assistant referee runs the referee box (a laptop with Ethernet)
+and the referee just does his/her usual thing. The referee box
 *only* comes in to play during restarts and stoppages. When a game is
 running the assistant referee does nothing. The only exception to this
 is when halftime and full time occur. I'll describe this scenario
@@ -142,7 +141,7 @@ where you left off. The game begins in a halted mode.
 
 The code is pretty simple. main contains the GUI relevant
 software. Gamecontrol has the code to keep track of events, interfaces
-to serial, and logs all events to a file. The commands and baud rate
+to UDP, and logs all events to a file. The commands
 are listed in commands.h. Finally referee.conf is the configuration file
 for game times, and number of timeouts.
 
@@ -158,7 +157,6 @@ gameinfo.h        the gameinfo class
 commands.h        contains all the protocols
 main.cc           For Gtk1.2: The main file also runs all the GUI interfacing
                   build with 'make -f Makefile.nogtkmm'
-serial.cc/h       The serial library written by Jim Bruce
 
 ========================================================================
 
