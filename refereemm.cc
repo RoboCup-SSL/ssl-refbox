@@ -6,6 +6,8 @@
 #include "getopt.h"
 #endif
 #include <cmath>
+#include <iomanip>
+#include <glibmm.h>
 
 Refereemm_Main_Window::Refereemm_Main_Window(GameControl& gc_): 
 	Gtk::Window(),
@@ -561,7 +563,6 @@ void Refereemm_Main_Window::idle()
 {
 	// First get new time step
 	gamecontrol.stepTime();
-	char str[1024];
 	const GameInfo &gi = gamecontrol.getGameInfo();
 
 	// Update the Gui
@@ -573,50 +574,29 @@ void Refereemm_Main_Window::idle()
 
 	if (gi.data.stage == PENALTY_SHOOTOUT) {
 		// Needs extra handling.
-		sprintf(str, "%2i", gi.data.goals[Yellow]);
-		yellow_goal.set_text( str );
-		sprintf(str, "%2i", gi.data.goals[Blue]);
-		blue_goal.set_text( str );
+		yellow_goal.set_text(Glib::ustring::format(std::setw(2), gi.data.goals[Yellow]));
+		blue_goal.set_text(Glib::ustring::format(std::setw(2), gi.data.goals[Blue]));
 
-		sprintf(str, "Penalties:\n %i - %i\n", 
-				gi.data.penaltygoals[Yellow], gi.data.penaltygoals[Blue]);
-		time_label.set_text( str );
+		time_label.set_text(Glib::ustring::compose(u8"Penalties:\n %1 - %2\n", gi.data.penaltygoals[Yellow], gi.data.penaltygoals[Blue]));
 	} else {
-		sprintf(str, "%2i", gi.data.goals[Yellow]);
-		yellow_goal.set_text( str );
-		sprintf(str, "%2i", gi.data.goals[Blue]);
-		blue_goal.set_text( str );
+		yellow_goal.set_text(Glib::ustring::format(std::setw(2), gi.data.goals[Yellow]));
+		blue_goal.set_text(Glib::ustring::format(std::setw(2), gi.data.goals[Blue]));
 
 		//display game status (stage, time remaining, stage...)
-		snprintf(str, 1024, "%s", gi.getStageString().c_str());
-		stage_label.set_text( str );
+		stage_label.set_text(gi.getStageString());
 
-		sprintf(str, "%2i:%04.1f",
-				DISP_MIN(gi.timeTaken()),
-				DISP_SEC(gi.timeTaken()));
-		time_label.set_text( str );
+		time_label.set_text(format_time_deciseconds(gi.timeTaken()));
 
-		sprintf(str, "(%2i:%04.1f left)", 
-				DISP_MIN(gi.timeRemaining()), 
-				DISP_SEC(gi.timeRemaining()));
-		timeleft_label.set_text( str );
+		timeleft_label.set_text(format_time_deciseconds(gi.timeRemaining()));
 	}
 
-	sprintf(str, "%i", gi.nrTimeouts(Yellow) );
-	yellow_timeouts_left_text.set_text( str );
-	sprintf(str, "%i", gi.nrTimeouts(Blue) );
-	blue_timeouts_left_text.set_text( str );
+	yellow_timeouts_left_text.set_text(Glib::ustring::format(gi.nrTimeouts(Yellow)));
+	blue_timeouts_left_text.set_text(Glib::ustring::format(gi.nrTimeouts(Blue)));
 
-	sprintf(str, "%2i:%04.1f",
-			DISP_MIN(gi.timeoutRemaining(Yellow)), 
-			DISP_SEC(gi.timeoutRemaining(Yellow)));
-	yellow_timeout_time_text.set_text(str);
+	yellow_timeout_time_text.set_text(format_time_deciseconds(gi.timeoutRemaining(Yellow)));
 
-	if (gi.penaltyTimeRemaining(Yellow) > 0) {
-		sprintf(str, "%2i:%04.1f",
-				DISP_MIN(gi.penaltyTimeRemaining(Yellow)), 
-				DISP_SEC(gi.penaltyTimeRemaining(Yellow)));
-		yellow_yellowcard_but.set_label(str);
+	if (gi.penaltyTimeRemaining(Yellow) > std::chrono::high_resolution_clock::duration::zero()) {
+		yellow_yellowcard_but.set_label(format_time_deciseconds(gi.penaltyTimeRemaining(Yellow)));
 		yellow_yellowcard_but.set_sensitive(false);
 	}
 	else {
@@ -624,16 +604,10 @@ void Refereemm_Main_Window::idle()
 		yellow_yellowcard_but.set_sensitive(true);
 	}
 
-	sprintf(str, "%2i:%04.1f",
-			DISP_MIN(gi.timeoutRemaining(Blue)),
-			DISP_SEC(gi.timeoutRemaining(Blue)));
-	blue_timeout_time_text.set_text(str);
+	blue_timeout_time_text.set_text(format_time_deciseconds(gi.timeoutRemaining(Blue)));
 
-	if (gi.penaltyTimeRemaining(Blue) > 0) {
-		sprintf(str, "%2i:%04.1f",
-				DISP_MIN(gi.penaltyTimeRemaining(Blue)),
-				DISP_SEC(gi.penaltyTimeRemaining(Blue)));
-		blue_yellowcard_but.set_label(str);
+	if (gi.penaltyTimeRemaining(Blue) > std::chrono::high_resolution_clock::duration::zero()) {
+		blue_yellowcard_but.set_label(format_time_deciseconds(gi.penaltyTimeRemaining(Blue)));
 		blue_yellowcard_but.set_sensitive(false);
 	}
 	else {
@@ -643,11 +617,7 @@ void Refereemm_Main_Window::idle()
 
 	set_active_widgets(gamecontrol.getEnableState());
 
-#ifdef WIN32
-	Sleep(50);
-#else
-	usleep(100000);
-#endif
+	Glib::usleep(100000);
 }
 
 
@@ -655,11 +625,7 @@ void Refereemm_Main_Window::idle()
 int main(int argc, char* argv[])
 {
 	int c;
-#ifndef WIN32
-	std::string configfile = "/etc/sslrefbox/referee.conf";
-#else
 	std::string configfile = "referee.conf";
-#endif
 	std::string logfile = "gamecontrol";
 	bool restart = false;
 

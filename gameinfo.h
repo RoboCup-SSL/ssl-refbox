@@ -26,13 +26,12 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
-#include <ctime>
+#include <fstream>
 #include <glibmm.h>
 #include <string>
-#include <fstream>
 
-#define DISP_MIN(t) ((t) <= 0.0 ? 0 : static_cast<unsigned int>(std::floor((t) / 60.0)))
-#define DISP_SEC(t) ((t) <= 0.0 ? 0.0 : std::fmod((t), 60.0))
+Glib::ustring format_time_seconds(std::chrono::high_resolution_clock::duration t);
+Glib::ustring format_time_deciseconds(std::chrono::high_resolution_clock::duration t);
 
 #define NUM_TEAMS 2
 enum Team {Blue, Yellow};
@@ -55,23 +54,22 @@ class GameInfo {
 			GameStage stage;
 			GameState laststate;
 
-			std::time_t gamestart; // time game started
-			double gametime; // time of the game
+			std::chrono::high_resolution_clock::duration gametime; // time of the game
 
-			double time_taken;
+			std::chrono::high_resolution_clock::duration time_taken;
 
-			double timelimits[NR_GAME_STAGES];
+			std::chrono::high_resolution_clock::duration timelimits[NR_GAME_STAGES];
 
-			double timeouts[NUM_TEAMS];
+			std::chrono::high_resolution_clock::duration timeouts[NUM_TEAMS];
 			int nrtimeouts[NUM_TEAMS];
 			int timeoutteam;
-			double timeoutstarttime;
+			std::chrono::high_resolution_clock::duration timeoutstarttime;
 
 			int goals[NUM_TEAMS];
 			int penaltygoals[NUM_TEAMS];
 			int yellowcards[NUM_TEAMS];
-			double timepenalty[NUM_TEAMS];
-			double yellowcard_time;
+			std::chrono::high_resolution_clock::duration timepenalty[NUM_TEAMS];
+			std::chrono::high_resolution_clock::duration yellowcard_time;
 			int redcards[NUM_TEAMS];
 			int penalties[NUM_TEAMS];
 			int freekicks[NUM_TEAMS];
@@ -136,11 +134,11 @@ class GameInfo {
 			return (data.time_taken >= data.timelimits[static_cast<unsigned int>(data.stage)]);
 		}
 
-		double timeRemaining() const {
-			return (std::max(0.0, data.timelimits[static_cast<unsigned int>(data.stage)] - data.time_taken));
+		std::chrono::high_resolution_clock::duration timeRemaining() const {
+			return (std::max(std::chrono::high_resolution_clock::duration::zero(), data.timelimits[static_cast<unsigned int>(data.stage)] - data.time_taken));
 		}
 
-		double timeTaken() const {
+		std::chrono::high_resolution_clock::duration timeTaken() const {
 			return (data.time_taken);
 		}
 
@@ -173,7 +171,7 @@ class GameInfo {
 			return (data.goals[Blue] == data.goals[Yellow]);
 		}
 
-		double timeoutRemaining(int team = -1) const {
+		std::chrono::high_resolution_clock::duration timeoutRemaining(int team = -1) const {
 			return (data.timeouts[((team < 0) ? data.timeoutteam : team)]);
 		}
 
@@ -182,11 +180,11 @@ class GameInfo {
 		}
 
 		bool isTimeoutComplete() const {
-			return (data.timeouts[data.timeoutteam] <= 0);
+			return (data.timeouts[data.timeoutteam] <= std::chrono::high_resolution_clock::duration::zero());
 		}
 
 		void resetTimer() {
-			data.time_taken = 0;
+			data.time_taken = std::chrono::high_resolution_clock::duration::zero();
 		}
 
 		bool canRestart() const {
@@ -205,13 +203,13 @@ class GameInfo {
 			data.state = STOPPED;
 		}
 
-		void setTimelimits(const double *tlim, const double *touts, int ntouts) {
+		void setTimelimits(const std::chrono::high_resolution_clock::duration (&tlim)[NR_GAME_STAGES], const std::chrono::high_resolution_clock::duration (&touts)[NUM_TEAMS], int ntouts) {
 			std::copy_n(tlim, NR_GAME_STAGES, data.timelimits);
 			std::copy_n(touts, NUM_TEAMS, data.timeouts);
 			std::fill_n(data.nrtimeouts, NUM_TEAMS, ntouts);
 		}
 
-		double penaltyTimeRemaining(int team = 0) const {
+		std::chrono::high_resolution_clock::duration penaltyTimeRemaining(int team = 0) const {
 			return (data.timepenalty[team]);
 		}
 };

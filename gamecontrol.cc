@@ -27,11 +27,11 @@
 #include "logging.h"
 #include "settings.h"
 #include "udp_broadcast.h"
+#include <glibmm.h>
 #include <iostream>
 #include <iomanip>
 #include <time.h>
 #include <sys/time.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
@@ -89,21 +89,15 @@ GameControl::GameControl(const std::string& configfile, const std::string& logfn
 	}
 }
 
-namespace {
-	Glib::ustring format_time(double t) {
-		return Glib::ustring::compose(u8"%1:%2", DISP_MIN(t), Glib::ustring::format(std::setw(2), std::setfill(L'0'), static_cast<int>(DISP_SEC(t))));
-	}
-}
-
 void GameControl::print() 
 {
 	std::cout << "Game Settings\n";
-	std::cout << "\ttimelimits : First Half " << format_time(gameinfo.data.timelimits[FIRST_HALF]) << '\n';
-	std::cout << "\t\tHalf time " << format_time(gameinfo.data.timelimits[HALF_TIME]) << '\n';
-	std::cout << "\t\tSecond half " << format_time(gameinfo.data.timelimits[SECOND_HALF]) << '\n';
-	std::cout << "\t\tOvertime " << format_time(gameinfo.data.timelimits[OVER_TIME1]) << '\n';
-	std::cout << "\t\tOvertime " << format_time(gameinfo.data.timelimits[OVER_TIME2]) << '\n';
-	std::cout << "\ttimeouts : number " << gameinfo.data.nrtimeouts[0] << ", total time " << format_time(gameinfo.data.timeouts[0]) << '\n';
+	std::cout << "\ttimelimits : First Half " << format_time_seconds(gameinfo.data.timelimits[FIRST_HALF]) << '\n';
+	std::cout << "\t\tHalf time " << format_time_seconds(gameinfo.data.timelimits[HALF_TIME]) << '\n';
+	std::cout << "\t\tSecond half " << format_time_seconds(gameinfo.data.timelimits[SECOND_HALF]) << '\n';
+	std::cout << "\t\tOvertime " << format_time_seconds(gameinfo.data.timelimits[OVER_TIME1]) << '\n';
+	std::cout << "\t\tOvertime " << format_time_seconds(gameinfo.data.timelimits[OVER_TIME2]) << '\n';
+	std::cout << "\ttimeouts : number " << gameinfo.data.nrtimeouts[0] << ", total time " << format_time_seconds(gameinfo.data.timeouts[0]) << '\n';
 }
 
 /////////////////////////////
@@ -126,7 +120,7 @@ void GameControl::sendCommand(char cmd, const Glib::ustring& msg)
 // send command to ethernet clients.
 void GameControl::ethernetSendCommand(const char cmd)
 {
-	unsigned int rem = static_cast<unsigned int>(std::floor(gameinfo.timeRemaining()));
+	unsigned int rem = std::chrono::duration_cast<std::chrono::duration<unsigned int, std::ratio<1>>>(gameinfo.timeRemaining()).count();
 
 	uint8_t p[6];
 	p[0] = cmd;
@@ -149,7 +143,7 @@ void GameControl::ethernetSendCommand(const char cmd)
 void GameControl::stepTime() 
 {
 	std::chrono::high_resolution_clock::time_point tnew = std::chrono::high_resolution_clock::now();
-	double dt = static_cast<double>(std::chrono::duration_cast<std::chrono::milliseconds>(tnew - tlast).count()) / 1000.0;
+	std::chrono::high_resolution_clock::duration dt = tnew - tlast;
 	tlast = tnew;
 
 	//  printf("game state %i\n", gameinfo.data.state);
@@ -170,10 +164,10 @@ void GameControl::stepTime()
 				!gameinfo.isHalted()) {
 			gameinfo.data.time_taken += dt;
 			for (int x = 0; x < NUM_TEAMS; ++x) {
-				if (gameinfo.data.timepenalty[x] > 0) {
+				if (gameinfo.data.timepenalty[x] > std::chrono::high_resolution_clock::duration::zero()) {
 					gameinfo.data.timepenalty[x] -= dt;
 				} else {
-					gameinfo.data.timepenalty[x] = 0;
+					gameinfo.data.timepenalty[x] = std::chrono::high_resolution_clock::duration::zero();
 				}
 			}
 
@@ -182,6 +176,13 @@ void GameControl::stepTime()
 
 	// repeat last command (if someone missed it)
 	ethernetSendCommand(lastCommand);
+}
+
+
+namespace {
+	std::chrono::high_resolution_clock::duration int_seconds_to_clock(int seconds) {
+		return std::chrono::duration_cast<std::chrono::high_resolution_clock::duration>(std::chrono::duration<int, std::ratio<1>>(seconds));
+	}
 }
 
 
@@ -202,8 +203,8 @@ void GameControl::readSettings(const std::string& configfile)
 
 	int timeout_seconds;
 	settings.get("TIMEOUT_LIMIT", timeout_seconds);
-	gameinfo.data.timeouts[Blue] = timeout_seconds;
-	gameinfo.data.timeouts[Yellow] = timeout_seconds;
+	gameinfo.data.timeouts[Blue] = int_seconds_to_clock(timeout_seconds);
+	gameinfo.data.timeouts[Yellow] = int_seconds_to_clock(timeout_seconds);
 
 	int timeout_number;
 	settings.get("NR_TIMEOUTS", timeout_number);
@@ -212,24 +213,24 @@ void GameControl::readSettings(const std::string& configfile)
 
 	int timelimit_firsthalf;
 	settings.get("FIRST_HALF", timelimit_firsthalf);
-	gameinfo.data.timelimits[FIRST_HALF] = timelimit_firsthalf;
+	gameinfo.data.timelimits[FIRST_HALF] = int_seconds_to_clock(timelimit_firsthalf);
 
 	int timelimit_halftime;
 	settings.get("HALF_TIME", timelimit_halftime);
-	gameinfo.data.timelimits[HALF_TIME] = timelimit_halftime;
+	gameinfo.data.timelimits[HALF_TIME] = int_seconds_to_clock(timelimit_halftime);
 
 	int timelimit_secondhalf;
 	settings.get("SECOND_HALF", timelimit_secondhalf);
-	gameinfo.data.timelimits[SECOND_HALF] = timelimit_secondhalf;
+	gameinfo.data.timelimits[SECOND_HALF] = int_seconds_to_clock(timelimit_secondhalf);
 
 	int timelimit_overtime;
 	settings.get("OVER_TIME", timelimit_overtime);
-	gameinfo.data.timelimits[OVER_TIME1] = timelimit_overtime;
-	gameinfo.data.timelimits[OVER_TIME2] = timelimit_overtime;
+	gameinfo.data.timelimits[OVER_TIME1] = int_seconds_to_clock(timelimit_overtime);
+	gameinfo.data.timelimits[OVER_TIME2] = int_seconds_to_clock(timelimit_overtime);
 
 	int timelimit_yellowcard;
 	settings.get("YELLOWCARD_TIME", timelimit_yellowcard);
-	gameinfo.data.yellowcard_time = timelimit_yellowcard;
+	gameinfo.data.yellowcard_time = int_seconds_to_clock(timelimit_yellowcard);
 }
 
 
@@ -436,10 +437,10 @@ bool GameControl::setCancel()
 	{
 		// reset yellow card if it is canceled
 		for (int x = 1; x < NUM_TEAMS; ++x)
-			if (gameinfo.data.timepenalty[x] > 0 && gameinfo.data.timepenalty[x] > gameinfo.data.timepenalty[x-1])
-				gameinfo.data.timepenalty[x] = 0.0;
-			else if (gameinfo.data.timepenalty[x-1] > 0)
-				gameinfo.data.timepenalty[x-1] = 0.0;
+			if (gameinfo.data.timepenalty[x] > std::chrono::high_resolution_clock::duration::zero() && gameinfo.data.timepenalty[x] > gameinfo.data.timepenalty[x-1])
+				gameinfo.data.timepenalty[x] = std::chrono::high_resolution_clock::duration::zero();
+			else if (gameinfo.data.timepenalty[x-1] > std::chrono::high_resolution_clock::duration::zero())
+				gameinfo.data.timepenalty[x-1] = std::chrono::high_resolution_clock::duration::zero();
 	}
 	return (true);
 }
@@ -452,7 +453,7 @@ bool GameControl::beginTimeout(Team team)
 			Glib::ustring::compose(u8"Timeout %1", str_Team[team]));
 
 	if (enabled) {
-		if ((gameinfo.nrTimeouts(team) <= 0) || (gameinfo.timeoutRemaining(team) <= 0)) {
+		if ((gameinfo.nrTimeouts(team) <= 0) || (gameinfo.timeoutRemaining(team) <= std::chrono::high_resolution_clock::duration::zero())) {
 			return (false);
 		}
 		if (!gameinfo.isStopped() && !gameinfo.isHalted())
@@ -565,12 +566,12 @@ bool GameControl::awardRedCard(Team team)
 			return (false);
 	}
 
-	gameinfo.data.timepenalty[team] = 0.0;
+	gameinfo.data.timepenalty[team] = std::chrono::high_resolution_clock::duration::zero();
 
 	++gameinfo.data.redcards[team];
 
 	sendCommand(CHOOSETEAM(team, COMM_REDCARD_BLUE, COMM_REDCARD_YELLOW), 
-			Glib::ustring::compose(u8"Yellow card awarded %1", str_Team[team]));
+			Glib::ustring::compose(u8"Red card awarded %1", str_Team[team]));
 	return (true);
 }
 
