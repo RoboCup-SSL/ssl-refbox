@@ -242,16 +242,13 @@ class GameControl {
 		unsigned int lastCommandCounter;    
 
 		// log commands, send them over UDP and change game state
-		void sendCommand(const char cmd, const Glib::ustring& msg);
-		void ethernetSendCommand(const char cmd);
+		void sendCommand(char cmd, const Glib::ustring& msg);
+		void ethernetSendPacket();
 
 		bool enabled;
 
 
 	public:
-		// debugging printout
-		void print();
-
 		// get the info to display
 		const GameInfo &getGameInfo() {
 			return (gameinfo);
@@ -265,6 +262,7 @@ class GameControl {
 			enabled = !enabled;
 			log.add(Glib::ustring::compose(u8"enabled %1", enabled));
 		}
+
 		void setEnable(bool en = true) {
 			enabled = en;
 			log.add(Glib::ustring::compose(u8"setting enabled %1", enabled));

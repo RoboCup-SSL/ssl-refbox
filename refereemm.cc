@@ -7,124 +7,116 @@
 #endif
 #include <cmath>
 #include <iomanip>
-#include <glibmm.h>
+#include <iostream>
 
 Refereemm_Main_Window::Refereemm_Main_Window(GameControl& gc_): 
 	Gtk::Window(),
 	gamecontrol(gc_),
 	dialog_gameover(*this),
-	start_but("Force Start (KP_5)"),
-	stop_but("Stop Game (KP_0)"),
-	game_status_label("Stopped"),
-	stage_label("??.??:?? left"),
-	time_label("00.00:00"),
-	timeleft_label("??.??:?? left"),
+	start_but(u8"Force Start (KP_5)"),
+	stop_but(u8"Stop Game (KP_0)"),
+	game_status_label(u8"Stopped"),
+	stage_label(u8"??.??:?? left"),
+	time_label(u8"00.00:00"),
+	timeleft_label(u8"??.??:?? left"),
 
-	goal_frame(" Yellow vs. Blue "),
-	yellow_goal("00"),
-	blue_goal("00"),
-	vs(":"),
-	switch_colors_but("<-->"),
-	game_control_frame("Game Status"),
+	goal_frame(u8" Yellow vs. Blue "),
+	yellow_goal(u8"00"),
+	blue_goal(u8"00"),
+	vs(u8":"),
+	switch_colors_but(u8"<-->"),
+	game_control_frame(u8"Game Status"),
 	game_control_box(Gtk::BUTTONBOX_DEFAULT_STYLE, 10 ),
-	yellow_goal_but("Goal Yellow!\n(KP_Div)"),
-	blue_goal_but("Goal Blue!\n(KP_Mult)"),
-	yellow_subgoal_but("-"),
-	blue_subgoal_but("-"),
-	cancel_but("Cancel\ncard or timeout"),
-	halt_but("Halt (KP_Point)"),
-	ready_but("Normal Start (KP_Enter)"),
+	yellow_goal_but(u8"Goal Yellow!\n(KP_Div)"),
+	blue_goal_but(u8"Goal Blue!\n(KP_Mult)"),
+	yellow_subgoal_but(u8"-"),
+	blue_subgoal_but(u8"-"),
+	cancel_but(u8"Cancel\ncard or timeout"),
+	halt_but(u8"Halt (KP_Point)"),
+	ready_but(u8"Normal Start (KP_Enter)"),
 
-	next_stage_label_left("Change stage to:"),
-	next_stage_label_right(""),
-	firsthalf_start_but("First Half"),
-	halftime_start_but("Half Time"),
-	secondhalf_start_but("Second Half"),
-	overtime1_start_but("Overtime1"),
-	overtime2_start_but("Overtime2"),
-	penaltyshootout_start_but("Penalty Shootout"),
-	gameover_start_but("End Game"),
+	next_stage_label_left(u8"Change stage to:"),
+	next_stage_label_right(u8""),
+	firsthalf_start_but(u8"First Half"),
+	halftime_start_but(u8"Half Time"),
+	secondhalf_start_but(u8"Second Half"),
+	overtime1_start_but(u8"Overtime1"),
+	overtime2_start_but(u8"Overtime2"),
+	penaltyshootout_start_but(u8"Penalty Shootout"),
+	gameover_start_but(u8"End Game"),
 
-	yellow_frame("Yellow Team"),
-	yellow_kickoff_but("Kickoff (KP_1)"),
-	yellow_freekick_but("Freekick (KP_7)"),
-	yellow_penalty_but("Penalty"),
-	yellow_indirect_freekick_but("Indirect (KP_4)"),
-	yellow_timeout_start_but("Timeout Start"),
-	yellow_timeout_time_label("Timeout Clock: "),
-	yellow_timeouts_left_label("Timeouts left: "),
-	yellow_yellowcard_but("Yellow Card"),
-	yellow_redcard_but("Red card"),
-	yellow_card_label("Red/Yellow Card"),
-	blue_frame("Blue Team"),
-	blue_kickoff_but("Kickoff (KP_3)"),
-	blue_freekick_but("Freekick (KP_9)"),
-	blue_penalty_but("Penalty"),
-	blue_indirect_freekick_but("Indirect (KP_6)"),
-	blue_timeout_start_but("Timeout Start"),
-	blue_timeout_time_label("Timeout Clock: "),
-	blue_timeouts_left_label("Timeouts left: "),
-	blue_yellowcard_but("Yellow Card"),
-	blue_redcard_but("Red card"),
-
-
-	//yellow_timeout_stop_but("Timeout Stop"),
-	blue_card_label("Red/Yellow Card")
-	//blue_timeout_stop_but("Timeout Stop"),
+	yellow_frame(u8"Yellow Team"),
+	yellow_kickoff_but(u8"Kickoff (KP_1)"),
+	yellow_freekick_but(u8"Freekick (KP_7)"),
+	yellow_penalty_but(u8"Penalty"),
+	yellow_indirect_freekick_but(u8"Indirect (KP_4)"),
+	yellow_timeout_start_but(u8"Timeout Start"),
+	yellow_timeout_time_label(u8"Timeout Clock: "),
+	yellow_timeouts_left_label(u8"Timeouts left: "),
+	yellow_yellowcard_but(u8"Yellow Card"),
+	yellow_redcard_but(u8"Red card"),
+	yellow_card_label(u8"Red/Yellow Card"),
+	blue_frame(u8"Blue Team"),
+	blue_kickoff_but(u8"Kickoff (KP_3)"),
+	blue_freekick_but(u8"Freekick (KP_9)"),
+	blue_penalty_but(u8"Penalty"),
+	blue_indirect_freekick_but(u8"Indirect (KP_6)"),
+	blue_timeout_start_but(u8"Timeout Start"),
+	blue_timeout_time_label(u8"Timeout Clock: "),
+	blue_timeouts_left_label(u8"Timeouts left: "),
+	blue_yellowcard_but(u8"Yellow Card"),
+	blue_redcard_but(u8"Red card"),
+	blue_card_label(u8"Red/Yellow Card")
 {
 	set_default_size(600,700);
-	set_title("Small Size League - Referee Box");
+	set_title(u8"Small Size League - Referee Box");
 
 	// Add Accelerator Buttons
-	stop_but.add_accelerator( "activate",get_accel_group(),
+	stop_but.add_accelerator( u8"activate",get_accel_group(),
 			GDK_KP_0,Gdk::ModifierType(0),Gtk::AccelFlags(0));
-	yellow_kickoff_but.add_accelerator( "activate",get_accel_group(),
+	yellow_kickoff_but.add_accelerator( u8"activate",get_accel_group(),
 			GDK_KP_1,Gdk::ModifierType(0),Gtk::AccelFlags(0));
-	blue_kickoff_but.add_accelerator( "activate",get_accel_group(),
+	blue_kickoff_but.add_accelerator( u8"activate",get_accel_group(),
 			GDK_KP_3,Gdk::ModifierType(0),Gtk::AccelFlags(0));
-	yellow_indirect_freekick_but.add_accelerator( "activate",get_accel_group(),
+	yellow_indirect_freekick_but.add_accelerator( u8"activate",get_accel_group(),
 			GDK_KP_4,Gdk::ModifierType(0),Gtk::AccelFlags(0));
-	start_but.add_accelerator( "activate",get_accel_group(),
+	start_but.add_accelerator( u8"activate",get_accel_group(),
 			GDK_KP_5,Gdk::ModifierType(0),Gtk::AccelFlags(0));
-	blue_indirect_freekick_but.add_accelerator( "activate",get_accel_group(),
+	blue_indirect_freekick_but.add_accelerator( u8"activate",get_accel_group(),
 			GDK_KP_6,Gdk::ModifierType(0),Gtk::AccelFlags(0));
-	yellow_freekick_but.add_accelerator( "activate",get_accel_group(),
+	yellow_freekick_but.add_accelerator( u8"activate",get_accel_group(),
 			GDK_KP_7,Gdk::ModifierType(0),Gtk::AccelFlags(0));
-	blue_freekick_but.add_accelerator( "activate",get_accel_group(),
+	blue_freekick_but.add_accelerator( u8"activate",get_accel_group(),
 			GDK_KP_9,Gdk::ModifierType(0),Gtk::AccelFlags(0));
 
-	ready_but.add_accelerator( "activate",get_accel_group(),
+	ready_but.add_accelerator( u8"activate",get_accel_group(),
 			GDK_KP_Enter,Gdk::ModifierType(0),Gtk::AccelFlags(0));
-	halt_but.add_accelerator( "activate",get_accel_group(),
+	halt_but.add_accelerator( u8"activate",get_accel_group(),
 			GDK_KP_Decimal,Gdk::ModifierType(0),Gtk::AccelFlags(0));
-	halt_but.add_accelerator( "activate",get_accel_group(),
+	halt_but.add_accelerator( u8"activate",get_accel_group(),
 			GDK_KP_Separator,Gdk::ModifierType(0),Gtk::AccelFlags(0));
 
 
-	yellow_goal_but.add_accelerator( "activate",get_accel_group(),
+	yellow_goal_but.add_accelerator( u8"activate",get_accel_group(),
 			GDK_KP_Divide,Gdk::ModifierType(0),Gtk::AccelFlags(0));
-	blue_goal_but.add_accelerator( "activate",get_accel_group(),
+	blue_goal_but.add_accelerator( u8"activate",get_accel_group(),
 			GDK_KP_Multiply,Gdk::ModifierType(0),Gtk::AccelFlags(0));
 
 
 	// Menu
 	Gtk::Menu::MenuList& menulist = config_m.items();
-	menulist.push_back( Gtk::Menu_Helpers::MenuElem("Load Config",
-				sigc::mem_fun(*this, &Refereemm_Main_Window::on_load_config)));
-	menulist.push_back( Gtk::Menu_Helpers::CheckMenuElem("Enable Commands",
+	menulist.push_back( Gtk::Menu_Helpers::CheckMenuElem(u8"Enable Commands",
 				sigc::mem_fun(*this, &Refereemm_Main_Window::on_toggle_enable_commands)));
 	menulist = file_m.items();
-	menulist.push_back( Gtk::Menu_Helpers::MenuElem("Quit",
+	menulist.push_back( Gtk::Menu_Helpers::MenuElem(u8"Quit",
 				sigc::mem_fun(*this, &Refereemm_Main_Window::on_exit_clicked) ) );
 
-	menu_bar.items().push_back( Gtk::Menu_Helpers::MenuElem("_Referee", file_m));
-	menu_bar.items().push_back( Gtk::Menu_Helpers::MenuElem("_Config", config_m));
+	menu_bar.items().push_back( Gtk::Menu_Helpers::MenuElem(u8"_Referee", file_m));
+	menu_bar.items().push_back( Gtk::Menu_Helpers::MenuElem(u8"_Config", config_m));
 
 	// Connecting the one million Signals
-	//   enable_commands_but.signal_clicked():connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_toggle_enable_commands));
 	switch_colors_but.signal_clicked().connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_switch_colors));
 	start_but.signal_clicked().connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_start_button));
-	//   start_but.signal_clicked().connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_start_button));
 	stop_but.signal_clicked().connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_stop_button));
 	halt_but.signal_clicked().connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_halt));   
 	cancel_but.signal_clicked().connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_cancel));
@@ -137,7 +129,6 @@ Refereemm_Main_Window::Refereemm_Main_Window(GameControl& gc_):
 	blue_subgoal_but.signal_clicked().connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_blue_subgoal));
 
 	yellow_timeout_start_but.signal_clicked().connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_yellow_timeout_start));
-	//   yellow_timeout_stop_but.signal_clicked().connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_yellow_timeout_stop));
 	yellow_kickoff_but.signal_clicked().connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_yellow_kickoff));
 	yellow_freekick_but.signal_clicked().connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_yellow_freekick));
 	yellow_penalty_but.signal_clicked().connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_yellow_penalty));
@@ -146,7 +137,6 @@ Refereemm_Main_Window::Refereemm_Main_Window(GameControl& gc_):
 	yellow_redcard_but.signal_clicked().connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_yellow_redcard));
 
 	blue_timeout_start_but.signal_clicked().connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_blue_timeout_start));
-	//   blue_timeout_stop_but.signal_clicked().connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_blue_timeout_stop));
 	blue_kickoff_but.signal_clicked().connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_blue_kickoff));
 	blue_freekick_but.signal_clicked().connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_blue_freekick));
 	blue_penalty_but.signal_clicked().connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_blue_penalty));
@@ -184,7 +174,6 @@ Refereemm_Main_Window::Refereemm_Main_Window(GameControl& gc_):
 	yellow_team_table.set_row_spacings(10);
 	yellow_team_table.set_col_spacings(10);
 	yellow_team_table.attach(yellow_timeout_start_but, 0,1,0,1, Gtk::EXPAND| Gtk::FILL, Gtk::EXPAND| Gtk::FILL);
-	//   yellow_team_table.attach(yellow_timeout_stop_but, 1,2,0,1, Gtk::EXPAND| Gtk::FILL, Gtk::EXPAND| Gtk::FILL);
 	yellow_team_table.attach(yellow_timeout_time_label, 0,1,1,2, Gtk::EXPAND| Gtk::FILL, Gtk::EXPAND| Gtk::FILL);
 	yellow_team_table.attach(yellow_timeout_time_text, 1,2,1,2, Gtk::EXPAND| Gtk::FILL, Gtk::EXPAND| Gtk::FILL);
 	yellow_team_table.attach(yellow_timeouts_left_label, 0,1,2,3, Gtk::EXPAND| Gtk::FILL, Gtk::EXPAND| Gtk::FILL);
@@ -199,7 +188,7 @@ Refereemm_Main_Window::Refereemm_Main_Window(GameControl& gc_):
 	yellow_team_table.attach(yellow_redcard_but, 1,2,6,7, Gtk::EXPAND| Gtk::FILL, Gtk::EXPAND| Gtk::FILL);
 
 	yellow_frame.add(yellow_team_table);
-	yellow_frame.modify_bg(Gtk::STATE_NORMAL , Gdk::Color("yellow"));
+	yellow_frame.modify_bg(Gtk::STATE_NORMAL , Gdk::Color(u8"yellow"));
 
 	team_hbox.pack_start( yellow_frame, Gtk::PACK_EXPAND_WIDGET, 20 );
 
@@ -207,7 +196,6 @@ Refereemm_Main_Window::Refereemm_Main_Window(GameControl& gc_):
 	blue_team_table.set_row_spacings(10);
 	blue_team_table.set_col_spacings(10);
 	blue_team_table.attach(blue_timeout_start_but, 0,1,0,1, Gtk::EXPAND| Gtk::FILL, Gtk::EXPAND| Gtk::FILL);
-	//   blue_team_table.attach(blue_timeout_stop_but, 1,2,0,1, Gtk::EXPAND| Gtk::FILL, Gtk::EXPAND| Gtk::FILL);
 	blue_team_table.attach(blue_timeout_time_label, 0,1,1,2, Gtk::EXPAND| Gtk::FILL, Gtk::EXPAND| Gtk::FILL);
 	blue_team_table.attach(blue_timeout_time_text, 1,2,1,2, Gtk::EXPAND| Gtk::FILL, Gtk::EXPAND| Gtk::FILL);
 	blue_team_table.attach(blue_timeouts_left_label, 0,1,2,3, Gtk::EXPAND| Gtk::FILL, Gtk::EXPAND| Gtk::FILL);
@@ -223,7 +211,7 @@ Refereemm_Main_Window::Refereemm_Main_Window(GameControl& gc_):
 
 
 	blue_frame.add(blue_team_table);
-	blue_frame.modify_bg(Gtk::STATE_NORMAL , Gdk::Color("blue"));
+	blue_frame.modify_bg(Gtk::STATE_NORMAL , Gdk::Color(u8"blue"));
 
 	team_hbox.pack_start( blue_frame, Gtk::PACK_EXPAND_WIDGET, 20 );
 
@@ -235,10 +223,10 @@ Refereemm_Main_Window::Refereemm_Main_Window(GameControl& gc_):
 
 
 	// Gamestatus Font, etc
-	Pango::AttrList pango_attr("<span size=\"xx-large\" weight=\"ultrabold\">Halted Running Stopped 0123456789:</span>");
+	Pango::AttrList pango_attr(u8"<span size=\"xx-large\" weight=\"ultrabold\">Halted Running Stopped 0123456789:</span>");
 	game_status_label.set_attributes(pango_attr);
 	time_label.set_attributes(pango_attr);
-	Pango::AttrList pango_attr2("<span size=\"80000\" weight=\"ultrabold\">0123456789:., </span>");
+	Pango::AttrList pango_attr2(u8"<span size=\"80000\" weight=\"ultrabold\">0123456789:., </span>");
 	yellow_goal.set_attributes(pango_attr2);
 	vs.set_attributes(pango_attr2);
 	blue_goal.set_attributes(pango_attr2);
@@ -248,10 +236,10 @@ Refereemm_Main_Window::Refereemm_Main_Window(GameControl& gc_):
 	goal_hbox.pack_start(blue_goal, Gtk::PACK_EXPAND_WIDGET, 10);
 	goal_vbox.add ( goal_hbox );
 
-	teamname_yellow.modify_base(Gtk::STATE_NORMAL, Gdk::Color("lightyellow"));
+	teamname_yellow.modify_base(Gtk::STATE_NORMAL, Gdk::Color(u8"lightyellow"));
 	teamname_yellow.set_has_frame(false);
 	teamname_yellow.set_alignment(Gtk::ALIGN_CENTER);
-	teamname_blue.modify_base(Gtk::STATE_NORMAL, Gdk::Color("lightblue"));
+	teamname_blue.modify_base(Gtk::STATE_NORMAL, Gdk::Color(u8"lightblue"));
 	teamname_blue.set_has_frame(false);
 	teamname_blue.set_alignment(Gtk::ALIGN_CENTER);
 	teamname_hbox.pack_start(teamname_yellow, Gtk::PACK_EXPAND_WIDGET, 10);
@@ -297,7 +285,6 @@ Refereemm_Main_Window::Refereemm_Main_Window(GameControl& gc_):
 	big_vbox.pack_start( halt_stop_hbox, Gtk::PACK_SHRINK, 10 );
 	big_vbox.pack_start( start_ready_hbox, Gtk::PACK_SHRINK, 10 );
 	big_vbox.pack_start( goal_frame, Gtk::PACK_EXPAND_WIDGET, 10 );   
-	//big_vbox.pack_start( game_status_hbox, Gtk::PACK_SHRINK, 10 );
 	big_vbox.pack_start( game_control_frame, Gtk::PACK_SHRINK, 10 );
 	big_vbox.pack_start( team_hbox, Gtk::PACK_SHRINK, 10);
 
@@ -309,16 +296,12 @@ Refereemm_Main_Window::Refereemm_Main_Window(GameControl& gc_):
 // signale
 void Refereemm_Main_Window::on_exit_clicked()
 {
-	exit(0);
+	std::exit(0);
 }
 
 void Refereemm_Main_Window::on_switch_colors()
 {
 	gamecontrol.switchColors();
-}
-
-void Refereemm_Main_Window::on_load_config()
-{
 }
 
 void Refereemm_Main_Window::on_toggle_enable_commands()
@@ -406,11 +389,6 @@ void Refereemm_Main_Window::on_yellow_timeout_start()
 	gamecontrol.beginTimeout(Yellow);
 }
 
-void Refereemm_Main_Window::on_yellow_timeout_stop()
-{
-	//   gamecontrol.stopTimeout();
-}
-
 void Refereemm_Main_Window::on_blue_kickoff()
 {
 	gamecontrol.setKickoff(Blue);
@@ -447,37 +425,14 @@ void Refereemm_Main_Window::on_blue_timeout_start()
 	gamecontrol.beginTimeout(Blue);
 }
 
-void Refereemm_Main_Window::on_blue_timeout_stop()
-{
-	//  gamecontrol.stopTimeout();
-}
-
 void Refereemm_Main_Window::on_teamname_yellow()
 {
-	std::string name(teamname_yellow.get_text());
-
-	// no ',' allowed in teamname
-	size_t i;
-	while (std::string::npos != (i = name.find(',')))
-	{
-		name.replace(i, 1, " ");
-	}
-
-	gamecontrol.setTeamName(Yellow, name);
+	gamecontrol.setTeamName(Yellow, teamname_yellow.get_text());
 }
 
 void Refereemm_Main_Window::on_teamname_blue()
 {
-	std::string name(teamname_blue.get_text());
-
-	// no ',' allowed in teamname
-	size_t i;
-	while (std::string::npos != (i = name.find(',')))
-	{
-		name.replace(i, 1, " ");
-	}
-
-	gamecontrol.setTeamName(Blue, name);
+	gamecontrol.setTeamName(Blue, teamname_blue.get_text());
 }
 
 void Refereemm_Main_Window::on_firsthalf_start()
@@ -512,6 +467,7 @@ void Refereemm_Main_Window::on_penaltyshootout_start()
 
 void Refereemm_Main_Window::on_gameover_start()
 {
+	gamecontrol.setHalt();
 	const GameInfo &info = gamecontrol.getGameInfo();
 	dialog_gameover.update_from_gameinfo(info);
 	dialog_gameover.show();
@@ -600,7 +556,7 @@ void Refereemm_Main_Window::idle()
 		yellow_yellowcard_but.set_sensitive(false);
 	}
 	else {
-		yellow_yellowcard_but.set_label("Yellow Card");
+		yellow_yellowcard_but.set_label(u8"Yellow Card");
 		yellow_yellowcard_but.set_sensitive(true);
 	}
 
@@ -611,7 +567,7 @@ void Refereemm_Main_Window::idle()
 		blue_yellowcard_but.set_sensitive(false);
 	}
 	else {
-		blue_yellowcard_but.set_label("Yellow Card");
+		blue_yellowcard_but.set_label(u8"Yellow Card");
 		blue_yellowcard_but.set_sensitive(true);
 	}
 
@@ -640,15 +596,15 @@ int main(int argc, char* argv[])
 			case 'l': logfile = optarg; break;
 			case 'h':
 			default:
-					  fprintf(stderr, "\nSmallSize Referee Program\n");
-					  fprintf(stderr, "(c) RoboCup Federation, 2003\n");
-					  fprintf(stderr, "\nUSAGE\n");
-					  fprintf(stderr, "referee -[hC]\n");
-					  fprintf(stderr, "\t-h\t\tthis help message\n");
-					  fprintf(stderr, "\t-C <file>\tUse config file <file>\n");
-					  fprintf(stderr, "\t-l <file>\tUse logfile prefix <file>\n");
-					  fprintf(stderr, "\t-r \trestore previous game\n");
-					  exit(0);
+					  std::cerr << "\nSmallSize Referee Program\n";
+					  std::cerr << "(c) RoboCup Federation, 2003\n";
+					  std::cerr << "\nUSAGE\n";
+					  std::cerr << "referee -[hC]\n";
+					  std::cerr << "\t-h\t\tthis help message\n";
+					  std::cerr << "\t-C <file>\tUse config file <file>\n";
+					  std::cerr << "\t-l <file>\tUse logfile prefix <file>\n";
+					  std::cerr << "\t-r \trestore previous game\n";
+					  return 0;
 		}
 	}
 

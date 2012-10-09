@@ -2,8 +2,10 @@
 #define REFEREEMM_H
 
 #include "dialog_gameover.h"
-#include "gamecontrol.h"
 #include <gtkmm.h>
+
+class EnableState;
+class GameControl;
 
 class Refereemm_Main_Window : public Gtk::Window
 {
@@ -11,53 +13,50 @@ class Refereemm_Main_Window : public Gtk::Window
 		Refereemm_Main_Window(GameControl&);
 
 		// signale
-		virtual void on_exit_clicked();
-		virtual void on_load_config();
+		void on_exit_clicked();
 
-		virtual void on_start_button();
-		virtual void on_stop_button();
-		virtual void on_cancel();
-		virtual void on_halt();
-		virtual void on_ready();
-		virtual void on_switch_colors();
+		void on_start_button();
+		void on_stop_button();
+		void on_cancel();
+		void on_halt();
+		void on_ready();
+		void on_switch_colors();
 
 
-		virtual void on_yellow_goal();
-		virtual void on_yellow_subgoal();
-		virtual void on_yellow_kickoff();
-		virtual void on_yellow_freekick();
-		virtual void on_yellow_penalty();
-		virtual void on_yellow_indirect_freekick();
-		virtual void on_yellow_timeout_start();
-		virtual void on_yellow_timeout_stop();
-		virtual void on_yellow_yellowcard();
-		virtual void on_yellow_redcard();
+		void on_yellow_goal();
+		void on_yellow_subgoal();
+		void on_yellow_kickoff();
+		void on_yellow_freekick();
+		void on_yellow_penalty();
+		void on_yellow_indirect_freekick();
+		void on_yellow_timeout_start();
+		void on_yellow_yellowcard();
+		void on_yellow_redcard();
 
-		virtual void on_blue_goal();
-		virtual void on_blue_subgoal();
-		virtual void on_blue_kickoff();
-		virtual void on_blue_freekick();
-		virtual void on_blue_penalty();
-		virtual void on_blue_indirect_freekick();
-		virtual void on_blue_timeout_start();
-		virtual void on_blue_timeout_stop();
-		virtual void on_blue_yellowcard();
-		virtual void on_blue_redcard();
-		virtual void on_teamname_yellow();
-		virtual void on_teamname_blue();
+		void on_blue_goal();
+		void on_blue_subgoal();
+		void on_blue_kickoff();
+		void on_blue_freekick();
+		void on_blue_penalty();
+		void on_blue_indirect_freekick();
+		void on_blue_timeout_start();
+		void on_blue_yellowcard();
+		void on_blue_redcard();
+		void on_teamname_yellow();
+		void on_teamname_blue();
 
-		virtual void on_firsthalf_start();
-		virtual void on_halftime_start();
-		virtual void on_secondhalf_start();
-		virtual void on_overtime1_start();
-		virtual void on_overtime2_start();
-		virtual void on_penaltyshootout_start();
-		virtual void on_gameover_start();
+		void on_firsthalf_start();
+		void on_halftime_start();
+		void on_secondhalf_start();
+		void on_overtime1_start();
+		void on_overtime2_start();
+		void on_penaltyshootout_start();
+		void on_gameover_start();
 
-		virtual void on_toggle_enable_commands();
+		void on_toggle_enable_commands();
 
 		// Idle Function
-		virtual void idle();
+		void idle();
 
 		// Gui Sensitive
 		void set_active_widgets(const EnableState&);
@@ -127,7 +126,6 @@ class Refereemm_Main_Window : public Gtk::Window
 		Gtk::Button yellow_penalty_but;
 		Gtk::Button yellow_indirect_freekick_but;
 		Gtk::Button yellow_timeout_start_but;
-		//   Gtk::Button yellow_timeout_stop_but;
 		Gtk::Label yellow_timeout_time_label;
 		Gtk::Label yellow_timeout_time_text;
 		Gtk::Label yellow_timeouts_left_label;
@@ -142,7 +140,6 @@ class Refereemm_Main_Window : public Gtk::Window
 		Gtk::Button blue_penalty_but;
 		Gtk::Button blue_indirect_freekick_but;
 		Gtk::Button blue_timeout_start_but;
-		//   Gtk::Button blue_timeout_stop_but;
 		Gtk::Label blue_timeout_time_label;
 		Gtk::Label blue_timeout_time_text;
 		Gtk::Label blue_timeouts_left_label;

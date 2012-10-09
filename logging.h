@@ -1,7 +1,7 @@
 #ifndef LOGGING_H
 #define LOGGING_H
 
-#include <ctime>
+#include <chrono>
 #include <glibmm.h>
 
 class Logging
@@ -11,7 +11,7 @@ class Logging
 		void add(const Glib::ustring& message);
 
 	protected:
-		std::time_t time_startup;
+		std::chrono::system_clock::time_point time_startup;
 };
 
 

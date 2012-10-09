@@ -3,16 +3,15 @@
 #include <iomanip>
 #include <iostream>
 
-Logging::Logging()
+Logging::Logging() :
+	time_startup(std::chrono::system_clock::now())
 {
-	std::time(&time_startup);
 }
 
 
 void Logging::add(const Glib::ustring& message)
 {
-	std::time_t now;
-	std::time(&now);
-	std::cout << Glib::ustring::format(std::setw(5), now - time_startup) << "s: " << Glib::locale_from_utf8(message) << '\n';
+	std::chrono::system_clock::duration diff = std::chrono::system_clock::now() - time_startup;
+	std::cout << Glib::ustring::format(std::setw(5), std::chrono::duration_cast<std::chrono::duration<unsigned int, std::ratio<1>>>(diff).count()) << "s: " << message << '\n';
 }
 

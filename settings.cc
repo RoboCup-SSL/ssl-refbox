@@ -1,93 +1,60 @@
 #include "settings.h"
-#include "gamecontrol.h"
 #include "logging.h"
-#include <cstdio>
-#include <cstdlib> //exit
+#include <fstream>
+#include <sstream>
+#include <stdexcept>
 
 Settings::Settings(Logging& log): log(log)
 {
 }
 
 
-void Settings::clear()
-{
-	dataString.clear();
-	dataInt.clear();
-}
-
-
-bool Settings::set(const std::string& setting, const int value)
-{
-	dataInt[setting] = value;
-	return true;
-}
-
-
-bool Settings::set(const std::string& setting, const std::string& value)
-{
-	dataString[setting] = value;
-	return true;
-}
-
-
-bool Settings::get(const std::string& setting, std::string& value)
+void Settings::get(const std::string& setting, std::string& value)
 {
 	if (dataString.find(setting) == dataString.end())
 	{
-		//err("Settings: Setting(String) for \"%s\" not found.", setting.c_str());
-		exit(-1);
-		return false;
+		throw std::runtime_error(Glib::locale_from_utf8(Glib::ustring::compose(u8"Setting \"%1\" missing in settings file", Glib::locale_to_utf8(setting))));
 	}
 
 	value = dataString[setting];
-	return true;
 }
 
 
-bool Settings::get(const std::string& setting, int& value)
+void Settings::get(const std::string& setting, int& value)
 {
 	if (dataInt.find(setting) == dataInt.end())
 	{
-		//err("Settings: Setting(Integer) for \"%s\" not found.", setting.c_str());
-		exit(-1);
-		return false;
+		throw std::runtime_error(Glib::locale_from_utf8(Glib::ustring::compose(u8"Setting \"%1\" missing or noninteger in settings file", Glib::locale_to_utf8(setting))));
 	}
+
 	value = dataInt[setting];
-	return true;
 }
 
 
-bool Settings::readFile(const std::string& filename)
+void Settings::readFile(const std::string& filename)
 {
-	FILE* fd = fopen(filename.c_str(), "r");
-	if (!fd)
-	{
-		//Warn user!
-		//err("Settings: Configfile \"%s\" not found.", filename.c_str());
-		exit(1);
-		return false;
-	}
+	std::ifstream ifs;
+	ifs.exceptions(std::ios_base::badbit | std::ios_base::eofbit | std::ios_base::failbit);
+	ifs.open(filename);
+	ifs.exceptions(std::ios_base::goodbit);
 
-	char tmp_name[128];
-	char tmp_strvalue[1024];
-	int result;
+	while (ifs) {
+		std::string line;
+		std::getline(ifs, line);
+		std::string name, sep, value;
+		std::istringstream iss(line);
+		if (iss >> name >> sep >> value && sep == "=") {
+			log.add(Glib::ustring::compose(u8"Settings: %1 = %2", name, value));
+			dataString[name] = value;
 
-	while(EOF != (result = fscanf(fd, "%127s = %1023s", tmp_name, tmp_strvalue)) )
-	{
-		if (result == 2)
-		{
-			log.add(Glib::ustring::compose(u8"Settings: %1 = %2", tmp_name, tmp_strvalue));
-			set(tmp_name, tmp_strvalue);
-
-			int tmp_intvalue;
-			if (1 == sscanf(tmp_strvalue, "%i", &tmp_intvalue) )
-			{
-				log.add(Glib::ustring::compose(u8"Settings: \"%1\" has integer value %2.", tmp_name, tmp_intvalue));
-				set(tmp_name, tmp_intvalue);
-			} 
+			try {
+				int intvalue = std::stoi(value);
+				dataInt[name] = intvalue;
+				log.add(Glib::ustring::compose(u8"Settings: \"%1\" has integer value %2.", name, intvalue));
+			} catch (const std::invalid_argument&) {
+				// Swallow: not an integer
+			}
 		}
 	}
-
-	return true;
 }
 

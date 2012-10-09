@@ -1,51 +1,43 @@
 #ifndef UDP_BROADCAST_H
 #define UDP_BROADCAST_H
 
+#include <cstddef>
+#include <glibmm.h>
 #include <stdint.h>
+#include <string>
+#include <vector>
 
 #ifndef WIN32
 #include <sys/socket.h>
 #include <netinet/ip.h>
+#else
+#include <winsock.h>
 #endif
-
-#include <string>
-#include <gtkmm.h>
 
 class Logging;
 
 class UDP_Broadcast
 {
 	public:
-		/** TODO */
-		class IOError: public Glib::IOChannelError
-	{
-		public:
-			IOError(const std::string& msg): Glib::IOChannelError(
-					Glib::IOChannelError::IO_ERROR, msg)
+		class IOError : public Glib::IOChannelError
 		{
-		}
-			IOError(const std::string& msg, int err): Glib::IOChannelError(
-					Glib::IOChannelError::IO_ERROR, msg + ": " + strerror(err)) 
-		{
-		}
-			virtual ~IOError() throw() {};
-	};
+			public:
+				IOError(const Glib::ustring& msg);
+				IOError(const Glib::ustring& msg, int err);
+		};
 
-		UDP_Broadcast(Logging& log) throw (IOError);
+		UDP_Broadcast(Logging& log);
 		~UDP_Broadcast();
 
-		/** TODO */
-		void set_destination(const std::string& host,
-				const uint16_t port) throw (IOError);
+		void set_destination(const std::string& host, uint16_t port);
 
-		/** TODO */
-		void send(const std::string& buffer) throw (IOError);
-		void send(const void* buffer, const size_t buflen) throw (IOError);    
+		void send(const void* buffer, std::size_t buflen);
+
 	protected:
 		Logging& log;
 		struct sockaddr_in addr;
-		int ifacenum;
-		struct in_addr ifaddr[32];
+		std::vector<in_addr> ifaddr;
+		std::vector<Glib::ustring> ifname;
 		int sock;
 };
 

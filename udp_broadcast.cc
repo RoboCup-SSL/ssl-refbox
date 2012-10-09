@@ -1,15 +1,17 @@
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+
 #include "udp_broadcast.h"
 #include "logging.h"
 #ifndef WIN32
-# include <errno.h>
-# include <sys/types.h>
-# include <sys/socket.h>
-# include <arpa/inet.h>
-# include <ifaddrs.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <ifaddrs.h>
 #else
-# include <windows.h>
-# include <winsock.h>
-# pragma comment(lib, "wsock32.lib")
+#include <windows.h>
+#include <winsock.h>
+#pragma comment(lib, "wsock32.lib")
 #endif
 #include <cstdio>
 #include <cstring>
@@ -18,41 +20,48 @@
 #define IPPROTO_UDP 0
 #endif
 
-UDP_Broadcast::UDP_Broadcast(Logging& log) throw (UDP_Broadcast::IOError) :
-	log(log)
+UDP_Broadcast::IOError::IOError(const Glib::ustring& msg) :
+	Glib::IOChannelError(Glib::IOChannelError::IO_ERROR, msg)
+{
+}
+
+UDP_Broadcast::IOError::IOError(const Glib::ustring& msg, int err) :
+	Glib::IOChannelError(Glib::IOChannelError::IO_ERROR, Glib::ustring::compose(u8"%1: %2", msg, std::strerror(err)))
+{
+}
+
+
+UDP_Broadcast::UDP_Broadcast(Logging& log) :
+	log(log),
+	sock(-1)
 {
 #ifdef WIN32
-	WORD sockVersion;
-	WSADATA wsaData;
-	sockVersion = MAKEWORD(1,1);
-	WSAStartup(sockVersion, &wsaData);
+	{
+		WORD sockVersion;
+		WSADATA wsaData;
+		sockVersion = MAKEWORD(1,1);
+		WSAStartup(sockVersion, &wsaData);
+	}
 #endif
-
-	sock = -1;
 
 #ifndef WIN32
 	//get pointer to list of network interfaces (does not work with WIN32)
-	ifacenum=0;
-	struct ifaddrs *ifap = 0;
-	if (-1 == getifaddrs(&ifap))
+	ifaddrs *ifap = 0;
+	if (getifaddrs(&ifap) < 0)
 	{
 		log.add(u8"could not get list of network interfaces");
 		throw UDP_Broadcast::IOError("Could not get list of network interfaces", errno);
 	}
-	struct ifaddrs *it = ifap;
-	int ifacecounter = 0;
-	while(ifacenum < 32 && it)
+	ifaddrs *it = ifap;
+	while (it)
 	{
-		if(it->ifa_addr
-				&& AF_INET==it->ifa_addr->sa_family
-				&& std::string("lo") != it->ifa_name)
+		if (it->ifa_addr && it->ifa_addr->sa_family == AF_INET && it->ifa_name != std::string("lo"))
 		{
-			ifaddr[ifacenum]=((struct sockaddr_in*)(it->ifa_addr))->sin_addr;
-			log.add(Glib::ustring::compose(u8"IPv4_Multicast: Interface found: %1 (%2)", it->ifa_name, inet_ntoa(ifaddr[ifacenum])));
-			++ifacenum;
+			ifaddr.push_back(reinterpret_cast<const sockaddr_in *>(it->ifa_addr)->sin_addr);
+			ifname.push_back(Glib::locale_to_utf8(it->ifa_name));
+			log.add(Glib::ustring::compose(u8"IPv4_Multicast: Interface found: %1 (%2)", it->ifa_name, inet_ntoa(ifaddr.back())));
 		}
 
-		++ifacecounter;
 		it = it->ifa_next;
 	}
 
@@ -63,10 +72,10 @@ UDP_Broadcast::UDP_Broadcast(Logging& log) throw (UDP_Broadcast::IOError) :
 
 	// create socket
 	sock = socket( AF_INET, SOCK_DGRAM, IPPROTO_UDP );
-	if ( sock == -1 )
+	if ( sock < 0 )
 	{
-		perror("could not create socket\n");
-		throw UDP_Broadcast::IOError("Could not create socket", errno);
+		std::perror("could not create socket");
+		throw UDP_Broadcast::IOError(u8"Could not create socket", errno);
 	}
 
 	// permit broadcasts
@@ -84,87 +93,73 @@ UDP_Broadcast::~UDP_Broadcast()
 }
 
 
-void UDP_Broadcast::set_destination(const std::string& host,
-		const uint16_t port) throw (UDP_Broadcast::IOError)
+void UDP_Broadcast::set_destination(const std::string& host, const uint16_t port)
 {
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(port);
 #ifndef WIN32
 	if (! inet_aton(host.c_str(), &addr.sin_addr))
 	{
-		throw IOError("inet_aton failed. Invalid address: " + host);
+		throw IOError(Glib::ustring::compose(u8"inet_aton failed. Invalid address: %1", Glib::locale_to_utf8(host)));
 	}
 #else
 	addr.sin_addr.s_addr = inet_addr(host.c_str());
 	if (addr.sin_addr.s_addr == 0)
 	{
-		throw IOError("Invalid address: " + host);
+		throw IOError(Glib::ustring::compose(u8"Invalid address: %1", host));
 	} 
 #endif
-	int yes = 1;
 
 	// allow packets to be received on this host        
 #ifndef WIN32
-	if (-1 == setsockopt(sock, IPPROTO_IP, IP_MULTICAST_LOOP, 
-				(const char*)&yes, sizeof(yes)))
+	static const int one = 1;
+	if (setsockopt(sock, IPPROTO_IP, IP_MULTICAST_LOOP, &one, sizeof(one)) < 0)
 	{
-		throw IOError("could not set multicast loop", errno);
+		throw IOError(u8"could not set multicast loop", errno);
 	}
 #endif
 }
 
-void UDP_Broadcast::send(const void* buffer, const size_t buflen) throw (IOError)
+void UDP_Broadcast::send(const void* buffer, const size_t buflen)
 {   
 #ifndef WIN32
-	for(int i=0; i<ifacenum; ++i)
+	for(std::size_t i = 0; i < ifaddr.size(); ++i)
 	{
 		//select network interface
 		struct ip_mreqn mreqn;
-		mreqn.imr_ifindex=0;
-		mreqn.imr_multiaddr=addr.sin_addr;
-		mreqn.imr_address=ifaddr[i];
+		mreqn.imr_ifindex = 0;
+		mreqn.imr_multiaddr = addr.sin_addr;
+		mreqn.imr_address = ifaddr[i];
 
-		if (-1 == setsockopt(sock, IPPROTO_IP, IP_MULTICAST_IF, &mreqn, sizeof(mreqn)))
+		if (setsockopt(sock, IPPROTO_IP, IP_MULTICAST_IF, &mreqn, sizeof(mreqn)) < 0)
 		{
-			throw UDP_Broadcast::IOError(
-					std::string("setsockopt() failed: ") + strerror(errno) );
+			throw UDP_Broadcast::IOError(u8"setsockopt() failed", errno);
 
 		}
 
 		//send data
-		ssize_t result = ::sendto(sock, (const char*)buffer, buflen, 0,
-				(struct sockaddr*) &addr, sizeof(addr));
-		if (result == -1)
+		ssize_t result = ::sendto(sock, buffer, buflen, MSG_NOSIGNAL, reinterpret_cast<const sockaddr*>(&addr), sizeof(addr));
+		if (result < 0)
 		{
-			throw UDP_Broadcast::IOError(
-					std::string("send() failed for iface : ") + strerror(errno));
+			throw UDP_Broadcast::IOError(Glib::ustring::compose(u8"send() failed for iface %1", ifname[i]), errno);
 		}
 	}
-	if (!ifacenum)
+	if (ifaddr.empty())
 	{
 		//no usable interfaces; the user is probably using loopback and has no network connection
-		ssize_t result = ::sendto(sock, (const char *)buffer, buflen, 0,
-				(struct sockaddr*) &addr, sizeof(addr));
-		if (result == -1)
+		ssize_t result = ::sendto(sock, buffer, buflen, MSG_NOSIGNAL, reinterpret_cast<const sockaddr*>(&addr), sizeof(addr));
+		if (result < 0)
 		{
-			throw UDP_Broadcast::IOError(
-					std::string("send() failed : ") + strerror(errno));
+			throw UDP_Broadcast::IOError(u8"send() failed", errno);
 		}
 	}
 #else
 	//send data
-	ssize_t result = ::sendto(sock, (const char*)buffer, buflen, 0,
-			(struct sockaddr*) &addr, sizeof(addr));
-	if (result == -1)
+	ssize_t result = ::sendto(sock, buffer, buflen, 0, reinterpret_cast<const sockaddr*>(&addr), sizeof(addr));
+	if (result < 0)
 	{
-		throw UDP_Broadcast::IOError(
-				std::string("send() failed for iface : ") + strerror(errno));
+		throw UDP_Broadcast::IOError(u8"send() failed", errno);
 	}
 #endif //WIN32
-}
-
-void UDP_Broadcast::send(const std::string& buffer) throw (IOError)
-{
-	send(buffer.c_str(), buffer.size());
 }
 

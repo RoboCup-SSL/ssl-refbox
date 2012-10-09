@@ -13,18 +13,13 @@ class Settings
 		/** Constructor with Filename */
 		Settings(Logging& log);
 
-		bool get(const std::string& setting, int&);
-		bool get(const std::string& setting, std::string&);
+		void get(const std::string& setting, int&);
+		void get(const std::string& setting, std::string&);
 
-		bool set(const std::string& setting, const int);
-		bool set(const std::string& setting, const std::string&);
+		void readFile(const std::string& filename);
 
-		void clear();
-		bool readFile(const std::string& filename);
 	protected:
-
 		Logging& log;
-		//bool writeFile(const std::string& filename);
 
 		std::map<std::string, int> dataInt;
 		std::map<std::string, std::string> dataString;
