@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <deque>
 #include <fstream>
 #include <glibmm.h>
 #include <string>
@@ -68,7 +69,7 @@ class GameInfo {
 			int goals[NUM_TEAMS];
 			int penaltygoals[NUM_TEAMS];
 			int yellowcards[NUM_TEAMS];
-			std::chrono::high_resolution_clock::duration timepenalty[NUM_TEAMS];
+			std::deque<std::chrono::high_resolution_clock::duration> timepenalty[NUM_TEAMS];
 			std::chrono::high_resolution_clock::duration yellowcard_time;
 			int redcards[NUM_TEAMS];
 			int penalties[NUM_TEAMS];
@@ -207,10 +208,6 @@ class GameInfo {
 			std::copy_n(tlim, NR_GAME_STAGES, data.timelimits);
 			std::copy_n(touts, NUM_TEAMS, data.timeouts);
 			std::fill_n(data.nrtimeouts, NUM_TEAMS, ntouts);
-		}
-
-		std::chrono::high_resolution_clock::duration penaltyTimeRemaining(int team = 0) const {
-			return (data.timepenalty[team]);
 		}
 };
 

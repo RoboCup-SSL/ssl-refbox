@@ -3,6 +3,7 @@
 #include <ctime>
 #include <iomanip>
 #include <iterator>
+#include <sstream>
 
 Glib::ustring format_time_seconds(std::chrono::high_resolution_clock::duration t) {
 	long seconds = std::chrono::duration_cast<std::chrono::duration<long, std::ratio<1>>>(t).count();
@@ -47,7 +48,6 @@ GameInfo::Data::Data() :
 	std::fill_n(goals, NUM_TEAMS, 0);
 	std::fill_n(penaltygoals, NUM_TEAMS, 0);
 	std::fill_n(yellowcards, NUM_TEAMS, 0);
-	std::fill_n(timepenalty, NUM_TEAMS, std::chrono::high_resolution_clock::duration::zero());
 	std::fill_n(redcards, NUM_TEAMS, 0);
 	std::fill_n(penalties, NUM_TEAMS, 0);
 	std::fill_n(freekicks, NUM_TEAMS, 0);
@@ -75,63 +75,77 @@ void GameInfo::Data::save(std::ostream &ofs) const {
 	std::copy_n(goals, NUM_TEAMS, std::ostream_iterator<int>(ofs, " "));
 	std::copy_n(penaltygoals, NUM_TEAMS, std::ostream_iterator<int>(ofs, " "));
 	std::copy_n(yellowcards, NUM_TEAMS, std::ostream_iterator<int>(ofs, " "));
-	for (unsigned int i = 0; i < NUM_TEAMS; ++i) ofs << timepenalty[i].count() << ' ';
 	ofs << yellowcard_time.count() << ' ';
 	std::copy_n(redcards, NUM_TEAMS, std::ostream_iterator<int>(ofs, " "));
 	std::copy_n(freekicks, NUM_TEAMS, std::ostream_iterator<int>(ofs, " "));
-	ofs << restarts << ' ';
+	ofs << restarts << '\n';
+
+	for (unsigned int i = 0; i < NUM_TEAMS; ++i) {
+		for (auto j = timepenalty[i].begin(), jend = timepenalty[i].end(); j != jend; ++j) {
+			ofs << j->count() << ' ';
+		}
+		ofs << '\n';
+	}
 }
 
 
 void GameInfo::Data::load(std::istream &ifs) {
+	std::string line;
 	for (unsigned int i = 0; i < NUM_TEAMS; ++i) {
-		std::string line;
 		std::getline(ifs, line);
 		teamnames[i] = line;
 	}
+
+	std::getline(ifs, line);
+	std::istringstream iss(line);
 	int tmp;
-	ifs >> tmp;
+	iss >> tmp;
 	restart = static_cast<GameRestart>(tmp);
-	ifs >> tmp;
+	iss >> tmp;
 	state = static_cast<GameState>(tmp);
-	ifs >> tmp;
+	iss >> tmp;
 	stage = static_cast<GameStage>(tmp);
-	ifs >> tmp;
+	iss >> tmp;
 	laststate = static_cast<GameState>(tmp);
 
 	std::chrono::high_resolution_clock::duration::rep tmpt;
-	ifs >> tmpt;
+	iss >> tmpt;
 	gametime = std::chrono::high_resolution_clock::duration(tmpt);
 
-	ifs >> tmpt;
+	iss >> tmpt;
 	time_taken = std::chrono::high_resolution_clock::duration(tmpt);
 
 	for (unsigned int i = 0; i < NR_GAME_STAGES; ++i) {
-		ifs >> tmpt;
+		iss >> tmpt;
 		timelimits[i] = std::chrono::high_resolution_clock::duration(tmpt);
 	}
 
 	for (unsigned int i = 0; i < NUM_TEAMS; ++i) {
-		ifs >> tmpt;
+		iss >> tmpt;
 		timeouts[i] = std::chrono::high_resolution_clock::duration(tmpt);
 	}
-	for (unsigned int i = 0; i < NUM_TEAMS; ++i) ifs >> nrtimeouts[i];
-	ifs >> timeoutteam;
-	ifs >> tmpt;
+	for (unsigned int i = 0; i < NUM_TEAMS; ++i) iss >> nrtimeouts[i];
+	iss >> timeoutteam;
+	iss >> tmpt;
 	timeoutstarttime = std::chrono::high_resolution_clock::duration(tmpt);
 
-	for (unsigned int i = 0; i < NUM_TEAMS; ++i) ifs >> goals[i];
-	for (unsigned int i = 0; i < NUM_TEAMS; ++i) ifs >> penaltygoals[i];
-	for (unsigned int i = 0; i < NUM_TEAMS; ++i) ifs >> yellowcards[i];
-	for (unsigned int i = 0; i < NUM_TEAMS; ++i) {
-		ifs >> tmpt;
-		timepenalty[i] = std::chrono::high_resolution_clock::duration(tmpt);
-	}
-	ifs >> tmpt;
+	for (unsigned int i = 0; i < NUM_TEAMS; ++i) iss >> goals[i];
+	for (unsigned int i = 0; i < NUM_TEAMS; ++i) iss >> penaltygoals[i];
+	for (unsigned int i = 0; i < NUM_TEAMS; ++i) iss >> yellowcards[i];
+	iss >> tmpt;
 	yellowcard_time = std::chrono::high_resolution_clock::duration(tmpt);
-	for (unsigned int i = 0; i < NUM_TEAMS; ++i) ifs >> redcards[i];
-	for (unsigned int i = 0; i < NUM_TEAMS; ++i) ifs >> freekicks[i];
-	ifs >> restarts;
+	for (unsigned int i = 0; i < NUM_TEAMS; ++i) iss >> redcards[i];
+	for (unsigned int i = 0; i < NUM_TEAMS; ++i) iss >> freekicks[i];
+	iss >> restarts;
+
+	for (unsigned int i = 0; i < NUM_TEAMS; ++i) {
+		std::getline(ifs, line);
+		iss.str(line);
+		timepenalty[i].clear();
+		while (iss >> tmpt) {
+			timepenalty[i].push_back(std::chrono::high_resolution_clock::duration(tmpt));
+		}
+	}
 }
 
 

@@ -551,24 +551,22 @@ void Refereemm_Main_Window::idle()
 
 	yellow_timeout_time_text.set_text(format_time_deciseconds(gi.timeoutRemaining(Yellow)));
 
-	if (gi.penaltyTimeRemaining(Yellow) > std::chrono::high_resolution_clock::duration::zero()) {
-		yellow_yellowcard_but.set_label(format_time_deciseconds(gi.penaltyTimeRemaining(Yellow)));
-		yellow_yellowcard_but.set_sensitive(false);
-	}
-	else {
+	if (gi.data.timepenalty[Yellow].empty()) {
 		yellow_yellowcard_but.set_label(u8"Yellow Card");
-		yellow_yellowcard_but.set_sensitive(true);
+	} else if (gi.data.timepenalty[Yellow].size() == 1) {
+		yellow_yellowcard_but.set_label(Glib::ustring::compose(u8"%1", format_time_deciseconds(gi.data.timepenalty[Yellow].front())));
+	} else {
+		yellow_yellowcard_but.set_label(Glib::ustring::compose(u8"%1 (+%2)", format_time_deciseconds(gi.data.timepenalty[Yellow].front()), gi.data.timepenalty[Yellow].size() - 1));
 	}
 
 	blue_timeout_time_text.set_text(format_time_deciseconds(gi.timeoutRemaining(Blue)));
 
-	if (gi.penaltyTimeRemaining(Blue) > std::chrono::high_resolution_clock::duration::zero()) {
-		blue_yellowcard_but.set_label(format_time_deciseconds(gi.penaltyTimeRemaining(Blue)));
-		blue_yellowcard_but.set_sensitive(false);
-	}
-	else {
+	if (gi.data.timepenalty[Blue].empty()) {
 		blue_yellowcard_but.set_label(u8"Yellow Card");
-		blue_yellowcard_but.set_sensitive(true);
+	} else if (gi.data.timepenalty[Blue].size() == 1) {
+		blue_yellowcard_but.set_label(Glib::ustring::compose(u8"%1", format_time_deciseconds(gi.data.timepenalty[Blue].front())));
+	} else {
+		blue_yellowcard_but.set_label(Glib::ustring::compose(u8"%1 (+%2)", format_time_deciseconds(gi.data.timepenalty[Blue].front()), gi.data.timepenalty[Blue].size() - 1));
 	}
 
 	set_active_widgets(gamecontrol.getEnableState());

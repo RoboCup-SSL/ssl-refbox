@@ -147,11 +147,17 @@ void GameControl::stepTime()
 	} else {
 		if ((gameinfo.data.stage == HALF_TIME) || !gameinfo.isHalted()) {
 			gameinfo.data.time_taken += dt;
-			for (int x = 0; x < NUM_TEAMS; ++x) {
-				if (gameinfo.data.timepenalty[x] > std::chrono::high_resolution_clock::duration::zero()) {
-					gameinfo.data.timepenalty[x] -= dt;
-				} else {
-					gameinfo.data.timepenalty[x] = std::chrono::high_resolution_clock::duration::zero();
+			for (unsigned int i = 0; i < NUM_TEAMS; ++i) {
+				auto &vec = gameinfo.data.timepenalty[i];
+				for (auto j = vec.begin(), jend = vec.end(); j != jend; ++j) {
+					if (*j > dt) {
+						*j -= dt;
+					} else {
+						*j = std::chrono::high_resolution_clock::duration::zero();
+					}
+				}
+				while (!vec.empty() && vec.front() == std::chrono::high_resolution_clock::duration::zero()) {
+					vec.pop_front();
 				}
 			}
 		}
@@ -417,11 +423,20 @@ bool GameControl::setCancel()
 	else 
 	{
 		// reset yellow card if it is canceled
-		for (unsigned int x = 1; x < NUM_TEAMS; ++x) {
-			if (gameinfo.data.timepenalty[x] > std::chrono::high_resolution_clock::duration::zero() && gameinfo.data.timepenalty[x] > gameinfo.data.timepenalty[x-1])
-				gameinfo.data.timepenalty[x] = std::chrono::high_resolution_clock::duration::zero();
-			else if (gameinfo.data.timepenalty[x-1] > std::chrono::high_resolution_clock::duration::zero())
-				gameinfo.data.timepenalty[x-1] = std::chrono::high_resolution_clock::duration::zero();
+		// choose the yellow card that was most recently issued, which must be the one whose remaining time is greatest
+		// because cards are kept in sorted order, this will be at the back of one of the teams’ queues
+		unsigned int best_team = 0;
+		std::chrono::high_resolution_clock::duration best_time = std::chrono::high_resolution_clock::duration::zero();
+		for (unsigned int i = 0; i < NUM_TEAMS; ++i) {
+			if (!gameinfo.data.timepenalty[i].empty()) {
+				if (gameinfo.data.timepenalty[i].back() > best_time) {
+					best_team = i;
+					best_time = gameinfo.data.timepenalty[i].back();
+				}
+			}
+		}
+		if (!gameinfo.data.timepenalty[best_team].empty()) {
+			gameinfo.data.timepenalty[best_team].pop_back();
 		}
 	}
 	return (true);
@@ -516,7 +531,7 @@ bool GameControl::awardYellowCard(Team team)
 			return (false);
 	}
 
-	gameinfo.data.timepenalty[team] = gameinfo.data.yellowcard_time;
+	gameinfo.data.timepenalty[team].push_back(gameinfo.data.yellowcard_time);
 
 	return (true);
 }
