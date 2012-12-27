@@ -524,6 +524,7 @@ bool GameControl::awardYellowCard(Team team)
 
 void GameControl::switchColors()
 {
+	static_assert(NUM_TEAMS == 2, "This function needs updating for NUM_TEAMS != 2.");
 	std::swap(gameinfo.data.teamnames[0], gameinfo.data.teamnames[1]);
 	std::swap(gameinfo.data.timeouts[0], gameinfo.data.timeouts[1]);
 	std::swap(gameinfo.data.nrtimeouts[0], gameinfo.data.nrtimeouts[1]);
