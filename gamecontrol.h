@@ -292,6 +292,7 @@ class GameControl {
 
 		bool awardYellowCard(Team team);
 		bool awardRedCard(Team team);
+		bool cancelRedCard(Team team);
 
 		bool setKickoff(Team team);
 		bool setPenalty(Team team);

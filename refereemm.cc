@@ -31,7 +31,7 @@ Refereemm_Main_Window::Refereemm_Main_Window(GameControl& gc_):
 	blue_goal_but(u8"Goal Blue!\n(KP_Mult)"),
 	yellow_subgoal_but(u8"-"),
 	blue_subgoal_but(u8"-"),
-	cancel_but(u8"Cancel\ncard or timeout"),
+	cancel_but(u8"Cancel yellow\ncard or timeout"),
 	halt_but(u8"Halt (KP_Point)"),
 	ready_but(u8"Normal Start (KP_Enter)"),
 
@@ -53,8 +53,7 @@ Refereemm_Main_Window::Refereemm_Main_Window(GameControl& gc_):
 	yellow_timeout_start_but(u8"Timeout Start"),
 	yellow_timeout_time_label(u8"Timeout Clock: "),
 	yellow_timeouts_left_label(u8"Timeouts left: "),
-	yellow_yellowcard_but(u8"Yellow Card"),
-	yellow_redcard_but(u8"Red card"),
+	yellow_redcard_sub_but(u8"−"),
 	yellow_card_label(u8"Red/Yellow Card"),
 	blue_frame(u8"Blue Team"),
 	blue_kickoff_but(u8"Kickoff (KP_3)"),
@@ -64,8 +63,7 @@ Refereemm_Main_Window::Refereemm_Main_Window(GameControl& gc_):
 	blue_timeout_start_but(u8"Timeout Start"),
 	blue_timeout_time_label(u8"Timeout Clock: "),
 	blue_timeouts_left_label(u8"Timeouts left: "),
-	blue_yellowcard_but(u8"Yellow Card"),
-	blue_redcard_but(u8"Red card"),
+	blue_redcard_sub_but(u8"−"),
 	blue_card_label(u8"Red/Yellow Card")
 {
 	set_default_size(600,700);
@@ -135,6 +133,7 @@ Refereemm_Main_Window::Refereemm_Main_Window(GameControl& gc_):
 	yellow_indirect_freekick_but.signal_clicked().connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_yellow_indirect_freekick));
 	yellow_yellowcard_but.signal_clicked().connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_yellow_yellowcard));
 	yellow_redcard_but.signal_clicked().connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_yellow_redcard));
+	yellow_redcard_sub_but.signal_clicked().connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_yellow_redcard_sub));
 
 	blue_timeout_start_but.signal_clicked().connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_blue_timeout_start));
 	blue_kickoff_but.signal_clicked().connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_blue_kickoff));
@@ -143,6 +142,7 @@ Refereemm_Main_Window::Refereemm_Main_Window(GameControl& gc_):
 	blue_indirect_freekick_but.signal_clicked().connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_blue_indirect_freekick));
 	blue_yellowcard_but.signal_clicked().connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_blue_yellowcard));
 	blue_redcard_but.signal_clicked().connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_blue_redcard));
+	blue_redcard_sub_but.signal_clicked().connect(sigc::mem_fun(*this, &Refereemm_Main_Window::on_blue_redcard_sub));
 
 	//game state control
 	firsthalf_start_but.signal_clicked().connect(
@@ -185,7 +185,9 @@ Refereemm_Main_Window::Refereemm_Main_Window(GameControl& gc_):
 
 	yellow_team_table.attach(yellow_card_label, 0,1,5,6, Gtk::EXPAND| Gtk::FILL, Gtk::EXPAND| Gtk::FILL);
 	yellow_team_table.attach(yellow_yellowcard_but, 0,1,6,7, Gtk::EXPAND| Gtk::FILL, Gtk::EXPAND| Gtk::FILL);
-	yellow_team_table.attach(yellow_redcard_but, 1,2,6,7, Gtk::EXPAND| Gtk::FILL, Gtk::EXPAND| Gtk::FILL);
+	yellow_redcard_box.pack_start(yellow_redcard_but, Gtk::PACK_EXPAND_WIDGET);
+	yellow_redcard_box.pack_start(yellow_redcard_sub_but, Gtk::PACK_SHRINK);
+	yellow_team_table.attach(yellow_redcard_box, 1,2,6,7, Gtk::EXPAND| Gtk::FILL, Gtk::EXPAND| Gtk::FILL);
 
 	yellow_frame.add(yellow_team_table);
 	yellow_frame.modify_bg(Gtk::STATE_NORMAL , Gdk::Color(u8"yellow"));
@@ -207,7 +209,9 @@ Refereemm_Main_Window::Refereemm_Main_Window(GameControl& gc_):
 
 	blue_team_table.attach(blue_card_label, 0,1,5,6, Gtk::EXPAND| Gtk::FILL, Gtk::EXPAND| Gtk::FILL);
 	blue_team_table.attach(blue_yellowcard_but, 0,1,6,7, Gtk::EXPAND| Gtk::FILL, Gtk::EXPAND| Gtk::FILL);
-	blue_team_table.attach(blue_redcard_but, 1,2,6,7, Gtk::EXPAND| Gtk::FILL, Gtk::EXPAND| Gtk::FILL);
+	blue_redcard_box.pack_start(blue_redcard_but, Gtk::PACK_EXPAND_WIDGET);
+	blue_redcard_box.pack_start(blue_redcard_sub_but, Gtk::PACK_SHRINK);
+	blue_team_table.attach(blue_redcard_box, 1,2,6,7, Gtk::EXPAND| Gtk::FILL, Gtk::EXPAND| Gtk::FILL);
 
 
 	blue_frame.add(blue_team_table);
@@ -384,6 +388,11 @@ void Refereemm_Main_Window::on_yellow_redcard()
 	gamecontrol.awardRedCard(Yellow);
 }
 
+void Refereemm_Main_Window::on_yellow_redcard_sub()
+{
+	gamecontrol.cancelRedCard(Yellow);
+}
+
 void Refereemm_Main_Window::on_yellow_timeout_start()
 {
 	gamecontrol.beginTimeout(Yellow);
@@ -418,6 +427,11 @@ void Refereemm_Main_Window::on_blue_yellowcard()
 void Refereemm_Main_Window::on_blue_redcard()
 {
 	gamecontrol.awardRedCard(Blue);
+}
+
+void Refereemm_Main_Window::on_blue_redcard_sub()
+{
+	gamecontrol.cancelRedCard(Blue);
 }
 
 void Refereemm_Main_Window::on_blue_timeout_start()
@@ -493,6 +507,7 @@ void Refereemm_Main_Window::set_active_widgets(const EnableState& es)
 	yellow_timeout_start_but.set_sensitive(es.timeout[Yellow]);
 	yellow_yellowcard_but.set_sensitive(es.cards);
 	yellow_redcard_but.set_sensitive(es.cards);
+	yellow_redcard_sub_but.set_sensitive(es.cancel);
 
 	//Blue Team
 	blue_kickoff_but.set_sensitive(es.kickoff[Blue]);
@@ -504,6 +519,7 @@ void Refereemm_Main_Window::set_active_widgets(const EnableState& es)
 	blue_timeout_start_but.set_sensitive(es.timeout[Blue]);
 	blue_yellowcard_but.set_sensitive(es.cards);
 	blue_redcard_but.set_sensitive(es.cards);
+	blue_redcard_sub_but.set_sensitive(es.cancel);
 
 	//Game stage control
 	firsthalf_start_but.set_sensitive(es.stage_firsthalf);
@@ -559,6 +575,12 @@ void Refereemm_Main_Window::idle()
 		yellow_yellowcard_but.set_label(Glib::ustring::compose(u8"%1 (+%2)", format_time_deciseconds(gi.data.timepenalty[Yellow].front()), gi.data.timepenalty[Yellow].size() - 1));
 	}
 
+	if (gi.data.redcards[Yellow]) {
+		yellow_redcard_but.set_label(Glib::ustring::compose(u8"Red Card (%1)", gi.data.redcards[Yellow]));
+	} else {
+		yellow_redcard_but.set_label(u8"Red Card");
+	}
+
 	blue_timeout_time_text.set_text(format_time_deciseconds(gi.timeoutRemaining(Blue)));
 
 	if (gi.data.timepenalty[Blue].empty()) {
@@ -567,6 +589,12 @@ void Refereemm_Main_Window::idle()
 		blue_yellowcard_but.set_label(Glib::ustring::compose(u8"%1", format_time_deciseconds(gi.data.timepenalty[Blue].front())));
 	} else {
 		blue_yellowcard_but.set_label(Glib::ustring::compose(u8"%1 (+%2)", format_time_deciseconds(gi.data.timepenalty[Blue].front()), gi.data.timepenalty[Blue].size() - 1));
+	}
+
+	if (gi.data.redcards[Blue]) {
+		blue_redcard_but.set_label(Glib::ustring::compose(u8"Red Card (%1)", gi.data.redcards[Blue]));
+	} else {
+		blue_redcard_but.set_label(u8"Red Card");
 	}
 
 	set_active_widgets(gamecontrol.getEnableState());

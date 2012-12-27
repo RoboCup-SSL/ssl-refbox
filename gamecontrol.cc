@@ -568,6 +568,20 @@ bool GameControl::awardRedCard(Team team)
 }
 
 
+bool GameControl::cancelRedCard(Team team)
+{
+	if (gameinfo.data.redcards[team]) {
+		--gameinfo.data.redcards[team];
+
+		sendCommand(COMM_CANCEL, "Sending cancel");
+
+		return true;
+	} else {
+		return false;
+	}
+}
+
+
 // game restart commands
 bool GameControl::setKickoff(Team team)
 {

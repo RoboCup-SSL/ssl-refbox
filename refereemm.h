@@ -32,6 +32,7 @@ class Refereemm_Main_Window : public Gtk::Window
 		void on_yellow_timeout_start();
 		void on_yellow_yellowcard();
 		void on_yellow_redcard();
+		void on_yellow_redcard_sub();
 
 		void on_blue_goal();
 		void on_blue_subgoal();
@@ -42,6 +43,8 @@ class Refereemm_Main_Window : public Gtk::Window
 		void on_blue_timeout_start();
 		void on_blue_yellowcard();
 		void on_blue_redcard();
+		void on_blue_redcard_sub();
+
 		void on_teamname_yellow();
 		void on_teamname_blue();
 
@@ -131,7 +134,9 @@ class Refereemm_Main_Window : public Gtk::Window
 		Gtk::Label yellow_timeouts_left_label;
 		Gtk::Label yellow_timeouts_left_text;
 		Gtk::Button yellow_yellowcard_but;
+		Gtk::HBox yellow_redcard_box;
 		Gtk::Button yellow_redcard_but;
+		Gtk::Button yellow_redcard_sub_but;
 		Gtk::Label yellow_card_label;
 
 		Gtk::Frame blue_frame;   
@@ -145,7 +150,9 @@ class Refereemm_Main_Window : public Gtk::Window
 		Gtk::Label blue_timeouts_left_label;
 		Gtk::Label blue_timeouts_left_text;
 		Gtk::Button blue_yellowcard_but;
+		Gtk::HBox blue_redcard_box;
 		Gtk::Button blue_redcard_but;
+		Gtk::Button blue_redcard_sub_but;
 		Gtk::Label blue_card_label;
 
 
