@@ -544,8 +544,6 @@ bool GameControl::awardRedCard(Team team)
 			return (false);
 	}
 
-	gameinfo.data.timepenalty[team] = std::chrono::high_resolution_clock::duration::zero();
-
 	++gameinfo.data.redcards[team];
 
 	sendCommand(CHOOSETEAM(team, COMM_REDCARD_BLUE, COMM_REDCARD_YELLOW), 
