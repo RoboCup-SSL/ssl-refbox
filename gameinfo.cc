@@ -39,18 +39,14 @@ GameInfo::Data::Data() :
 	time_taken(std::chrono::high_resolution_clock::duration::zero()),
 	timeoutteam(0),
 	timeoutstarttime(std::chrono::high_resolution_clock::duration::zero()),
-	yellowcard_time(std::chrono::high_resolution_clock::duration::zero()),
-	restarts(0)
+	yellowcard_time(std::chrono::high_resolution_clock::duration::zero())
 {
 	std::fill_n(timelimits, NR_GAME_STAGES, std::chrono::high_resolution_clock::duration::zero());
 	std::fill_n(timeouts, NUM_TEAMS, std::chrono::high_resolution_clock::duration::zero());
 	std::fill_n(nrtimeouts, NUM_TEAMS, 0);
 	std::fill_n(goals, NUM_TEAMS, 0);
 	std::fill_n(penaltygoals, NUM_TEAMS, 0);
-	std::fill_n(yellowcards, NUM_TEAMS, 0);
 	std::fill_n(redcards, NUM_TEAMS, 0);
-	std::fill_n(penalties, NUM_TEAMS, 0);
-	std::fill_n(freekicks, NUM_TEAMS, 0);
 }
 
 
@@ -74,11 +70,9 @@ void GameInfo::Data::save(std::ostream &ofs) const {
 
 	std::copy_n(goals, NUM_TEAMS, std::ostream_iterator<int>(ofs, " "));
 	std::copy_n(penaltygoals, NUM_TEAMS, std::ostream_iterator<int>(ofs, " "));
-	std::copy_n(yellowcards, NUM_TEAMS, std::ostream_iterator<int>(ofs, " "));
 	ofs << yellowcard_time.count() << ' ';
 	std::copy_n(redcards, NUM_TEAMS, std::ostream_iterator<int>(ofs, " "));
-	std::copy_n(freekicks, NUM_TEAMS, std::ostream_iterator<int>(ofs, " "));
-	ofs << restarts << '\n';
+	ofs << '\n';
 
 	for (unsigned int i = 0; i < NUM_TEAMS; ++i) {
 		for (auto j = timepenalty[i].begin(), jend = timepenalty[i].end(); j != jend; ++j) {
@@ -131,12 +125,9 @@ void GameInfo::Data::load(std::istream &ifs) {
 
 	for (unsigned int i = 0; i < NUM_TEAMS; ++i) iss >> goals[i];
 	for (unsigned int i = 0; i < NUM_TEAMS; ++i) iss >> penaltygoals[i];
-	for (unsigned int i = 0; i < NUM_TEAMS; ++i) iss >> yellowcards[i];
 	iss >> tmpt;
 	yellowcard_time = std::chrono::high_resolution_clock::duration(tmpt);
 	for (unsigned int i = 0; i < NUM_TEAMS; ++i) iss >> redcards[i];
-	for (unsigned int i = 0; i < NUM_TEAMS; ++i) iss >> freekicks[i];
-	iss >> restarts;
 
 	for (unsigned int i = 0; i < NUM_TEAMS; ++i) {
 		std::getline(ifs, line);

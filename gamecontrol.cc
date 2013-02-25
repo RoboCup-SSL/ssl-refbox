@@ -545,11 +545,8 @@ void GameControl::switchColors()
 	std::swap(gameinfo.data.nrtimeouts[0], gameinfo.data.nrtimeouts[1]);
 	std::swap(gameinfo.data.goals[0], gameinfo.data.goals[1]);
 	std::swap(gameinfo.data.penaltygoals[0], gameinfo.data.penaltygoals[1]);
-	std::swap(gameinfo.data.yellowcards[0], gameinfo.data.yellowcards[1]);
 	std::swap(gameinfo.data.timepenalty[0], gameinfo.data.timepenalty[1]);
 	std::swap(gameinfo.data.redcards[0], gameinfo.data.redcards[1]);
-	std::swap(gameinfo.data.penalties[0], gameinfo.data.penalties[1]);
-	std::swap(gameinfo.data.freekicks[0], gameinfo.data.freekicks[1]);
 }
 
 

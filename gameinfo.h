@@ -68,13 +68,9 @@ class GameInfo {
 
 			int goals[NUM_TEAMS];
 			int penaltygoals[NUM_TEAMS];
-			int yellowcards[NUM_TEAMS];
 			std::deque<std::chrono::high_resolution_clock::duration> timepenalty[NUM_TEAMS];
 			std::chrono::high_resolution_clock::duration yellowcard_time;
 			int redcards[NUM_TEAMS];
-			int penalties[NUM_TEAMS];
-			int freekicks[NUM_TEAMS];
-			int restarts;
 
 			Data();
 			void save(std::ostream &ofs) const;
