@@ -6,7 +6,12 @@ override LDLIBS := $(shell pkg-config --libs-only-l gtkmm-2.4)
 world : sslrefbox
 
 sslrefbox : $(patsubst %.cc,%.o,$(wildcard *.cc))
-	$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
+	@echo "LD  $@"
+	@$(CXX) $(LDFLAGS) -o $@ $+ $(LDLIBS)
+
+%.o : %.cc
+	@echo "CXX $@"
+	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 $(patsubst %.cc,%.o,$(wildcard *.cc)) : $(wildcard *.h)
 
