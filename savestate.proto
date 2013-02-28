@@ -1,0 +1,48 @@
+import "referee.proto";
+
+// The type of data saved in the saved state file.
+message SaveState {
+	// The possible teams.
+	// These must be numbered 0 and 1.
+	enum Team {
+		TEAM_YELLOW = 0;
+		TEAM_BLUE = 1;
+	}
+
+	// The possible cards.
+	enum Card {
+		CARD_YELLOW = 0;
+		CARD_RED = 1;
+	}
+
+	// Information about an issued card.
+	message CardInfo {
+		required Team team = 1;
+		required Card card = 2;
+	}
+
+	// Information about a running timeout.
+	message TimeoutInfo {
+		required Team team = 1;
+		required uint32 left_before = 2;
+	}
+
+	// The current packet.
+	required Referee referee = 1;
+
+	// The number of goals scored by each team during a penalty shootout.
+	required uint32 yellow_penalty_goals = 2;
+	required uint32 blue_penalty_goals = 3;
+
+	// The amount of time, in microseconds, taken so far in a stage.
+	required uint64 time_taken = 4;
+
+	// The most recently awarded card.
+	// Absent if no card has been awarded, if the most recent card has been cancelled, or if the most recent card was yellow and has expired.
+	optional CardInfo last_card = 5;
+
+	// The current timeout.
+	// Only present if in a timeout.
+	// However, this is still present if we are in the HALT state and that state was reached from inside a timeout, so we can pop back to the timeout if needed.
+	optional TimeoutInfo timeout = 6;
+}
