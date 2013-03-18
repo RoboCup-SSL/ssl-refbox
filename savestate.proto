@@ -28,7 +28,7 @@ message SaveState {
 	}
 
 	// The current packet.
-	required Referee referee = 1;
+	required SSL_Referee referee = 1;
 
 	// The number of goals scored by each team during a penalty shootout.
 	required uint32 yellow_penalty_goals = 2;

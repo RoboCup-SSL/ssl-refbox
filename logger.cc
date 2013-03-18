@@ -14,7 +14,7 @@ Logger::Logger(const std::string &filename) : start_time(std::chrono::system_clo
 	std::wostringstream oss;
 	static const wchar_t TIME_PATTERN[] = L"%x %X %Z";
 	std::use_facet<std::time_put<wchar_t>>(std::locale()).put(oss, oss, L' ', std::localtime(&real_time), TIME_PATTERN, TIME_PATTERN + std::wcslen(TIME_PATTERN));
-	write(Glib::ustring::compose(u8"Referee box started at %1.", oss.str()));
+	write(Glib::ustring::compose(u8"SSL_Referee box started at %1.", oss.str()));
 }
 
 void Logger::write(const Glib::ustring &message) {

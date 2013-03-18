@@ -67,7 +67,7 @@ void save_game(const SaveState &ss, const std::string &save_filename) {
 	// We never save the current game state if we are in post-game.
 	// It is better to leave the save file holding the last state just before we ended the game.
 	// Thus, if the transition to post-game was accidental, the operator can recover.
-	if (ss.referee().stage() == Referee::POST_GAME) {
+	if (ss.referee().stage() == SSL_Referee::POST_GAME) {
 		return;
 	}
 

@@ -19,12 +19,12 @@ class LegacyPublisher : public NonCopyable, public Publisher {
 		UDPBroadcast bcast;
 		uint8_t counter;
 		char cached_command_char;
-		Referee::Stage last_stage;
-		Referee::Command last_command;
+		SSL_Referee::Stage last_stage;
+		SSL_Referee::Command last_command;
 		int last_yellow_ycards, last_blue_ycards;
 		unsigned int last_yellow_rcards, last_blue_rcards;
 
-		char compute_command(const Referee &state);
+		char compute_command(const SSL_Referee &state);
 };
 
 #endif

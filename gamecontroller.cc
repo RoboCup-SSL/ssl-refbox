@@ -27,18 +27,18 @@ GameController::GameController(Logger &logger, const Configuration &configuratio
 			throw std::runtime_error(Glib::locale_from_utf8(Glib::ustring::compose(u8"Protobuf error loading saved game state from file \"%1\"!", Glib::filename_to_utf8(configuration.save_filename))));
 		}
 		ifs.close();
-		set_command(Referee::HALT);
+		set_command(SSL_Referee::HALT);
 	} else {
-		Referee &ref = *state.mutable_referee();
+		SSL_Referee &ref = *state.mutable_referee();
 		ref.set_packet_timestamp(0);
-		ref.set_stage(Referee::NORMAL_FIRST_HALF_PRE);
-		ref.set_command(Referee::HALT);
+		ref.set_stage(SSL_Referee::NORMAL_FIRST_HALF_PRE);
+		ref.set_command(SSL_Referee::HALT);
 		ref.set_command_counter(0);
 		ref.set_command_timestamp(static_cast<uint64_t>(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())) * 1000000UL);
 
 		for (unsigned int teami = 0; teami < 2; ++teami) {
 			SaveState::Team team = static_cast<SaveState::Team>(teami);
-			Referee::TeamInfo &ti = TeamMeta::ALL[team].team_info(ref);
+			SSL_Referee::TeamInfo &ti = TeamMeta::ALL[team].team_info(ref);
 			ti.set_name(u8"");
 			ti.set_score(0);
 			ti.set_red_cards(0);
@@ -66,11 +66,11 @@ GameController::~GameController() {
 	}
 }
 
-void GameController::enter_stage(Referee::Stage stage) {
-	Referee &ref = *state.mutable_referee();
+void GameController::enter_stage(SSL_Referee::Stage stage) {
+	SSL_Referee &ref = *state.mutable_referee();
 
 	// Record what’s happening.
-	logger.write(Glib::ustring::compose(u8"Entering new stage %1", Referee::Stage_descriptor()->FindValueByNumber(stage)->name()));
+	logger.write(Glib::ustring::compose(u8"Entering new stage %1", SSL_Referee::Stage_descriptor()->FindValueByNumber(stage)->name()));
 
 	// Set the new stage.
 	ref.set_stage(stage);
@@ -80,23 +80,23 @@ void GameController::enter_stage(Referee::Stage stage) {
 
 	// Set or remove the stage time left as appropriate for the stage.
 	switch (stage) {
-		case Referee::NORMAL_FIRST_HALF:      ref.set_stage_time_left(configuration.normal_half_seconds        * 1000000); break;
-		case Referee::NORMAL_HALF_TIME:       ref.set_stage_time_left(configuration.normal_half_time_seconds   * 1000000); break;
-		case Referee::NORMAL_SECOND_HALF:     ref.set_stage_time_left(configuration.normal_half_seconds        * 1000000); break;
-		case Referee::EXTRA_TIME_BREAK:       ref.set_stage_time_left(configuration.overtime_break_seconds     * 1000000); break;
-		case Referee::EXTRA_FIRST_HALF:       ref.set_stage_time_left(configuration.overtime_half_seconds      * 1000000); break;
-		case Referee::EXTRA_HALF_TIME:        ref.set_stage_time_left(configuration.overtime_half_time_seconds * 1000000); break;
-		case Referee::EXTRA_SECOND_HALF:      ref.set_stage_time_left(configuration.overtime_half_seconds      * 1000000); break;
-		case Referee::PENALTY_SHOOTOUT_BREAK: ref.set_stage_time_left(configuration.shootout_break_seconds     * 1000000); break;
+		case SSL_Referee::NORMAL_FIRST_HALF:      ref.set_stage_time_left(configuration.normal_half_seconds        * 1000000); break;
+		case SSL_Referee::NORMAL_HALF_TIME:       ref.set_stage_time_left(configuration.normal_half_time_seconds   * 1000000); break;
+		case SSL_Referee::NORMAL_SECOND_HALF:     ref.set_stage_time_left(configuration.normal_half_seconds        * 1000000); break;
+		case SSL_Referee::EXTRA_TIME_BREAK:       ref.set_stage_time_left(configuration.overtime_break_seconds     * 1000000); break;
+		case SSL_Referee::EXTRA_FIRST_HALF:       ref.set_stage_time_left(configuration.overtime_half_seconds      * 1000000); break;
+		case SSL_Referee::EXTRA_HALF_TIME:        ref.set_stage_time_left(configuration.overtime_half_time_seconds * 1000000); break;
+		case SSL_Referee::EXTRA_SECOND_HALF:      ref.set_stage_time_left(configuration.overtime_half_seconds      * 1000000); break;
+		case SSL_Referee::PENALTY_SHOOTOUT_BREAK: ref.set_stage_time_left(configuration.shootout_break_seconds     * 1000000); break;
 		default: ref.clear_stage_time_left(); break;
 	}
 
 	// If we’re going into a pre-game state before either the normal game or overtime, reset the timeouts.
-	if (stage == Referee::NORMAL_FIRST_HALF_PRE || stage == Referee::EXTRA_FIRST_HALF_PRE) {
-		unsigned int count = stage == Referee::NORMAL_FIRST_HALF_PRE ? configuration.normal_timeouts : configuration.overtime_timeouts;
-		unsigned int seconds = stage == Referee::NORMAL_FIRST_HALF_PRE ? configuration.normal_timeout_seconds : configuration.overtime_timeout_seconds;
+	if (stage == SSL_Referee::NORMAL_FIRST_HALF_PRE || stage == SSL_Referee::EXTRA_FIRST_HALF_PRE) {
+		unsigned int count = stage == SSL_Referee::NORMAL_FIRST_HALF_PRE ? configuration.normal_timeouts : configuration.overtime_timeouts;
+		unsigned int seconds = stage == SSL_Referee::NORMAL_FIRST_HALF_PRE ? configuration.normal_timeout_seconds : configuration.overtime_timeout_seconds;
 		for (unsigned int teami = 0; teami < 2; ++teami) {
-			Referee::TeamInfo &ti = TeamMeta::ALL[teami].team_info(ref);
+			SSL_Referee::TeamInfo &ti = TeamMeta::ALL[teami].team_info(ref);
 			ti.set_timeouts(count);
 			ti.set_timeout_time(static_cast<uint32_t>(seconds * 1000000UL));
 		}
@@ -104,9 +104,9 @@ void GameController::enter_stage(Referee::Stage stage) {
 
 	// Nearly all stage entries correspond to a transition to HALT.
 	// The exceptions are game half entries, where a NORMAL START accompanies the entry in an atomic transition from kickoff.
-	bool is_half = stage == Referee::NORMAL_FIRST_HALF || stage == Referee::NORMAL_SECOND_HALF || stage == Referee::EXTRA_FIRST_HALF || stage == Referee::EXTRA_SECOND_HALF;
+	bool is_half = stage == SSL_Referee::NORMAL_FIRST_HALF || stage == SSL_Referee::NORMAL_SECOND_HALF || stage == SSL_Referee::EXTRA_FIRST_HALF || stage == SSL_Referee::EXTRA_SECOND_HALF;
 	if (!is_half) {
-		set_command(Referee::HALT, true);
+		set_command(SSL_Referee::HALT, true);
 	}
 
 	// We should save the game state now.
@@ -116,68 +116,68 @@ void GameController::enter_stage(Referee::Stage stage) {
 }
 
 void GameController::start_half_time() {
-	Referee &ref = *state.mutable_referee();
+	SSL_Referee &ref = *state.mutable_referee();
 
 	// Which stage to go into depends on which stage we are already in.
 	switch (ref.stage()) {
-		case Referee::NORMAL_FIRST_HALF_PRE:
-		case Referee::NORMAL_FIRST_HALF:
-			enter_stage(Referee::NORMAL_HALF_TIME);
+		case SSL_Referee::NORMAL_FIRST_HALF_PRE:
+		case SSL_Referee::NORMAL_FIRST_HALF:
+			enter_stage(SSL_Referee::NORMAL_HALF_TIME);
 			break;
-		case Referee::NORMAL_HALF_TIME:
-		case Referee::NORMAL_SECOND_HALF_PRE:
-		case Referee::NORMAL_SECOND_HALF:
-			enter_stage(Referee::EXTRA_TIME_BREAK);
+		case SSL_Referee::NORMAL_HALF_TIME:
+		case SSL_Referee::NORMAL_SECOND_HALF_PRE:
+		case SSL_Referee::NORMAL_SECOND_HALF:
+			enter_stage(SSL_Referee::EXTRA_TIME_BREAK);
 			break;
-		case Referee::EXTRA_TIME_BREAK:
-		case Referee::EXTRA_FIRST_HALF_PRE:
-		case Referee::EXTRA_FIRST_HALF:
-			enter_stage(Referee::EXTRA_HALF_TIME);
+		case SSL_Referee::EXTRA_TIME_BREAK:
+		case SSL_Referee::EXTRA_FIRST_HALF_PRE:
+		case SSL_Referee::EXTRA_FIRST_HALF:
+			enter_stage(SSL_Referee::EXTRA_HALF_TIME);
 			break;
-		case Referee::EXTRA_HALF_TIME:
-		case Referee::EXTRA_SECOND_HALF_PRE:
-		case Referee::EXTRA_SECOND_HALF:
-		case Referee::PENALTY_SHOOTOUT_BREAK:
-		case Referee::PENALTY_SHOOTOUT:
-			enter_stage(Referee::PENALTY_SHOOTOUT_BREAK);
+		case SSL_Referee::EXTRA_HALF_TIME:
+		case SSL_Referee::EXTRA_SECOND_HALF_PRE:
+		case SSL_Referee::EXTRA_SECOND_HALF:
+		case SSL_Referee::PENALTY_SHOOTOUT_BREAK:
+		case SSL_Referee::PENALTY_SHOOTOUT:
+			enter_stage(SSL_Referee::PENALTY_SHOOTOUT_BREAK);
 			break;
-		case Referee::POST_GAME:
+		case SSL_Referee::POST_GAME:
 			break;
 	}
 }
 
 void GameController::halt() {
-	set_command(Referee::HALT);
+	set_command(SSL_Referee::HALT);
 }
 
 void GameController::stop() {
 	state.clear_timeout();
-	set_command(Referee::STOP);
+	set_command(SSL_Referee::STOP);
 }
 
 void GameController::force_start() {
 	advance_from_pre();
-	set_command(Referee::FORCE_START);
+	set_command(SSL_Referee::FORCE_START);
 }
 
 void GameController::normal_start() {
 	advance_from_pre();
-	set_command(Referee::NORMAL_START);
+	set_command(SSL_Referee::NORMAL_START);
 }
 
 void GameController::set_teamname(SaveState::Team team, const Glib::ustring &name) {
-	Referee &ref = *state.mutable_referee();
+	SSL_Referee &ref = *state.mutable_referee();
 	TeamMeta::ALL[team].team_info(ref).set_name(name.raw());
 }
 
 void GameController::set_goalie(SaveState::Team team, unsigned int goalie) {
-	Referee &ref = *state.mutable_referee();
+	SSL_Referee &ref = *state.mutable_referee();
 	TeamMeta::ALL[team].team_info(ref).set_goalie(goalie);
 }
 
 void GameController::switch_colours() {
 	logger.write(u8"Switching colours.");
-	Referee &ref = *state.mutable_referee();
+	SSL_Referee &ref = *state.mutable_referee();
 
 	// Swap the TeamInfo structures.
 	ref.yellow().GetReflection()->Swap(ref.mutable_yellow(), ref.mutable_blue());
@@ -196,14 +196,14 @@ void GameController::switch_colours() {
 }
 
 void GameController::award_goal(SaveState::Team team) {
-	Referee &ref = *state.mutable_referee();
-	Referee::TeamInfo &ti = TeamMeta::ALL[team].team_info(ref);
+	SSL_Referee &ref = *state.mutable_referee();
+	SSL_Referee::TeamInfo &ti = TeamMeta::ALL[team].team_info(ref);
 
 	// Increase the team’s score.
 	ti.set_score(ti.score() + 1);
 
 	// Increase the team’s number of penalty goals if in a penalty shootout.
-	if (ref.stage() == Referee::PENALTY_SHOOTOUT) {
+	if (ref.stage() == SSL_Referee::PENALTY_SHOOTOUT) {
 		TeamMeta::ALL[team].set_penalty_goals(state, TeamMeta::ALL[team].penalty_goals(state) + 1);
 	}
 
@@ -212,8 +212,8 @@ void GameController::award_goal(SaveState::Team team) {
 }
 
 void GameController::subtract_goal(SaveState::Team team) {
-	Referee &ref = *state.mutable_referee();
-	Referee::TeamInfo &ti = TeamMeta::ALL[team].team_info(ref);
+	SSL_Referee &ref = *state.mutable_referee();
+	SSL_Referee::TeamInfo &ti = TeamMeta::ALL[team].team_info(ref);
 
 	// Subtract a goal.
 	if (ti.score()) {
@@ -229,19 +229,19 @@ void GameController::subtract_goal(SaveState::Team team) {
 }
 
 void GameController::cancel_card_or_timeout() {
-	Referee &ref = *state.mutable_referee();
+	SSL_Referee &ref = *state.mutable_referee();
 
-	if (ref.command() == Referee::TIMEOUT_YELLOW || ref.command() == Referee::TIMEOUT_BLUE) {
+	if (ref.command() == SSL_Referee::TIMEOUT_YELLOW || ref.command() == SSL_Referee::TIMEOUT_BLUE) {
 		// A timeout is active; cancel it.
 		SaveState::Team team = TeamMeta::command_team(ref.command());
 		logger.write(Glib::ustring::compose(u8"Cancelling %1 timeout.", TeamMeta::ALL[team].COLOUR));
-		Referee::TeamInfo &ti = TeamMeta::ALL[team].team_info(ref);
+		SSL_Referee::TeamInfo &ti = TeamMeta::ALL[team].team_info(ref);
 		ti.set_timeouts(ti.timeouts() + 1);
 		ti.set_timeout_time(state.timeout().left_before());
 		stop();
 	} else if (state.has_last_card()) {
 		// A card is active; cancel it.
-		Referee::TeamInfo &ti = TeamMeta::ALL[state.last_card().team()].team_info(ref);
+		SSL_Referee::TeamInfo &ti = TeamMeta::ALL[state.last_card().team()].team_info(ref);
 		switch (state.last_card().card()) {
 			case SaveState::CARD_YELLOW:
 				if (ti.yellow_card_times_size()) {
@@ -264,8 +264,8 @@ void GameController::cancel_card_or_timeout() {
 }
 
 void GameController::timeout_start(SaveState::Team team) {
-	Referee &ref = *state.mutable_referee();
-	Referee::TeamInfo &ti = TeamMeta::ALL[team].team_info(ref);
+	SSL_Referee &ref = *state.mutable_referee();
+	SSL_Referee::TeamInfo &ti = TeamMeta::ALL[team].team_info(ref);
 
 	// Only update any of the accounting if there is not already a record of an in-progress timeout.
 	// This allows to issue HALT during a timeout, then resume the running timeout, without eating up another of the team’s timeouts and without affecting the Cancel button.
@@ -296,8 +296,8 @@ void GameController::prepare_penalty(SaveState::Team team) {
 }
 
 void GameController::yellow_card(SaveState::Team team) {
-	Referee &ref = *state.mutable_referee();
-	Referee::TeamInfo &ti = TeamMeta::ALL[team].team_info(ref);
+	SSL_Referee &ref = *state.mutable_referee();
+	SSL_Referee::TeamInfo &ti = TeamMeta::ALL[team].team_info(ref);
 	logger.write(Glib::ustring::compose(u8"Issuing yellow card to %1.", TeamMeta::ALL[team].COLOUR));
 
 	// Add the yellow card.
@@ -312,8 +312,8 @@ void GameController::yellow_card(SaveState::Team team) {
 }
 
 void GameController::red_card(SaveState::Team team) {
-	Referee &ref = *state.mutable_referee();
-	Referee::TeamInfo &ti = TeamMeta::ALL[team].team_info(ref);
+	SSL_Referee &ref = *state.mutable_referee();
+	SSL_Referee::TeamInfo &ti = TeamMeta::ALL[team].team_info(ref);
 	logger.write(Glib::ustring::compose(u8"Issuing red card to %1.", TeamMeta::ALL[team].COLOUR));
 
 	// Add the red card.
@@ -327,7 +327,7 @@ void GameController::red_card(SaveState::Team team) {
 }
 
 bool GameController::tick() {
-	Referee &ref = *state.mutable_referee();
+	SSL_Referee &ref = *state.mutable_referee();
 
 	// Read how many microseconds passed since the last tick.
 	uint32_t delta = timer.read_and_reset();
@@ -340,17 +340,17 @@ bool GameController::tick() {
 	}
 
 	// Pull out the current command for checking against.
-	Referee::Command command = ref.command();
+	SSL_Referee::Command command = ref.command();
 
 	// Check if this is a half-time-like stage.
-	Referee::Stage stage = ref.stage();
-	bool half_time_like = stage == Referee::NORMAL_HALF_TIME || stage == Referee::EXTRA_TIME_BREAK || stage == Referee::EXTRA_HALF_TIME || stage == Referee::PENALTY_SHOOTOUT_BREAK;
+	SSL_Referee::Stage stage = ref.stage();
+	bool half_time_like = stage == SSL_Referee::NORMAL_HALF_TIME || stage == SSL_Referee::EXTRA_TIME_BREAK || stage == SSL_Referee::EXTRA_HALF_TIME || stage == SSL_Referee::PENALTY_SHOOTOUT_BREAK;
 
 	// Run some clocks.
-	if (command == Referee::TIMEOUT_YELLOW || command == Referee::TIMEOUT_BLUE) {
+	if (command == SSL_Referee::TIMEOUT_YELLOW || command == SSL_Referee::TIMEOUT_BLUE) {
 		// While a team is in a timeout, only its timeout clock runs.
 		SaveState::Team team = TeamMeta::command_team(command);
-		Referee::TeamInfo &ti = TeamMeta::ALL[team].team_info(ref);
+		SSL_Referee::TeamInfo &ti = TeamMeta::ALL[team].team_info(ref);
 		uint32_t old_left = ti.timeout_time();
 		uint32_t old_tenths = old_left / 100000;
 		uint32_t new_left = old_left > delta ? old_left - delta : 0;
@@ -359,7 +359,7 @@ bool GameController::tick() {
 		if (new_tenths != old_tenths) {
 			signal_timeout_time_changed.emit();
 		}
-	} else if (command != Referee::HALT || half_time_like) {
+	} else if (command != SSL_Referee::HALT || half_time_like) {
 		// Otherwise, as long as we are not in halt OR we are in a half-time-like stage, the stage clock runs, if this particular stage *has* a stage clock.
 		// There are two game clocks, the stage time left clock and the stage time taken clock.
 		// The stage time left clock may or may not exist; the stage time taken clock always exists.
@@ -394,7 +394,7 @@ bool GameController::tick() {
 		// Also, in these states, yellow cards count down.
 		for (unsigned int teami = 0; teami < 2; ++teami) {
 			SaveState::Team team = static_cast<SaveState::Team>(teami);
-			Referee::TeamInfo &ti = TeamMeta::ALL[team].team_info(ref);
+			SSL_Referee::TeamInfo &ti = TeamMeta::ALL[team].team_info(ref);
 			if (ti.yellow_card_times_size()) {
 				// Tick down all the counters.
 				bool emit = false;
@@ -441,11 +441,11 @@ bool GameController::tick() {
 	return true;
 }
 
-void GameController::set_command(Referee::Command command, bool no_signal) {
-	Referee *ref = state.mutable_referee();
+void GameController::set_command(SSL_Referee::Command command, bool no_signal) {
+	SSL_Referee *ref = state.mutable_referee();
 
 	// Record what’s happening.
-	logger.write(Glib::ustring::compose(u8"Setting command %1", Referee::Command_descriptor()->FindValueByNumber(command)->name()));
+	logger.write(Glib::ustring::compose(u8"Setting command %1", SSL_Referee::Command_descriptor()->FindValueByNumber(command)->name()));
 
 	// Set the new command.
 	ref->set_command(command);
@@ -468,10 +468,10 @@ void GameController::set_command(Referee::Command command, bool no_signal) {
 
 void GameController::advance_from_pre() {
 	switch (state.referee().stage()) {
-		case Referee::NORMAL_FIRST_HALF_PRE:  enter_stage(Referee::NORMAL_FIRST_HALF); break;
-		case Referee::NORMAL_SECOND_HALF_PRE: enter_stage(Referee::NORMAL_SECOND_HALF); break;
-		case Referee::EXTRA_FIRST_HALF_PRE:   enter_stage(Referee::EXTRA_FIRST_HALF); break;
-		case Referee::EXTRA_SECOND_HALF_PRE:  enter_stage(Referee::EXTRA_SECOND_HALF); break;
+		case SSL_Referee::NORMAL_FIRST_HALF_PRE:  enter_stage(SSL_Referee::NORMAL_FIRST_HALF); break;
+		case SSL_Referee::NORMAL_SECOND_HALF_PRE: enter_stage(SSL_Referee::NORMAL_SECOND_HALF); break;
+		case SSL_Referee::EXTRA_FIRST_HALF_PRE:   enter_stage(SSL_Referee::EXTRA_FIRST_HALF); break;
+		case SSL_Referee::EXTRA_SECOND_HALF_PRE:  enter_stage(SSL_Referee::EXTRA_SECOND_HALF); break;
 		default: break;
 	}
 }

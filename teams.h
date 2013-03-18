@@ -9,9 +9,9 @@ class TeamMeta {
 	public:
 		static const TeamMeta ALL[2];
 
-		static SaveState::Team command_team(Referee::Command command);
+		static SaveState::Team command_team(SSL_Referee::Command command);
 
-		const Referee::Command GOAL_COMMAND, TIMEOUT_COMMAND, PREPARE_KICKOFF_COMMAND, DIRECT_FREE_COMMAND, INDIRECT_FREE_COMMAND, PREPARE_PENALTY_COMMAND;
+		const SSL_Referee::Command GOAL_COMMAND, TIMEOUT_COMMAND, PREPARE_KICKOFF_COMMAND, DIRECT_FREE_COMMAND, INDIRECT_FREE_COMMAND, PREPARE_PENALTY_COMMAND;
 		const Glib::ustring COLOUR;
 
 		TeamMeta();
@@ -19,8 +19,8 @@ class TeamMeta {
 		SaveState::Team team() const;
 		SaveState::Team other() const;
 
-		Referee::TeamInfo &team_info(Referee &ref) const;
-		const Referee::TeamInfo &team_info(const Referee &ref) const;
+		SSL_Referee::TeamInfo &team_info(SSL_Referee &ref) const;
+		const SSL_Referee::TeamInfo &team_info(const SSL_Referee &ref) const;
 
 		uint32_t penalty_goals(const SaveState &ss) const;
 		void set_penalty_goals(SaveState &ss, uint32_t penalty_goals) const;

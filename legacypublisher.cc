@@ -5,52 +5,52 @@
 #include <stdexcept>
 
 namespace {
-	char map_stage(Referee::Stage stage) {
+	char map_stage(SSL_Referee::Stage stage) {
 		switch (stage) {
-			case Referee::NORMAL_FIRST_HALF_PRE: return '1';
-			case Referee::NORMAL_FIRST_HALF: return '1';
-			case Referee::NORMAL_HALF_TIME: return 'h';
-			case Referee::NORMAL_SECOND_HALF_PRE: return '2';
-			case Referee::NORMAL_SECOND_HALF: return '2';
-			case Referee::EXTRA_TIME_BREAK: return 'h';
-			case Referee::EXTRA_FIRST_HALF_PRE: return 'o';
-			case Referee::EXTRA_FIRST_HALF: return 'o';
-			case Referee::EXTRA_HALF_TIME: return 'h';
-			case Referee::EXTRA_SECOND_HALF_PRE: return 'O';
-			case Referee::EXTRA_SECOND_HALF: return 'O';
-			case Referee::PENALTY_SHOOTOUT_BREAK: return 'h';
-			case Referee::PENALTY_SHOOTOUT: return 'a';
-			case Referee::POST_GAME: return 'H';
+			case SSL_Referee::NORMAL_FIRST_HALF_PRE: return '1';
+			case SSL_Referee::NORMAL_FIRST_HALF: return '1';
+			case SSL_Referee::NORMAL_HALF_TIME: return 'h';
+			case SSL_Referee::NORMAL_SECOND_HALF_PRE: return '2';
+			case SSL_Referee::NORMAL_SECOND_HALF: return '2';
+			case SSL_Referee::EXTRA_TIME_BREAK: return 'h';
+			case SSL_Referee::EXTRA_FIRST_HALF_PRE: return 'o';
+			case SSL_Referee::EXTRA_FIRST_HALF: return 'o';
+			case SSL_Referee::EXTRA_HALF_TIME: return 'h';
+			case SSL_Referee::EXTRA_SECOND_HALF_PRE: return 'O';
+			case SSL_Referee::EXTRA_SECOND_HALF: return 'O';
+			case SSL_Referee::PENALTY_SHOOTOUT_BREAK: return 'h';
+			case SSL_Referee::PENALTY_SHOOTOUT: return 'a';
+			case SSL_Referee::POST_GAME: return 'H';
 		}
 
 		throw std::logic_error("Impossible state!");
 	}
 
-	char map_command(Referee::Command command) {
+	char map_command(SSL_Referee::Command command) {
 		switch (command) {
-			case Referee::HALT: return 'H';
-			case Referee::STOP: return 'S';
-			case Referee::NORMAL_START: return ' ';
-			case Referee::FORCE_START: return 's';
-			case Referee::PREPARE_KICKOFF_YELLOW: return 'k';
-			case Referee::PREPARE_KICKOFF_BLUE: return 'K';
-			case Referee::PREPARE_PENALTY_YELLOW: return 'p';
-			case Referee::PREPARE_PENALTY_BLUE: return 'P';
-			case Referee::DIRECT_FREE_YELLOW: return 'f';
-			case Referee::DIRECT_FREE_BLUE: return 'F';
-			case Referee::INDIRECT_FREE_YELLOW: return 'i';
-			case Referee::INDIRECT_FREE_BLUE: return 'I';
-			case Referee::TIMEOUT_YELLOW: return 't';
-			case Referee::TIMEOUT_BLUE: return 'T';
-			case Referee::GOAL_YELLOW: return 'g';
-			case Referee::GOAL_BLUE: return 'G';
+			case SSL_Referee::HALT: return 'H';
+			case SSL_Referee::STOP: return 'S';
+			case SSL_Referee::NORMAL_START: return ' ';
+			case SSL_Referee::FORCE_START: return 's';
+			case SSL_Referee::PREPARE_KICKOFF_YELLOW: return 'k';
+			case SSL_Referee::PREPARE_KICKOFF_BLUE: return 'K';
+			case SSL_Referee::PREPARE_PENALTY_YELLOW: return 'p';
+			case SSL_Referee::PREPARE_PENALTY_BLUE: return 'P';
+			case SSL_Referee::DIRECT_FREE_YELLOW: return 'f';
+			case SSL_Referee::DIRECT_FREE_BLUE: return 'F';
+			case SSL_Referee::INDIRECT_FREE_YELLOW: return 'i';
+			case SSL_Referee::INDIRECT_FREE_BLUE: return 'I';
+			case SSL_Referee::TIMEOUT_YELLOW: return 't';
+			case SSL_Referee::TIMEOUT_BLUE: return 'T';
+			case SSL_Referee::GOAL_YELLOW: return 'g';
+			case SSL_Referee::GOAL_BLUE: return 'G';
 		}
 
 		throw std::logic_error("Impossible state!");
 	}
 }
 
-LegacyPublisher::LegacyPublisher(const Configuration &configuration, Logger &logger) : bcast(logger, configuration.address, configuration.legacy_port, configuration.interface), counter(0), cached_command_char('H'), last_stage(Referee::NORMAL_FIRST_HALF_PRE), last_command(Referee::HALT), last_yellow_ycards(0), last_blue_ycards(0), last_yellow_rcards(0), last_blue_rcards(0) {
+LegacyPublisher::LegacyPublisher(const Configuration &configuration, Logger &logger) : bcast(logger, configuration.address, configuration.legacy_port, configuration.interface), counter(0), cached_command_char('H'), last_stage(SSL_Referee::NORMAL_FIRST_HALF_PRE), last_command(SSL_Referee::HALT), last_yellow_ycards(0), last_blue_ycards(0), last_yellow_rcards(0), last_blue_rcards(0) {
 }
 
 void LegacyPublisher::publish(SaveState &state) {
@@ -78,7 +78,7 @@ void LegacyPublisher::publish(SaveState &state) {
 	bcast.send(packet, sizeof(packet));
 }
 
-char LegacyPublisher::compute_command(const Referee &state) {
+char LegacyPublisher::compute_command(const SSL_Referee &state) {
 	enum class Disposition {
 		STAGE,
 		COMMAND,

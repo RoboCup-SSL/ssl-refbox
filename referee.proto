@@ -1,5 +1,5 @@
 // Each UDP packet contains one of these messages.
-message Referee {
+message SSL_Referee {
 	// The UNIX timestamp when the packet was sent, in microseconds.
 	// Divide by 1,000,000 to get a time_t.
 	required uint64 packet_timestamp = 1;

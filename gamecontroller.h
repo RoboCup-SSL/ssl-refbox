@@ -24,7 +24,7 @@ class GameController : public NonCopyable {
 		GameController(Logger &logger, const Configuration &configuration, const std::vector<Publisher *> &publishers, bool resume);
 		~GameController();
 
-		void enter_stage(Referee::Stage stage);
+		void enter_stage(SSL_Referee::Stage stage);
 		void start_half_time();
 
 		void halt();
@@ -59,7 +59,7 @@ class GameController : public NonCopyable {
 		uint64_t microseconds_since_last_state_save;
 
 		bool tick();
-		void set_command(Referee::Command command, bool no_signal = false);
+		void set_command(SSL_Referee::Command command, bool no_signal = false);
 		void advance_from_pre();
 };
 
