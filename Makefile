@@ -42,4 +42,4 @@ $(non_proto_objs) : %.o : %.cc $(all_headers)
 # Rule to clean intermediates and outputs.
 .PHONY : clean
 clean :
-	$(RM) sslrefbox $(all_objs) $(proto_sources) $(proto_headers)
+	$(RM) sslrefbox referee.log referee.sav *.o *.pb.cc *.pb.h
