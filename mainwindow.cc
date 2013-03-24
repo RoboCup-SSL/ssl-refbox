@@ -149,6 +149,11 @@ MainWindow::MainWindow(GameController &controller) :
 	yellow_goal_but.add_accelerator(u8"activate", get_accel_group(), GDK_KP_Divide, Gdk::ModifierType(0), Gtk::AccelFlags(0));
 	blue_goal_but.add_accelerator(u8"activate", get_accel_group(), GDK_KP_Multiply, Gdk::ModifierType(0), Gtk::AccelFlags(0));
 
+	// Goalie fields should not be editable because if the user types a number on the numpad, it will be treated as an accelerator for a command instead
+	// This does not change the visual style, but it rejects all keyboard edits, so users will learn not to use the keyboard and will not accidentally hit a command key
+	yellow_goalie_spin.set_editable(false);
+	blue_goalie_spin.set_editable(false);
+
 	// Menu
 	Gtk::Menu::MenuList &menulist = config_menu.items();
 	menulist.push_back(ignore_rules_menu_item);
