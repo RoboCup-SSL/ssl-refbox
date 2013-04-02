@@ -96,7 +96,7 @@ void save_game(const SaveState &ss, const std::string &save_filename) {
 	std::ofstream ofs;
 	ofs.exceptions(std::ios_base::badbit | std::ios_base::failbit);
 	ofs.open(save_filename, std::ios_base::out | std::ios_base::binary);
-	if (!state.SerializeToOstream(&ofs)) {
+	if (!ss.SerializeToOstream(&ofs)) {
 		throw std::runtime_error(Glib::locale_from_utf8(Glib::ustring::compose(u8"Protobuf error saving game state to file \"%1\"!", Glib::filename_to_utf8(save_filename))));
 	}
 	ofs.close();
