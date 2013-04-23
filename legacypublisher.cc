@@ -61,7 +61,7 @@ void LegacyPublisher::publish(SaveState &state) {
 	packet[2] = static_cast<uint8_t>(state.referee().blue().score());
 	packet[3] = static_cast<uint8_t>(state.referee().yellow().score());
 	if (state.referee().has_stage_time_left() && state.referee().stage_time_left() >= 0) {
-		unsigned int left = state.referee().stage_time_left();
+		unsigned int left = state.referee().stage_time_left() / 1000000;
 		if (left <= 65535) {
 			packet[4] = static_cast<uint8_t>(left / 256);
 			packet[5] = static_cast<uint8_t>(left);
