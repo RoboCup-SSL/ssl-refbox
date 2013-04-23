@@ -50,14 +50,14 @@ namespace {
 	}
 }
 
-LegacyPublisher::LegacyPublisher(const Configuration &configuration, Logger &logger) : bcast(logger, configuration.address, configuration.legacy_port, configuration.interface), counter(0), cached_command_char('H'), last_stage(SSL_Referee::NORMAL_FIRST_HALF_PRE), last_command(SSL_Referee::HALT), last_yellow_ycards(0), last_blue_ycards(0), last_yellow_rcards(0), last_blue_rcards(0) {
+LegacyPublisher::LegacyPublisher(const Configuration &configuration, Logger &logger) : bcast(logger, configuration.address, configuration.legacy_port, configuration.interface), cached_command_char('H'), last_stage(SSL_Referee::NORMAL_FIRST_HALF_PRE), last_command(SSL_Referee::HALT), last_yellow_ycards(0), last_blue_ycards(0), last_yellow_rcards(0), last_blue_rcards(0) {
 }
 
 void LegacyPublisher::publish(SaveState &state) {
 	// Encode the packet.
 	uint8_t packet[6];
 	packet[0] = compute_command(state.referee());
-	packet[1] = counter;
+	packet[1] = static_cast<uint8_t>(state.referee().command_counter());
 	packet[2] = static_cast<uint8_t>(state.referee().blue().score());
 	packet[3] = static_cast<uint8_t>(state.referee().yellow().score());
 	if (state.referee().has_stage_time_left() && state.referee().stage_time_left() >= 0) {

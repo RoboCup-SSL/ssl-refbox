@@ -17,7 +17,6 @@ class LegacyPublisher : public NonCopyable, public Publisher {
 
 	private:
 		UDPBroadcast bcast;
-		uint8_t counter;
 		char cached_command_char;
 		SSL_Referee::Stage last_stage;
 		SSL_Referee::Command last_command;
