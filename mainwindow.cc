@@ -130,7 +130,7 @@ MainWindow::MainWindow(GameController &controller) :
 		blue_penalty_but(u8"Penalty"),
 		blue_indirect_freekick_but(u8"Indirect (KP_6)") {
 	set_default_size(600, 700);
-	set_title(u8"Small Size League - SSL_Referee Box");
+	set_title(u8"Small Size League - Referee Box");
 
 	// Add Accelerator Buttons
 	stop_but.add_accelerator(u8"activate", get_accel_group(), GDK_KP_0, Gdk::ModifierType(0), Gtk::AccelFlags(0));

@@ -26,10 +26,10 @@ namespace {
 
 		// Parse the command-line arguments.
 		Glib::OptionContext option_context;
-		option_context.set_summary(u8"Runs the RoboCup Small Size League SSL_Referee Box.");
-		option_context.set_summary(u8"The SSL_Referee Box is © RoboCup Federation, 2003–2013.");
+		option_context.set_summary(u8"Runs the RoboCup Small Size League Referee Box.");
+		option_context.set_description(u8"The Referee Box is © RoboCup Federation, 2003–2013.");
 
-		Glib::OptionGroup option_group(u8"referee", u8"SSL_Referee Box Options", u8"Show SSL_Referee Box Options");
+		Glib::OptionGroup option_group(u8"referee", u8"Referee Box Options", u8"Show Referee Box Options");
 
 		Glib::OptionEntry config_file_entry;
 		config_file_entry.set_long_name(u8"config");
