@@ -433,12 +433,26 @@ void MainWindow::on_teamname_blue_changed() {
 	controller.set_teamname(SaveState::TEAM_BLUE, teamname_blue.get_text());
 }
 
+// If we just updated the packet immediately, we would spam changes on every click of the arrow moving through all the intermediate goalie IDs.
+// Instead, we only send the new goalie ID if the spinner has not been touched for more than one second, so it should jump directly from the old to the new value.
 void MainWindow::on_goalie_yellow_changed() {
-	controller.set_goalie(SaveState::TEAM_YELLOW, yellow_goalie_spin.get_value_as_int());
+	goalie_yellow_commit_connection.disconnect();
+	goalie_yellow_commit_connection = Glib::signal_timeout().connect(sigc::mem_fun(this, &MainWindow::on_goalie_yellow_commit), 1000);
 }
 
 void MainWindow::on_goalie_blue_changed() {
+	goalie_blue_commit_connection.disconnect();
+	goalie_blue_commit_connection = Glib::signal_timeout().connect(sigc::mem_fun(this, &MainWindow::on_goalie_blue_commit), 1000);
+}
+
+bool MainWindow::on_goalie_yellow_commit() {
+	controller.set_goalie(SaveState::TEAM_YELLOW, yellow_goalie_spin.get_value_as_int());
+	return false;
+}
+
+bool MainWindow::on_goalie_blue_commit() {
 	controller.set_goalie(SaveState::TEAM_BLUE, blue_goalie_spin.get_value_as_int());
+	return false;
 }
 
 void MainWindow::update_sensitivities() {

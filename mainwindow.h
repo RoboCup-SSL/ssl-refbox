@@ -13,6 +13,7 @@
 #include <gtkmm/spinbutton.h>
 #include <gtkmm/table.h>
 #include <gtkmm/window.h>
+#include <sigc++/connection.h>
 
 class GameController;
 
@@ -32,10 +33,15 @@ class MainWindow : public Gtk::Window {
 		void on_goalie_yellow_changed();
 		void on_goalie_blue_changed();
 
+		bool on_goalie_yellow_commit();
+		bool on_goalie_blue_commit();
+
 		void update_sensitivities();
 
 		// The game controller.
 		GameController &controller;
+
+		sigc::connection goalie_yellow_commit_connection, goalie_blue_commit_connection;
 
 		// Elements
 		Gtk::VBox big_vbox;
