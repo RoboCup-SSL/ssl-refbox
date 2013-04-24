@@ -1,4 +1,5 @@
 #include "udpbroadcast.h"
+#include "addrinfolist.h"
 #include "exception.h"
 #include "logger.h"
 #include "noncopyable.h"
@@ -22,16 +23,6 @@
 #endif
 
 namespace {
-	class AddrInfoList : public NonCopyable {
-		public:
-			AddrInfoList(const char *node, const char *service, const addrinfo *hints);
-			~AddrInfoList();
-			addrinfo *get() const;
-
-		private:
-			addrinfo *ai;
-	};
-
 	class InterfaceList;
 
 	class InterfaceInfo {
@@ -56,24 +47,6 @@ namespace {
 			InterfaceInfo(const std::string &name, int family, unsigned int ifindex);
 #endif
 	};
-}
-
-
-
-AddrInfoList::AddrInfoList(const char *node, const char *service, const addrinfo *hints) {
-	ai = 0;
-	int rc = getaddrinfo(node, service, hints, &ai);
-	if (rc) {
-		throw GAIError("Cannot look up address info", rc);
-	}
-}
-
-AddrInfoList::~AddrInfoList() {
-	freeaddrinfo(ai);
-}
-
-addrinfo *AddrInfoList::get() const {
-	return ai;
 }
 
 
