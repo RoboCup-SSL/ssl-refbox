@@ -154,6 +154,13 @@ UDPBroadcast::UDPBroadcast(Logger &logger, const std::string &host, const std::s
 					static const int one = 1;
 					setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &one, sizeof(one));
 
+					// Permit multicast loop to the local machine, but don’t worry if it fails (Windows/UNIX disagree on whether this happens on the send or the receive path).
+					if (i->ai_family == AF_INET) {
+						setsockopt(sock, IPPROTO_IP, IP_MULTICAST_LOOP, &one, sizeof(one));
+					} else {
+						setsockopt(sock, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &one, sizeof(one));
+					}
+
 					// Lock in a default destination address.
 					if (connect(sock, i->ai_addr, i->ai_addrlen) < 0) {
 						throw SystemError("Cannot connect socket");
