@@ -1,5 +1,6 @@
 build/
 client/testclient
+scoreboard/scoreboard
 *.o
 referee.log
 referee.sav
