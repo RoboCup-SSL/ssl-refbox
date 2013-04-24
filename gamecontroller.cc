@@ -346,6 +346,9 @@ bool GameController::tick() {
 	SSL_Referee::Stage stage = ref.stage();
 	bool half_time_like = stage == SSL_Referee::NORMAL_HALF_TIME || stage == SSL_Referee::EXTRA_TIME_BREAK || stage == SSL_Referee::EXTRA_HALF_TIME || stage == SSL_Referee::PENALTY_SHOOTOUT_BREAK;
 
+	// Check if this is a pre-game stage.
+	bool pre_game = stage == SSL_Referee::NORMAL_FIRST_HALF_PRE || stage == SSL_Referee::NORMAL_SECOND_HALF_PRE || stage == SSL_Referee::EXTRA_FIRST_HALF_PRE || stage == SSL_Referee::EXTRA_SECOND_HALF_PRE;
+
 	// Run some clocks.
 	if (command == SSL_Referee::TIMEOUT_YELLOW || command == SSL_Referee::TIMEOUT_BLUE) {
 		// While a team is in a timeout, only its timeout clock runs.
@@ -391,43 +394,45 @@ bool GameController::tick() {
 			}
 		}
 
-		// Also, in these states, yellow cards count down.
-		for (unsigned int teami = 0; teami < 2; ++teami) {
-			SaveState::Team team = static_cast<SaveState::Team>(teami);
-			SSL_Referee::TeamInfo &ti = TeamMeta::ALL[team].team_info(ref);
-			if (ti.yellow_card_times_size()) {
-				// Tick down all the counters.
-				bool emit = false;
-				for (int j = 0; j < ti.yellow_card_times_size(); ++j) {
-					uint32_t old_left = ti.yellow_card_times(j);
-					uint32_t old_tenths = old_left / 100000;
-					uint32_t new_left = old_left > delta ? old_left - delta : 0;
-					uint32_t new_tenths = new_left / 100000;
-					ti.set_yellow_card_times(j, new_left);
-					if (!j && new_tenths != old_tenths) {
-						emit = true;
-					}
-				}
-
-				// Remove any that are at zero.
-				if (!ti.yellow_card_times(0)) {
-                    auto last_valid = std::remove(ti.mutable_yellow_card_times()->begin(), ti.mutable_yellow_card_times()->end(), 0);
-                    ti.mutable_yellow_card_times()->Truncate(static_cast<int>(last_valid - ti.mutable_yellow_card_times()->begin()));
-					emit = true;
-				}
-
-				// If we have reached zero yellow cards for this team, we may need to clear the save state’s idea of the last issued card so it doesn’t try to cancel a missing card.
-				if (!ti.yellow_card_times_size()) {
-					if (state.has_last_card()) {
-						if (state.last_card().team() == team && state.last_card().card() == SaveState::CARD_YELLOW) {
-							state.clear_last_card();
-							signal_other_changed.emit();
+		// Also, in all of these states except a half-time-like or pre-game state, yellow cards count down.
+		if (!half_time_like && !pre_game) {
+			for (unsigned int teami = 0; teami < 2; ++teami) {
+				SaveState::Team team = static_cast<SaveState::Team>(teami);
+				SSL_Referee::TeamInfo &ti = TeamMeta::ALL[team].team_info(ref);
+				if (ti.yellow_card_times_size()) {
+					// Tick down all the counters.
+					bool emit = false;
+					for (int j = 0; j < ti.yellow_card_times_size(); ++j) {
+						uint32_t old_left = ti.yellow_card_times(j);
+						uint32_t old_tenths = old_left / 100000;
+						uint32_t new_left = old_left > delta ? old_left - delta : 0;
+						uint32_t new_tenths = new_left / 100000;
+						ti.set_yellow_card_times(j, new_left);
+						if (!j && new_tenths != old_tenths) {
+							emit = true;
 						}
 					}
-				}
 
-				if (emit) {
-					signal_yellow_card_time_changed.emit();
+					// Remove any that are at zero.
+					if (!ti.yellow_card_times(0)) {
+						auto last_valid = std::remove(ti.mutable_yellow_card_times()->begin(), ti.mutable_yellow_card_times()->end(), 0);
+						ti.mutable_yellow_card_times()->Truncate(static_cast<int>(last_valid - ti.mutable_yellow_card_times()->begin()));
+						emit = true;
+					}
+
+					// If we have reached zero yellow cards for this team, we may need to clear the save state’s idea of the last issued card so it doesn’t try to cancel a missing card.
+					if (!ti.yellow_card_times_size()) {
+						if (state.has_last_card()) {
+							if (state.last_card().team() == team && state.last_card().card() == SaveState::CARD_YELLOW) {
+								state.clear_last_card();
+								signal_other_changed.emit();
+							}
+						}
+					}
+
+					if (emit) {
+						signal_yellow_card_time_changed.emit();
+					}
 				}
 			}
 		}
