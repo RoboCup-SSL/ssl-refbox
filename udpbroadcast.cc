@@ -1,5 +1,3 @@
-//#pragma GCC diagnostic ignored "-Wold-style-cast"
-
 #include "udpbroadcast.h"
 #include "exception.h"
 #include "logger.h"
