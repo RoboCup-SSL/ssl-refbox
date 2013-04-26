@@ -1,5 +1,6 @@
 #include "configuration.h"
 #include "logger.h"
+#include <algorithm>
 #include <glibmm/convert.h>
 #include <glibmm/keyfile.h>
 #include <glibmm/ustring.h>
@@ -30,6 +31,11 @@ Configuration::Configuration(const std::string &filename) {
 	legacy_port = kf.has_key(u8"ip", u8"LEGACY_PORT") ? kf.get_string(u8"ip", u8"LEGACY_PORT") : "";
 	protobuf_port = kf.has_key(u8"ip", u8"PROTOBUF_PORT") ? kf.get_string(u8"ip", u8"PROTOBUF_PORT") : "";
 	interface = kf.has_key(u8"ip", u8"INTERFACE") ? kf.get_string(u8"ip", u8"INTERFACE") : "";
+
+	for (const Glib::ustring &key : kf.get_keys(u8"teams")) {
+		teams.push_back(kf.get_string(u8"teams", key));
+	}
+	std::sort(teams.begin(), teams.end());
 }
 
 void Configuration::dump(Logger &logger) {

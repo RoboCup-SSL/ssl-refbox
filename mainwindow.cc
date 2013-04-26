@@ -86,6 +86,8 @@ MainWindow::MainWindow(GameController &controller) :
 		yellow_goal(u8"00"),
 		blue_goal(u8"00"),
 		vs(u8":"),
+		teamname_yellow(true),
+		teamname_blue(true),
 		switch_colours_but(u8"<-->"),
 
 		game_control_frame(u8"Game Status"),
@@ -274,12 +276,16 @@ MainWindow::MainWindow(GameController &controller) :
 	goal_hbox.pack_start(blue_goal, Gtk::PACK_EXPAND_WIDGET, 10);
 	goal_vbox.add(goal_hbox);
 
-	teamname_yellow.modify_base(Gtk::STATE_NORMAL, Gdk::Color(u8"lightyellow"));
-	teamname_yellow.set_has_frame(false);
-	teamname_yellow.set_alignment(Gtk::ALIGN_CENTER);
-	teamname_blue.modify_base(Gtk::STATE_NORMAL, Gdk::Color(u8"lightblue"));
-	teamname_blue.set_has_frame(false);
-	teamname_blue.set_alignment(Gtk::ALIGN_CENTER);
+	for (const Glib::ustring &team : controller.configuration.teams) {
+		teamname_yellow.append(team);
+		teamname_blue.append(team);
+	}
+	teamname_yellow.get_entry()->modify_base(Gtk::STATE_NORMAL, Gdk::Color(u8"lightyellow"));
+	teamname_yellow.get_entry()->modify_base(Gtk::STATE_INSENSITIVE, Gdk::Color(u8"lightyellow"));
+	teamname_yellow.get_entry()->set_alignment(Gtk::ALIGN_CENTER);
+	teamname_blue.get_entry()->modify_base(Gtk::STATE_NORMAL, Gdk::Color(u8"lightblue"));
+	teamname_blue.get_entry()->modify_base(Gtk::STATE_INSENSITIVE, Gdk::Color(u8"lightblue"));
+	teamname_blue.get_entry()->set_alignment(Gtk::ALIGN_CENTER);
 	teamname_hbox.pack_start(teamname_yellow, Gtk::PACK_EXPAND_WIDGET, 10);
 	teamname_hbox.pack_start(switch_colours_but, Gtk::PACK_SHRINK);
 	teamname_hbox.pack_start(teamname_blue,   Gtk::PACK_EXPAND_WIDGET, 10);
@@ -389,8 +395,10 @@ void MainWindow::on_other_changed() {
 	blue_goal.set_text(Glib::ustring::format(ref.blue().score() - (ref.stage() == SSL_Referee::PENALTY_SHOOTOUT ? state.blue_penalty_goals() : 0)));
 
 	// Update team names.
-	teamname_yellow.set_text(ref.yellow().name());
-	teamname_blue.set_text(ref.blue().name());
+	teamname_yellow.set_active_text(ref.yellow().name());
+	teamname_yellow.get_entry()->set_text(ref.yellow().name());
+	teamname_blue.set_active_text(ref.blue().name());
+	teamname_blue.get_entry()->set_text(ref.blue().name());
 
 	// Update stage and command.
 	stage_label.set_text(STAGE_NAMES[ref.stage()]);
@@ -426,11 +434,11 @@ void MainWindow::on_other_changed() {
 }
 
 void MainWindow::on_teamname_yellow_changed() {
-	controller.set_teamname(SaveState::TEAM_YELLOW, teamname_yellow.get_text());
+	controller.set_teamname(SaveState::TEAM_YELLOW, teamname_yellow.get_entry_text());
 }
 
 void MainWindow::on_teamname_blue_changed() {
-	controller.set_teamname(SaveState::TEAM_BLUE, teamname_blue.get_text());
+	controller.set_teamname(SaveState::TEAM_BLUE, teamname_blue.get_entry_text());
 }
 
 // If we just updated the packet immediately, we would spam changes on every click of the arrow moving through all the intermediate goalie IDs.
@@ -490,8 +498,8 @@ void MainWindow::update_sensitivities() {
 	normal_start_but.set_sensitive(ign || is_prepare_kickoff || is_prepare_penalty);
 
 	// You can edit the game names when you are halted except post-game.
-	teamname_yellow.set_editable(ign || (ref.stage() != SSL_Referee::POST_GAME && ref.command() == SSL_Referee::HALT));
-	teamname_blue.set_editable(ign || (ref.stage() != SSL_Referee::POST_GAME && ref.command() == SSL_Referee::HALT));
+	teamname_yellow.set_sensitive(ign || (ref.stage() != SSL_Referee::POST_GAME && ref.command() == SSL_Referee::HALT));
+	teamname_blue.set_sensitive(ign || (ref.stage() != SSL_Referee::POST_GAME && ref.command() == SSL_Referee::HALT));
 
 	// You can switch colours when you are halted in a break or pre-half.
 	switch_colours_but.set_sensitive(ign || (ref.command() == SSL_Referee::HALT && (is_break || is_pre)));

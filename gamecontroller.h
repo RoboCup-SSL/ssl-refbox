@@ -19,6 +19,7 @@ class Publisher;
 class GameController : public NonCopyable {
 	public:
 		SaveState state;
+		const Configuration &configuration;
 		sigc::signal<void> signal_timeout_time_changed, signal_game_clock_changed, signal_yellow_card_time_changed, signal_other_changed;
 
 		GameController(Logger &logger, const Configuration &configuration, const std::vector<Publisher *> &publishers, bool resume);
@@ -52,7 +53,6 @@ class GameController : public NonCopyable {
 
 	private:
 		Logger &logger;
-		const Configuration &configuration;
 		const std::vector<Publisher *> &publishers;
 		sigc::connection tick_connection;
 		MicrosecondCounter timer;

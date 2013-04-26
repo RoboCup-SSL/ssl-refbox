@@ -5,7 +5,7 @@
 #include <gtkmm/button.h>
 #include <gtkmm/buttonbox.h>
 #include <gtkmm/checkbutton.h>
-#include <gtkmm/entry.h>
+#include <gtkmm/comboboxtext.h>
 #include <gtkmm/frame.h>
 #include <gtkmm/label.h>
 #include <gtkmm/menu.h>
@@ -64,8 +64,8 @@ class MainWindow : public Gtk::Window {
 		Gtk::Label blue_goal;
 		Gtk::Label vs;
 		Gtk::HBox teamname_hbox;
-		Gtk::Entry teamname_yellow;
-		Gtk::Entry teamname_blue;
+		Gtk::ComboBoxText teamname_yellow;
+		Gtk::ComboBoxText teamname_blue;
 		Gtk::Button switch_colours_but;
 
 		Gtk::HBox game_status_hbox;

@@ -2,6 +2,8 @@
 #define CONFIGURATION_H
 
 #include <string>
+#include <vector>
+#include <glibmm/ustring.h>
 
 class Logger;
 
@@ -35,6 +37,9 @@ class Configuration {
 		std::string legacy_port;
 		std::string protobuf_port;
 		std::string interface;
+
+		// [teams] section
+		std::vector<Glib::ustring> teams;
 
 		Configuration(const std::string &filename);
 		void dump(Logger &logger);

@@ -18,7 +18,7 @@ namespace {
 	const uint32_t STATE_SAVE_INTERVAL = 5000000UL;
 }
 
-GameController::GameController(Logger &logger, const Configuration &configuration, const std::vector<Publisher *> &publishers, bool resume) : logger(logger), configuration(configuration), publishers(publishers), tick_connection(Glib::signal_timeout().connect(sigc::mem_fun(this, &GameController::tick), 25)), microseconds_since_last_state_save(0) {
+GameController::GameController(Logger &logger, const Configuration &configuration, const std::vector<Publisher *> &publishers, bool resume) : configuration(configuration), logger(logger), publishers(publishers), tick_connection(Glib::signal_timeout().connect(sigc::mem_fun(this, &GameController::tick), 25)), microseconds_since_last_state_save(0) {
 	if (resume) {
 		std::ifstream ifs;
 		ifs.exceptions(std::ios_base::badbit);
