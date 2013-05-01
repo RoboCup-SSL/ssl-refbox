@@ -174,7 +174,7 @@ bool MainWindow::on_expose_event(GdkEventExpose *evt) {
 	Pango::Rectangle window_rect(0, 0, width, height);
 	// window_rect
 		Pango::Rectangle top_rect, bottom_rect;
-		split_rect_vertical(window_rect, {&top_rect, &bottom_rect}, {0.3, 0.7});
+		split_rect_vertical(window_rect, {&top_rect, &bottom_rect}, {0.2, 0.8});
 		// top_rect
 			Pango::Rectangle clock_rect, stages_rect;
 			split_rect_horizontal(top_rect, {&clock_rect, &stages_rect}, {0.7, 0.3});
@@ -198,7 +198,7 @@ bool MainWindow::on_expose_event(GdkEventExpose *evt) {
 				pad_rect(yellow_rect, yellow_inner_rect, padding);
 				// yellow_inner_rect
 					Pango::Rectangle yellow_name_rect, yellow_images_rect, yellow_score_rect;
-					split_rect_vertical(yellow_inner_rect, {&yellow_name_rect, &yellow_images_rect, &yellow_score_rect}, {0.25, 0.25, 0.5});
+					split_rect_vertical(yellow_inner_rect, {&yellow_name_rect, &yellow_images_rect, &yellow_score_rect}, {0.2, 0.3, 0.5});
 					// yellow_name_rect is terminal
 					// yellow_images_rect
 						Pango::Rectangle yellow_flag_rect, yellow_logo_rect;
@@ -213,7 +213,7 @@ bool MainWindow::on_expose_event(GdkEventExpose *evt) {
 				pad_rect(blue_rect, blue_inner_rect, padding);
 				// blue_inner_rect
 					Pango::Rectangle blue_name_rect, blue_images_rect, blue_score_rect;
-					split_rect_vertical(blue_inner_rect, {&blue_name_rect, &blue_images_rect, &blue_score_rect}, {0.25, 0.25, 0.5});
+					split_rect_vertical(blue_inner_rect, {&blue_name_rect, &blue_images_rect, &blue_score_rect}, {0.2, 0.3, 0.5});
 					// blue_name_rect is terminal
 					// blue_images_rect
 						Pango::Rectangle blue_flag_rect, blue_logo_rect;
