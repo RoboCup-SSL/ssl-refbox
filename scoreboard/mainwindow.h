@@ -24,8 +24,6 @@ class MainWindow : public Gtk::Window {
 
 		bool is_fullscreen;
 
-		int last_width, last_height;
-
 		void handle_state_updated();
 		int key_snoop(Widget *, GdkEventKey *);
 		void on_size_allocate(Gdk::Rectangle &);

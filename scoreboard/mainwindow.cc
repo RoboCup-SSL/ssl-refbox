@@ -129,7 +129,7 @@ namespace {
 	}
 }
 
-MainWindow::MainWindow(GameState &state, const image_database_t &flags, const image_database_t &logos) : state(state), flags(flags), logos(logos), is_fullscreen(false), last_width(-1), last_height(-1) {
+MainWindow::MainWindow(GameState &state, const image_database_t &flags, const image_database_t &logos) : state(state), flags(flags), logos(logos), is_fullscreen(false) {
 	set_title(u8"Scoreboard (press F to toggle fullscreen");
 
 	Gtk::Main::signal_key_snooper().connect(sigc::mem_fun(this, &MainWindow::key_snoop));
