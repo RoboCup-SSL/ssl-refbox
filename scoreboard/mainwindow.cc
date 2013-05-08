@@ -113,16 +113,8 @@ namespace {
 			return;
 		}
 
-		double xscale = static_cast<double>(target.get_width()) / image->get_width();
-		double yscale = static_cast<double>(target.get_height()) / image->get_height();
-		double scale = std::min(xscale, yscale);
-
-		int scaled_image_width = static_cast<int>(image->get_width() * scale);
-		int scaled_image_height = static_cast<int>(image->get_height() * scale);
-
 		ctx->save();
-		ctx->translate(target.get_x() + (target.get_width() - scaled_image_width) / 2, target.get_y() + (target.get_height() - scaled_image_height) / 2);
-		ctx->scale(scale, scale);
+		ctx->translate(target.get_x() + (target.get_width() - image->get_width()) / 2, target.get_y() + (target.get_height() - image->get_height()) / 2);
 		Gdk::Cairo::set_source_pixbuf(ctx, image, 0, 0);
 		ctx->paint();
 		ctx->restore();
@@ -263,19 +255,19 @@ bool MainWindow::on_expose_event(GdkEventExpose *evt) {
 	ctx->set_source_rgb(1.0, 1.0, 1.0);
 	draw_text(ctx, yellow_name_rect, padding, state.referee.yellow().name());
 	if (yellow_flag) {
-		draw_image(ctx, yellow_flag_rect, padding, yellow_flag);
+		draw_image(ctx, yellow_flag_rect, padding, resize_image(yellow_flag, yellow_flag_rect.get_width(), yellow_flag_rect.get_height(), yellow_flag_cache, state.referee.yellow().name()));
 	}
 	if (yellow_logo) {
-		draw_image(ctx, yellow_logo_rect, padding, yellow_logo);
+		draw_image(ctx, yellow_logo_rect, padding, resize_image(yellow_logo, yellow_logo_rect.get_width(), yellow_logo_rect.get_height(), yellow_logo_cache, state.referee.yellow().name()));
 	}
 	ctx->set_source_rgb(1.0, 1.0, 1.0);
 	draw_text(ctx, yellow_score_rect, padding, Glib::ustring::format(state.referee.yellow().score()));
 	draw_text(ctx, blue_name_rect, padding, state.referee.blue().name());
 	if (blue_flag) {
-		draw_image(ctx, blue_flag_rect, padding, blue_flag);
+		draw_image(ctx, blue_flag_rect, padding, resize_image(blue_flag, blue_flag_rect.get_width(), blue_flag_rect.get_height(), blue_flag_cache, state.referee.blue().name()));
 	}
 	if (blue_logo) {
-		draw_image(ctx, blue_logo_rect, padding, blue_logo);
+		draw_image(ctx, blue_logo_rect, padding, resize_image(blue_logo, blue_logo_rect.get_width(), blue_logo_rect.get_height(), blue_logo_cache, state.referee.blue().name()));
 	}
 	ctx->set_source_rgb(1.0, 1.0, 1.0);
 	draw_text(ctx, blue_score_rect, padding, Glib::ustring::format(state.referee.blue().score()));
@@ -311,5 +303,16 @@ void MainWindow::on_size_allocate(Gdk::Rectangle &) {
 	if (win) {
 		win->invalidate(false);
 	}
+}
+
+Glib::RefPtr<Gdk::Pixbuf> MainWindow::resize_image(Glib::RefPtr<Gdk::Pixbuf> image, int width, int height, ImageCache &cache, const Glib::ustring &team) {
+	if (!cache.image || cache.image->get_width() != width || cache.image->get_height() != height || cache.team != team) {
+		double xscale = static_cast<double>(width) / image->get_width();
+		double yscale = static_cast<double>(height) / image->get_height();
+		double scale = std::min(xscale, yscale);
+		cache.image = image->scale_simple(std::min(width, static_cast<int>(image->get_width() * scale)), std::min(height, static_cast<int>(image->get_height() * scale)), Gdk::INTERP_BILINEAR);
+		cache.team = team;
+	}
+	return cache.image;
 }
 
