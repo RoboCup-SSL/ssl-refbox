@@ -121,7 +121,12 @@ namespace {
 	}
 }
 
-MainWindow::MainWindow(GameState &state, const image_database_t &flags, const image_database_t &logos) : state(state), flags(flags), logos(logos), is_fullscreen(false) {
+MainWindow::MainWindow(GameState &state, const image_database_t &flags, const image_database_t &logos, const Glib::KeyFile &config) :
+		state(state),
+		flags(flags),
+		logos(logos),
+		config(config),
+		is_fullscreen(false) {
 	set_title(u8"Scoreboard (press F to toggle fullscreen");
 
 	Gtk::Main::signal_key_snooper().connect(sigc::mem_fun(this, &MainWindow::key_snoop));
@@ -156,12 +161,6 @@ bool MainWindow::on_expose_event(GdkEventExpose *evt) {
 		return true;
 	}
 
-	// Find the flag and logo images for the two teams.
-	Glib::RefPtr<Gdk::Pixbuf> yellow_flag = find_image(flags, state.referee.yellow().name());
-	Glib::RefPtr<Gdk::Pixbuf> yellow_logo = find_image(logos, state.referee.yellow().name());
-	Glib::RefPtr<Gdk::Pixbuf> blue_flag = find_image(flags, state.referee.blue().name());
-	Glib::RefPtr<Gdk::Pixbuf> blue_logo = find_image(logos, state.referee.blue().name());
-
 	// Compute a rectangle that will hold each part of the display.
 	Pango::Rectangle window_rect(0, 0, width, height);
 	// window_rect
@@ -188,38 +187,14 @@ bool MainWindow::on_expose_event(GdkEventExpose *evt) {
 			// yellow_rect
 				Pango::Rectangle yellow_inner_rect;
 				pad_rect(yellow_rect, yellow_inner_rect, padding);
-				// yellow_inner_rect
-					Pango::Rectangle yellow_name_rect, yellow_images_rect, yellow_score_rect;
-					split_rect_vertical(yellow_inner_rect, {&yellow_name_rect, &yellow_images_rect, &yellow_score_rect}, {0.2, 0.3, 0.5});
-					// yellow_name_rect is terminal
-					// yellow_images_rect
-						Pango::Rectangle yellow_flag_rect, yellow_logo_rect;
-						if (yellow_flag && yellow_logo) {
-							split_rect_horizontal(yellow_images_rect, {&yellow_flag_rect, &yellow_logo_rect}, {0.5, 0.5});
-						} else {
-							yellow_flag_rect = yellow_logo_rect = yellow_images_rect;
-						}
-					// yellow_score_rect is terminal
 			// blue_rect
 				Pango::Rectangle blue_inner_rect;
 				pad_rect(blue_rect, blue_inner_rect, padding);
-				// blue_inner_rect
-					Pango::Rectangle blue_name_rect, blue_images_rect, blue_score_rect;
-					split_rect_vertical(blue_inner_rect, {&blue_name_rect, &blue_images_rect, &blue_score_rect}, {0.2, 0.3, 0.5});
-					// blue_name_rect is terminal
-					// blue_images_rect
-						Pango::Rectangle blue_flag_rect, blue_logo_rect;
-						if (blue_flag && blue_logo) {
-							split_rect_horizontal(blue_images_rect, {&blue_flag_rect, &blue_logo_rect}, {0.5, 0.5});
-						} else {
-							blue_flag_rect = blue_logo_rect = blue_images_rect;
-						}
-					// blue_score_rect is terminal
 
 #if SHOW_LAYOUT
 	// Show the rectangles making up the layout.
 	ctx->set_source_rgb(1.0, 1.0, 1.0);
-	std::initializer_list<const Pango::Rectangle *> rects{&clock_rect, &half_time_rect, &first_half_rect, &second_half_rect, &overtime_first_half_rect, &overtime_second_half_rect, &penalty_shootout_rect, &yellow_rect, &yellow_name_rect, &yellow_flag_rect, &yellow_logo_rect, &yellow_score_rect, &blue_rect, &blue_name_rect, &blue_flag_rect, &blue_logo_rect, &blue_score_rect};
+	std::initializer_list<const Pango::Rectangle *> rects{&clock_rect, &half_time_rect, &first_half_rect, &second_half_rect, &overtime_first_half_rect, &overtime_second_half_rect, &penalty_shootout_rect, &blue_rect, &blue_name_rect, &blue_flag_rect, &blue_logo_rect, &blue_score_rect};
 	for (auto i : rects) {
 		ctx->rectangle(i->get_x(), i->get_y(), i->get_width(), i->get_height());
 	}
@@ -236,7 +211,7 @@ bool MainWindow::on_expose_event(GdkEventExpose *evt) {
 	ctx->stroke();
 	ctx->set_line_width(1);
 
-	// Draw the texts.
+	// Draw the common texts.
 	ctx->set_source_rgb(1.0, 1.0, 1.0);
 	draw_text(ctx, clock_rect, padding, state.referee.stage_time_left() < 0 ? u8"0:00.0" : format_time_deciseconds(state.referee.stage_time_left()));
 	{
@@ -252,25 +227,10 @@ bool MainWindow::on_expose_event(GdkEventExpose *evt) {
 			draw_text(ctx, *stage_rects[i], padding, STAGE_TEXTS[i]);
 		}
 	}
-	ctx->set_source_rgb(1.0, 1.0, 1.0);
-	draw_text(ctx, yellow_name_rect, padding, state.referee.yellow().name());
-	if (yellow_flag) {
-		draw_image(ctx, yellow_flag_rect, padding, resize_image(yellow_flag, yellow_flag_rect.get_width(), yellow_flag_rect.get_height(), yellow_flag_cache, state.referee.yellow().name()));
-	}
-	if (yellow_logo) {
-		draw_image(ctx, yellow_logo_rect, padding, resize_image(yellow_logo, yellow_logo_rect.get_width(), yellow_logo_rect.get_height(), yellow_logo_cache, state.referee.yellow().name()));
-	}
-	ctx->set_source_rgb(1.0, 1.0, 1.0);
-	draw_text(ctx, yellow_score_rect, padding, Glib::ustring::format(state.referee.yellow().score()));
-	draw_text(ctx, blue_name_rect, padding, state.referee.blue().name());
-	if (blue_flag) {
-		draw_image(ctx, blue_flag_rect, padding, resize_image(blue_flag, blue_flag_rect.get_width(), blue_flag_rect.get_height(), blue_flag_cache, state.referee.blue().name()));
-	}
-	if (blue_logo) {
-		draw_image(ctx, blue_logo_rect, padding, resize_image(blue_logo, blue_logo_rect.get_width(), blue_logo_rect.get_height(), blue_logo_cache, state.referee.blue().name()));
-	}
-	ctx->set_source_rgb(1.0, 1.0, 1.0);
-	draw_text(ctx, blue_score_rect, padding, Glib::ustring::format(state.referee.blue().score()));
+
+	// Draw the team information panels.
+	draw_team_rectangle(state.referee.yellow().name(), yellow_logo_cache, yellow_flag_cache, yellow_inner_rect, ctx, padding, state.referee.yellow().score());
+	draw_team_rectangle(state.referee.blue().name(), blue_logo_cache, blue_flag_cache, blue_inner_rect, ctx, padding, state.referee.blue().score());
 
 	return true;
 }
@@ -314,5 +274,77 @@ Glib::RefPtr<Gdk::Pixbuf> MainWindow::resize_image(Glib::RefPtr<Gdk::Pixbuf> ima
 		cache.team = team;
 	}
 	return cache.image;
+}
+
+void MainWindow::draw_team_rectangle(const Glib::ustring &name, ImageCache &logo_cache, ImageCache &flag_cache, Pango::Rectangle inner_rect, Cairo::RefPtr<Cairo::Context> ctx, int padding, unsigned int score) {
+	// Find the logo and flag images for the team.
+	Glib::RefPtr<Gdk::Pixbuf> logo = find_image(logos, name);
+	Glib::RefPtr<Gdk::Pixbuf> flag = find_image(flags, name);
+
+	// Decide whether to show the team name.
+	bool show_name = config.has_key(u8"shownames", name) ? config.get_boolean(u8"shownames", name) : !logo;
+	if (!show_name && !flag && !logo) {
+		show_name = true;
+	}
+
+	// inner_rect
+		Pango::Rectangle top_rect, score_rect;
+		split_rect_vertical(inner_rect, {&top_rect, &score_rect}, {0.6, 0.4});
+		// top_rect
+			Pango::Rectangle name_rect, images_rect, logo_rect, flag_rect;
+			if (show_name && (flag || logo)) {
+				split_rect_vertical(top_rect, {&name_rect, &images_rect}, {0.35, 0.65});
+			} else if (flag || logo) {
+				images_rect = top_rect;
+			} else {
+				name_rect = top_rect;
+			}
+			// name_rect is terminal
+			// images_rect
+				if (flag && logo) {
+					int fwidth = flag->get_width();
+					int fheight = flag->get_height();
+					int lwidth = logo->get_width();
+					int lheight = logo->get_height();
+					int hwidth = fwidth + lwidth, hheight = std::max(fheight, lheight);
+					int vwidth = std::max(fwidth, lwidth), vheight = fheight + lheight;
+					double hscale = std::min(static_cast<double>(images_rect.get_width()) / hwidth, static_cast<double>(images_rect.get_height()) / hheight);
+					double vscale = std::min(static_cast<double>(images_rect.get_width()) / vwidth, static_cast<double>(images_rect.get_height()) / vheight);
+					if (hscale >= vscale) {
+						split_rect_horizontal(images_rect, {&logo_rect, &flag_rect}, {0.5, 0.5});
+					} else {
+						split_rect_vertical(images_rect, {&logo_rect, &flag_rect}, {0.5, 0.5});
+					}
+					// logo_rect is terminal
+					// flag_rect is terminal
+				} else if (logo) {
+					logo_rect = images_rect;
+					// logo_rect is terminal
+				} else if (flag) {
+					flag_rect = images_rect;
+					// flag_rect is terminal
+				}
+		// score_rect is terminal
+
+#if SHOW_LAYOUT
+	// Show the rectangles making up the layout.
+	ctx->set_source_rgb(1.0, 1.0, 1.0);
+	std::initializer_list<const Pango::Rectangle *> rects{&clock_rect, &half_time_rect, &first_half_rect, &second_half_rect, &overtime_first_half_rect, &overtime_second_half_rect, &penalty_shootout_rect, &rect, &name_rect, &flag_rect, &logo_rect, &score_rect, &blue_rect, &blue_name_rect, &blue_flag_rect, &blue_logo_rect, &blue_score_rect};
+	for (auto i : rects) {
+		ctx->rectangle(i->get_x(), i->get_y(), i->get_width(), i->get_height());
+	}
+	ctx->stroke();
+#endif
+
+	ctx->set_source_rgb(1.0, 1.0, 1.0);
+	draw_text(ctx, name_rect, padding, name);
+	if (logo) {
+		draw_image(ctx, logo_rect, padding, resize_image(logo, logo_rect.get_width(), logo_rect.get_height(), logo_cache, name));
+	}
+	if (flag) {
+		draw_image(ctx, flag_rect, padding, resize_image(flag, flag_rect.get_width(), flag_rect.get_height(), flag_cache, name));
+	}
+	ctx->set_source_rgb(1.0, 1.0, 1.0);
+	draw_text(ctx, score_rect, padding, Glib::ustring::format(score));
 }
 

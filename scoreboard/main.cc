@@ -7,6 +7,7 @@
 #include <locale>
 #include <glibmm/convert.h>
 #include <glibmm/exception.h>
+#include <glibmm/keyfile.h>
 #include <glibmm/optioncontext.h>
 #include <glibmm/optionentry.h>
 #include <glibmm/optiongroup.h>
@@ -52,6 +53,10 @@ namespace {
 		option_context.set_main_group(option_group);
 		Gtk::Main kit(argc, argv, option_context);
 
+		// Load configuration file.
+		Glib::KeyFile kf;
+		kf.load_from_file("scoreboard.conf");
+
 		// Load the flags and logos.
 		const image_database_t &flags = load_image_database("flags");
 		const image_database_t &logos = load_image_database("logos");
@@ -61,7 +66,7 @@ namespace {
 		GameState state(mc_interface, mc_group, mc_port);
 
 		// Create and display a main window.
-		MainWindow main_window(state, flags, logos);
+		MainWindow main_window(state, flags, logos, kf);
 		kit.run(main_window);
 
         // Shut down protobuf.
