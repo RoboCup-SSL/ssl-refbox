@@ -1,5 +1,7 @@
 #include "imagedb.h"
 #include <glibmm/fileutils.h>
+#include <glibmm/miscutils.h>
+#include <glibmm/convert.h>
 
 image_database_t load_image_database(const std::string &path) {
 	image_database_t db;
