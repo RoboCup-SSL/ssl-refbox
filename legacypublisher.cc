@@ -8,16 +8,16 @@ namespace {
 	char map_stage(SSL_Referee::Stage stage) {
 		switch (stage) {
 			case SSL_Referee::NORMAL_FIRST_HALF_PRE: return '1';
-			case SSL_Referee::NORMAL_FIRST_HALF: return '1';
+			case SSL_Referee::NORMAL_FIRST_HALF: return ' ';
 			case SSL_Referee::NORMAL_HALF_TIME: return 'h';
 			case SSL_Referee::NORMAL_SECOND_HALF_PRE: return '2';
-			case SSL_Referee::NORMAL_SECOND_HALF: return '2';
+			case SSL_Referee::NORMAL_SECOND_HALF: return ' ';
 			case SSL_Referee::EXTRA_TIME_BREAK: return 'h';
 			case SSL_Referee::EXTRA_FIRST_HALF_PRE: return 'o';
-			case SSL_Referee::EXTRA_FIRST_HALF: return 'o';
+			case SSL_Referee::EXTRA_FIRST_HALF: return ' ';
 			case SSL_Referee::EXTRA_HALF_TIME: return 'h';
 			case SSL_Referee::EXTRA_SECOND_HALF_PRE: return 'O';
-			case SSL_Referee::EXTRA_SECOND_HALF: return 'O';
+			case SSL_Referee::EXTRA_SECOND_HALF: return ' ';
 			case SSL_Referee::PENALTY_SHOOTOUT_BREAK: return 'h';
 			case SSL_Referee::PENALTY_SHOOTOUT: return 'a';
 			case SSL_Referee::POST_GAME: return 'H';
