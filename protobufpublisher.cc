@@ -12,7 +12,7 @@ ProtobufPublisher::ProtobufPublisher(const Configuration &configuration, Logger 
 
 void ProtobufPublisher::publish(SaveState &state) {
 	// Shove in the packet timestamp.
-	std::chrono::microseconds diff = std::chrono::system_clock::now() - std::chrono::system_clock::from_time_t(0);
+	std::chrono::microseconds diff = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - std::chrono::system_clock::from_time_t(0));
 	state.mutable_referee()->set_packet_timestamp(diff.count());
 
 	// Serialize the packet.
