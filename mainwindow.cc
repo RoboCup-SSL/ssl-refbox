@@ -377,6 +377,19 @@ void MainWindow::on_yellow_card_time_changed() {
 }
 
 void MainWindow::on_other_changed() {
+	// If a goalie change has been requested but not yet committed, we must push that goalie change through now.
+	// Otherwise, two things might happen:
+	// (1) A new command might be issued with the old goalie number, when we really should have committed the new goalie number no later than when the new command is sent, and
+	// (2) The new goalie number might be discarded because it is only present in the UI and not yet in the game state, and the UI will be updated from the game state.
+	if (goalie_yellow_commit_connection) {
+		goalie_yellow_commit_connection.disconnect();
+		on_goalie_yellow_commit();
+	}
+	if (goalie_blue_commit_connection) {
+		goalie_blue_commit_connection.disconnect();
+		on_goalie_blue_commit();
+	}
+
 	// Update all the other things as well as they can be affected by these changes.
 	on_timeout_time_changed();
 	on_game_clock_changed();
