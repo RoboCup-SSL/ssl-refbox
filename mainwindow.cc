@@ -377,6 +377,7 @@ void MainWindow::on_yellow_card_time_changed() {
 }
 
 void MainWindow::on_other_changed() {
+	// Update all the other things as well as they can be affected by these changes.
 	on_timeout_time_changed();
 	on_game_clock_changed();
 	on_yellow_card_time_changed();
