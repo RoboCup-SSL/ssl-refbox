@@ -4,7 +4,9 @@
 #include <iomanip>
 #include <cairomm/context.h>
 #include <cairomm/refptr.h>
+#include <gdkmm/cursor.h>
 #include <gdkmm/general.h>
+#include <gdkmm/window.h>
 #include <glibmm/refptr.h>
 #include <gtkmm/main.h>
 #include <pangomm/fontdescription.h>
@@ -135,6 +137,9 @@ MainWindow::MainWindow(GameState &state, const image_database_t &flags, const im
 
 	set_default_size(400, 400);
 	show_all();
+
+	Gdk::Cursor cursor(Gdk::BLANK_CURSOR);
+	get_window()->set_cursor(cursor);
 }
 
 bool MainWindow::on_expose_event(GdkEventExpose *evt) {
