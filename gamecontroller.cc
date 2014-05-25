@@ -459,7 +459,7 @@ void GameController::set_command(SSL_Referee::Command command, bool no_signal) {
 	ref->set_command_counter(ref->command_counter() + 1);
 
 	// Record the command timestamp.
-	std::chrono::microseconds diff = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - std::chrono::system_clock::from_time_t(0));
+	std::chrono::microseconds diff = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - std::chrono::system_clock::from_time_t(0));
 	ref->set_command_timestamp(diff.count());
 
 	// We should save the game state now.
