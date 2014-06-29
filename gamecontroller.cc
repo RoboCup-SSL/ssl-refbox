@@ -271,7 +271,11 @@ void GameController::timeout_start(SaveState::Team team) {
 	// This allows to issue HALT during a timeout, then resume the running timeout, without eating up another of the team’s timeouts and without affecting the Cancel button.
 	// If that happens, during HALT there will still be a record of a running timeout.
 	if (!(state.has_timeout() && state.timeout().team() == team)) {
-		ti.set_timeouts(ti.timeouts() - 1);
+		// Do not debit a timeout if the team has no timeouts left, as we would wrap the counter.
+		// Assume the referee is granting an extra timeout at their discretion.
+		if (ti.timeouts()) {
+			ti.set_timeouts(ti.timeouts() - 1);
+		}
 		state.mutable_timeout()->set_team(team);
 		state.mutable_timeout()->set_left_before(ti.timeout_time());
 	}
