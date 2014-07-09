@@ -1,7 +1,8 @@
 # Standard compiler and linker flags.
-override CXXFLAGS := -std=gnu++0x -Wall -Wextra -Wold-style-cast -Wconversion -Wundef -O2 -g $(shell pkg-config --cflags gtkmm-2.4 protobuf | sed 's/-I/-isystem /g') $(CXXFLAGS)
-override LDFLAGS := $(shell pkg-config --libs-only-L --libs-only-other gtkmm-2.4 protobuf)
-override LDLIBS := $(shell pkg-config --libs-only-l gtkmm-2.4 protobuf)
+PKG_CONFIG ?= pkg-config
+override CXXFLAGS := -std=gnu++0x -Wall -Wextra -Wold-style-cast -Wconversion -Wundef -O2 -g $(shell $(PKG_CONFIG) --cflags gtkmm-2.4 protobuf | sed 's/-I/-isystem /g') $(CXXFLAGS)
+override LDFLAGS := $(shell $(PKG_CONFIG) --libs-only-L --libs-only-other gtkmm-2.4 protobuf)
+override LDLIBS := $(shell $(PKG_CONFIG) --libs-only-l gtkmm-2.4 protobuf)
 
 # The default target.
 .PHONY : world
