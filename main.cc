@@ -34,9 +34,9 @@ namespace {
 		Glib::OptionEntry config_file_entry;
 		config_file_entry.set_long_name(u8"config");
 		config_file_entry.set_short_name('C');
-		config_file_entry.set_description(u8"Sets the name of the configuration file (default is “referee.conf”).");
+		config_file_entry.set_description(u8"Sets the name of the configuration file (required; typically single.conf or double.conf).");
 		config_file_entry.set_arg_description(u8"CONFIGFILE");
-		std::string config_filename = Glib::filename_from_utf8(u8"referee.conf");
+		std::string config_filename;
 		option_group.add_entry_filename(config_file_entry, config_filename);
 
 		Glib::OptionEntry resume_entry;
@@ -48,6 +48,12 @@ namespace {
 
 		option_context.set_main_group(option_group);
 		Gtk::Main kit(argc, argv, option_context);
+
+		// Check for required option.
+		if (config_filename.empty()) {
+			std::cerr << "The -C/--config option is mandatory. You probably want single.conf or double.conf.\n";
+			return 1;
+		}
 
 		// Initialize the game objects.
 		Configuration configuration(config_filename);
