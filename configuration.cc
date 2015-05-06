@@ -11,18 +11,18 @@ Configuration::Configuration(const std::string &filename) {
 
 	normal_half_seconds = kf.get_integer(u8"normal", u8"HALF");
 	normal_half_time_seconds = kf.get_integer(u8"normal", u8"HALF_TIME");
-	normal_timeout_seconds = kf.get_integer(u8"normal", u8"TIMEOUT_TIME");
-	normal_timeouts = kf.get_integer(u8"normal", u8"TIMEOUTS");
+	normal_timeout_seconds = static_cast<unsigned int>(kf.get_integer(u8"normal", u8"TIMEOUT_TIME"));
+	normal_timeouts = static_cast<unsigned int>(kf.get_integer(u8"normal", u8"TIMEOUTS"));
 
 	overtime_break_seconds = kf.get_integer(u8"overtime", u8"BREAK");
 	overtime_half_seconds = kf.get_integer(u8"overtime", u8"HALF");
 	overtime_half_time_seconds = kf.get_integer(u8"overtime", u8"HALF_TIME");
-	overtime_timeout_seconds = kf.get_integer(u8"overtime", u8"TIMEOUT_TIME");
-	overtime_timeouts = kf.get_integer(u8"overtime", u8"TIMEOUTS");
+	overtime_timeout_seconds = static_cast<unsigned int>(kf.get_integer(u8"overtime", u8"TIMEOUT_TIME"));
+	overtime_timeouts = static_cast<unsigned int>(kf.get_integer(u8"overtime", u8"TIMEOUTS"));
 
 	shootout_break_seconds = kf.get_integer(u8"shootout", u8"BREAK");
 
-	yellow_card_seconds = kf.get_integer(u8"global", u8"YELLOW_CARD_TIME");
+	yellow_card_seconds = static_cast<unsigned int>(kf.get_integer(u8"global", u8"YELLOW_CARD_TIME"));
 
 	save_filename = kf.has_key(u8"files", u8"SAVE") ? Glib::filename_from_utf8(kf.get_string(u8"files", u8"SAVE")) : "";
 	log_filename = kf.has_key(u8"files", u8"LOG") ? Glib::filename_from_utf8(kf.get_string(u8"files", u8"LOG")) : "";

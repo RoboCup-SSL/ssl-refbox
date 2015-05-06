@@ -376,7 +376,7 @@ bool GameController::tick() {
 			if (ref.has_stage_time_left()) {
 				int32_t old_left = ref.stage_time_left();
 				int32_t old_tenths = old_left / 100000;
-				int32_t new_left = old_left - delta;
+				int32_t new_left = old_left - static_cast<int32_t>(delta);
 				int32_t new_tenths = new_left / 100000;
 				ref.set_stage_time_left(new_left);
 				if (new_tenths != old_tenths) {

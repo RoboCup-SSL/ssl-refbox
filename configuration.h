@@ -10,20 +10,20 @@ class Logger;
 class Configuration {
 	public:
 		// [normal] section
-		unsigned int normal_half_seconds;
-		unsigned int normal_half_time_seconds;
+		int normal_half_seconds;
+		int normal_half_time_seconds;
 		unsigned int normal_timeout_seconds;
 		unsigned int normal_timeouts;
 
 		// [overtime] section
-		unsigned int overtime_break_seconds;
-		unsigned int overtime_half_seconds;
-		unsigned int overtime_half_time_seconds;
+		int overtime_break_seconds;
+		int overtime_half_seconds;
+		int overtime_half_time_seconds;
 		unsigned int overtime_timeout_seconds;
 		unsigned int overtime_timeouts;
 
 		// [shootout] section
-		unsigned int shootout_break_seconds;
+		int shootout_break_seconds;
 
 		// [global] section
 		unsigned int yellow_card_seconds;
