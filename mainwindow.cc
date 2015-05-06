@@ -468,12 +468,12 @@ void MainWindow::on_goalie_blue_changed() {
 }
 
 bool MainWindow::on_goalie_yellow_commit() {
-	controller.set_goalie(SaveState::TEAM_YELLOW, yellow_goalie_spin.get_value_as_int());
+	controller.set_goalie(SaveState::TEAM_YELLOW, static_cast<unsigned int>(yellow_goalie_spin.get_value_as_int()));
 	return false;
 }
 
 bool MainWindow::on_goalie_blue_commit() {
-	controller.set_goalie(SaveState::TEAM_BLUE, blue_goalie_spin.get_value_as_int());
+	controller.set_goalie(SaveState::TEAM_BLUE, static_cast<unsigned int>(blue_goalie_spin.get_value_as_int()));
 	return false;
 }
 

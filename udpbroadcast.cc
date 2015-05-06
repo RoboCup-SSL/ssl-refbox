@@ -65,7 +65,7 @@ bool InterfaceInfo::configure_socket(const Socket &sock, Logger &logger) const {
 #endif
 	if (family_ == AF_INET) {
 		ip_mreqn mreq;
-		mreq.imr_ifindex = ifindex;
+		mreq.imr_ifindex = static_cast<int>(ifindex);
 		if (setsockopt(sock, IPPROTO_IP, IP_MULTICAST_IF, &mreq, sizeof(mreq)) < 0) {
 			int rc = errno;
 			logger.write(Glib::ustring::compose(u8"Cannot set IPv4 socket to send multicast packet on interface %1: %2", Glib::locale_to_utf8(name_), Glib::locale_to_utf8(std::strerror(rc))));

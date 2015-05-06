@@ -56,12 +56,12 @@ LegacyPublisher::LegacyPublisher(const Configuration &configuration, Logger &log
 void LegacyPublisher::publish(SaveState &state) {
 	// Encode the packet.
 	uint8_t packet[6];
-	packet[0] = compute_command(state.referee());
+	packet[0] = static_cast<uint8_t>(compute_command(state.referee()));
 	packet[1] = static_cast<uint8_t>(state.referee().command_counter());
 	packet[2] = static_cast<uint8_t>(state.referee().blue().score());
 	packet[3] = static_cast<uint8_t>(state.referee().yellow().score());
 	if (state.referee().has_stage_time_left() && state.referee().stage_time_left() >= 0) {
-		unsigned int left = state.referee().stage_time_left() / 1000000;
+		int left = state.referee().stage_time_left() / 1000000;
 		if (left <= 65535) {
 			packet[4] = static_cast<uint8_t>(left / 256);
 			packet[5] = static_cast<uint8_t>(left);
