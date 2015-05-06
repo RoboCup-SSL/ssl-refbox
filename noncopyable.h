@@ -3,18 +3,14 @@
 
 class NonCopyable {
 	public:
-		NonCopyable(const NonCopyable &);
-		NonCopyable &operator=(const NonCopyable &);
+		NonCopyable(const NonCopyable &) = delete;
+		NonCopyable &operator=(const NonCopyable &) = delete;
 
 	protected:
 		NonCopyable();
 };
 
 
-
-NonCopyable::NonCopyable(const NonCopyable &) = delete;
-
-NonCopyable &NonCopyable::operator=(const NonCopyable &) = delete;
 
 inline NonCopyable::NonCopyable() {
 }
