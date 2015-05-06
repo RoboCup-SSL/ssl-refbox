@@ -55,6 +55,14 @@ bool InterfaceInfo::configure_socket(const Socket &sock, Logger &logger) const {
 #ifdef WIN32
 	return true;
 #else
+#ifdef __APPLE__
+    int set = 1;
+    if (setsockopt(sock, SOL_SOCKET, SO_NOSIGPIPE, reinterpret_cast<void *>(&set), sizeof(int)) < 0) {
+        int rc = errno;
+        logger.write(Glib::ustring::compose(u8"Cannot set NOSIGPIPE option for interface %1: %2", Glib::locale_to_utf8(name_), Glib::locale_to_utf8(std::strerror(rc))));
+        return false;
+    }
+#endif
 	if (family_ == AF_INET) {
 		ip_mreqn mreq;
 		mreq.imr_ifindex = ifindex;
@@ -194,7 +202,11 @@ void UDPBroadcast::send(const void *data, size_t length) {
 			if (i.configure_socket(sock.second, logger)) {
 				// The socket was set up to send to this interface.
 				// Now send data.
+#ifdef __APPLE__
+				ssize_t ssz = ::send(sock.second, data, length, 0);
+#else
 				ssize_t ssz = ::send(sock.second, data, length, MSG_NOSIGNAL);
+#endif
 				if (ssz < 0) {
 					int rc = errno;
 					logger.write(Glib::ustring::compose(u8"Failed to send on interface %1 to address %2 and port %3: %4", Glib::locale_to_utf8(i.name()), Glib::locale_to_utf8(sock.first.first), Glib::locale_to_utf8(sock.first.second), Glib::locale_to_utf8(std::strerror(rc))));

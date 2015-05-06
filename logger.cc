@@ -5,7 +5,7 @@
 #include <locale>
 #include <sstream>
 
-Logger::Logger(const std::string &filename) : start_time(std::chrono::system_clock::now()) {
+Logger::Logger(const std::string &filename) : start_time(std::chrono::high_resolution_clock::now()) {
 	if (!filename.empty()) {
 		ofs.exceptions(std::ios_base::badbit | std::ios_base::failbit);
 		ofs.open(filename, std::ios_base::out | std::ios_base::app);
