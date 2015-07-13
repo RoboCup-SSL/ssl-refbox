@@ -96,7 +96,7 @@ MainWindow::MainWindow(GameController &controller) :
 		timeleft_label(u8"??.??:?? left"),
 		game_status_label(u8"Stopped"),
 		game_control_box(Gtk::BUTTONBOX_DEFAULT_STYLE, 10),
-		cancel_but(u8"Cancel\ncard or timeout"),
+		cancel_but(u8"Cancel\n"),
 		yellow_goal_but(u8"Goal Yellow!\n(KP_Div)"),
 		yellow_subgoal_but(u8"−"),
 		blue_goal_but(u8"Goal Blue!\n(KP_Mult)"),
@@ -521,7 +521,21 @@ void MainWindow::update_sensitivities() {
 	// You can cancel a card whenever there is one outstanding.
 	// You can cancel a timeout only when the timeout is running, not if it is in a nested HALT.
 	// You can never cancel anything in post-game.
-	cancel_but.set_sensitive(ign || (ref.stage() != SSL_Referee::POST_GAME && (controller.state.has_last_card() || is_timeout_running)));
+	if (ref.stage() != SSL_Referee::POST_GAME) {
+		if (controller.state.has_last_card()) {
+			cancel_but.set_sensitive();
+			cancel_but.set_label(u8"Cancel\nlast card");
+		} else if (is_timeout_running) {
+			cancel_but.set_sensitive();
+			cancel_but.set_label(u8"Cancel\ncurrent timeout");
+		} else {
+			cancel_but.set_sensitive(false);
+			cancel_but.set_label(u8"Cancel\n");
+		}
+	} else {
+		cancel_but.set_sensitive(false);
+		cancel_but.set_label(u8"Cancel\n");
+	}
 
 	// You can award goals whenever you are stopped.
 	yellow_goal_but.set_sensitive(ign || is_stopped);
