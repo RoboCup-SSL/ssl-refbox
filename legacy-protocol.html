@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>SSL Referee Box—Legacy Protocol</title>
+</head>
+<body>
+<p><a href="/">Front Page</a></p>
+<h1>SSL Referee Box—Legacy Protocol</h1>
+<p><span style="color: red;">Warning:</span> This protocol is not recommended. It is provided for backwards compatibility only. New software should use <a href="protocol.html">the Protobuf-based protocol</a>.</p>
+
+<p>The protocol for referee signaling uses ASCII characters to signal referee decisions to teams. The commands currently implemented are listed below:</p>
+<pre>
+Command type 	Command Description 	Command
+=================================================================================
+Control commands
+	Halt 	                        H
+	Stop 	                        S
+	Ready 	                        ' ' (space character)
+	Start 	                        s
+Game Notifications
+	Begin first half 	        1
+	Begin half time 	        h
+	Begin second half 	        2
+	Begin overtime half 1 	        o
+	Begin overtime half 2 	        O
+	Begin penalty shootout 	        a
+
+Command type 	Command Description 	Yellow Team Command 	Blue Team Command
+=================================================================================
+Game restarts
+	Kick off 	                k                       K
+	Penalty 	                p 	                P
+	Direct Free kick 	        f 	                F
+	Indirect Free kick 	        i 	                I
+Extras
+	Timeout 	                t 	                T
+	Timeout end 	                z 	                z
+	Goal scored 	                g 	                G
+	decrease Goal score 	        d 	                D
+	Yellow Card 	                y 	                Y
+	Red Card 	                r 	                R
+	Cancel 	                        c
+</pre>
+
+<h2>Transmission Method</h2>
+<p>The referee commands are sent via IP network to the teams, using UDP multicasting datagrams. Data is sent continuously, multiple times per second, inside UDP packets as described below. The IPv4 multicast address is 224.5.23.1, port 10001 using a TP 100 MBit/s Ethernet connection.</p>
+
+<p>Each UDP packet contains 6 Bytes:</p>
+
+<pre>
++---------+---------+------------+--------------+-------------------+
+| Command | Counter | Goals blue | Goals yellow | time left (16 Bit)|
++---------+---------+------------+--------------+-------------------+
+</pre>
+
+<p>The referee box uses this code for the packet:</p>
+<pre>
+  struct GameStatePacket{
+    char cmd;                      // current referee command
+    unsigned char cmd_counter;     // increments each time new command is set
+    unsigned char goals_blue;      // current score for blue team
+    unsigned char goals_yellow;    // current score for yellow team
+    unsigned short time_remaining; // seconds remaining for current game stage (network byte order)
+  };
+</pre>
+
+<p>The receiver can check the counter value to see if it already got this command.</p>
+</body>
+</html>
