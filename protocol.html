@@ -5,7 +5,7 @@
 <title>SSL Referee Box—Protocol</title>
 </head>
 <body>
-<p><a href="/">Front Page</a></p>
+<p><a href="./">Front Page</a></p>
 <h1>SSL Referee Box—Protocol</h1>
 <p>The referee box sends information about the current state of the game to teams over Ethernet on the field network. Packets are encoded using <a href="https://developers.google.com/protocol-buffers/">Google Protocol Buffers</a>, just like SSL-Vision. Each referee box packet is a message of type <code>SSL_Referee</code>, as defined in <a href="https://github.com/RoboCup-SSL/ssl-refbox/blob/master/referee.proto">the Protocol Buffers file</a>. For details about the fields in the message, please see the comments in that file. Each packet is a UDP packet containing exactly the binary encoded form of the <code>SSL_Referee</code> message; packets are sent to UDP port 10003 at IP multicast group 224.5.23.1 (this can be changed in the configuration file for local testing if necessary).</p>
 
