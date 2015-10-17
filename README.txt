@@ -21,4 +21,4 @@ referee box will keep a record of the timeouts, time remaining, score
 and penalties.
 
 More information can be found at:
-http://robocup-ssl.github.io/ssl-refbox/
+https://robocup-ssl.github.io/ssl-refbox/
