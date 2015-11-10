@@ -352,7 +352,7 @@ void MainWindow::on_game_clock_changed() {
 	// Thus, only show the cloc if we are not in the penalty shootout.
 	const SaveState &state = controller.state;
 	if (state.referee().stage() != SSL_Referee::PENALTY_SHOOTOUT) {
-		time_label.set_text(format_time_deciseconds(state.time_taken()));
+		time_label.set_text(format_time_deciseconds(static_cast<uint64_t>(state.time_taken())));
 		timeleft_label.set_text(format_time_deciseconds(state.referee().has_stage_time_left() ? state.referee().stage_time_left() : 0));
 	}
 }
