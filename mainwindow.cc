@@ -349,7 +349,7 @@ void MainWindow::on_timeout_time_changed() {
 
 void MainWindow::on_game_clock_changed() {
 	// The penalty shootout renders in a special way; there is no game clock during that time, instead, it shows a penalty goal count.
-	// Thus, only show the cloc if we are not in the penalty shootout.
+	// Thus, only show the clock if we are not in the penalty shootout.
 	const SaveState &state = controller.state;
 	if (state.referee().stage() != SSL_Referee::PENALTY_SHOOTOUT) {
 		time_label.set_text(format_time_deciseconds(static_cast<uint64_t>(state.time_taken())));
