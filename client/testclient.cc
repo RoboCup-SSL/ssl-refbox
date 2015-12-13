@@ -74,7 +74,11 @@ int main() {
 		}
 
 		// Display some information.
-		std::cout << "TS=" << referee.packet_timestamp() << ", stage=" << referee.stage() << ", stage_time_left=" << referee.stage_time_left() << ", command=" << referee.command() << ", yscore=" << referee.yellow().score() << ", bscore=" << referee.blue().score() << '\n';
+		std::cout << "TS=" << referee.packet_timestamp() << ", stage=" << referee.stage() << ", stage_time_left=" << referee.stage_time_left() << ", command=" << referee.command() << ", yscore=" << referee.yellow().score() << ", bscore=" << referee.blue().score();
+		if (referee.has_designated_x()) {
+			std::cout << ", designated=(" << referee.designated_x() << ',' << referee.designated_y() << ')';
+		}
+		std::cout << '\n';
 	}
 }
 
