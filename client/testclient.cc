@@ -68,7 +68,7 @@ int main() {
 
 		// Parse a Protobuf structure out of it.
 		SSL_Referee referee;
-		if (!referee.ParseFromArray(buffer, len)) {
+		if (!referee.ParseFromArray(buffer, static_cast<int>(len))) {
 			std::cerr << "Protobuf parsing error!\n";
 			return 1;
 		}
