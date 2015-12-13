@@ -44,6 +44,8 @@ namespace {
 			case SSL_Referee::TIMEOUT_BLUE: return 'T';
 			case SSL_Referee::GOAL_YELLOW: return 'g';
 			case SSL_Referee::GOAL_BLUE: return 'G';
+			case SSL_Referee::BALL_PLACEMENT_YELLOW: return 'S';
+			case SSL_Referee::BALL_PLACEMENT_BLUE: return 'S';
 		}
 
 		throw std::logic_error("Impossible state!");
