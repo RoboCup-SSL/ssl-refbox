@@ -2,6 +2,8 @@ build/
 client/testclient
 scoreboard/scoreboard
 *.o
+rcon.pb.cc
+rcon.pb.h
 referee.log
 referee.sav
 referee.pb.cc

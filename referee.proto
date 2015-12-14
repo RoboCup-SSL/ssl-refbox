@@ -143,6 +143,9 @@ message SSL_Referee {
 	// millimetres and correspond to SSL-Vision coordinates. These fields are
 	// always either both present (in the case of a ball placement command) or
 	// both absent (in the case of any other command).
-	optional float designated_x = 9;
-	optional float designated_y = 10;
+	message Point {
+		required float x = 1;
+		required float y = 2;
+	}
+	optional Point designated_position = 9;
 }
