@@ -43,6 +43,8 @@ namespace {
 		u8"Timeout (B)",
 		u8"Stopped",
 		u8"Stopped",
+		u8"Placing (Y)",
+		u8"Placing (B)",
 	};
 
 	Glib::ustring format_time_deciseconds(uint64_t micros) {
