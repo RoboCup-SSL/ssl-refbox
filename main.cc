@@ -42,7 +42,7 @@ namespace {
 		Glib::OptionEntry resume_entry;
 		resume_entry.set_long_name(u8"resume");
 		resume_entry.set_short_name('r');
-		resume_entry.set_description(u8"Resumes an in-progress game by loading the saved state file (specified as SAVENAME in configuration).");
+		resume_entry.set_description(u8"Resumes an in-progress game by loading the saved state file (specified as SAVE in configuration).");
 		bool resume = false;
 		option_group.add_entry(resume_entry, resume);
 
