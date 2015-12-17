@@ -409,10 +409,13 @@ void MainWindow::on_other_changed() {
 	blue_goal.set_text(Glib::ustring::format(ref.blue().score() - (ref.stage() == SSL_Referee::PENALTY_SHOOTOUT ? state.blue_penalty_goals() : 0)));
 
 	// Update team names.
-	teamname_yellow.set_active_text(ref.yellow().name());
-	teamname_yellow.get_entry()->set_text(ref.yellow().name());
-	teamname_blue.set_active_text(ref.blue().name());
-	teamname_blue.get_entry()->set_text(ref.blue().name());
+	{
+		const Glib::ustring &yellow_name = ref.yellow().name(), &blue_name = ref.blue().name();
+		teamname_yellow.set_active_text(yellow_name);
+		teamname_yellow.get_entry()->set_text(yellow_name);
+		teamname_blue.set_active_text(blue_name);
+		teamname_blue.get_entry()->set_text(blue_name);
+	}
 
 	// Update stage and command.
 	stage_label.set_text(STAGE_NAMES[ref.stage()]);
