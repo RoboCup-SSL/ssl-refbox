@@ -6,6 +6,7 @@
 #include "savestate.pb.h"
 #include "timing.h"
 #include <cstdint>
+#include <string>
 #include <vector>
 #include <glibmm/ustring.h>
 #include <sigc++/connection.h>
@@ -22,7 +23,7 @@ class GameController : public NonCopyable {
 		const Configuration &configuration;
 		sigc::signal<void> signal_timeout_time_changed, signal_game_clock_changed, signal_yellow_card_time_changed, signal_other_changed;
 
-		GameController(Logger &logger, const Configuration &configuration, const std::vector<Publisher *> &publishers, bool resume);
+		GameController(Logger &logger, const Configuration &configuration, const std::vector<Publisher *> &publishers, const std::string &resume_filename);
 		~GameController();
 
 		void enter_stage(SSL_Referee::Stage stage);

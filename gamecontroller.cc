@@ -18,13 +18,18 @@ namespace {
 	const uint32_t STATE_SAVE_INTERVAL = 5000000UL;
 }
 
-GameController::GameController(Logger &logger, const Configuration &configuration, const std::vector<Publisher *> &publishers, bool resume) : configuration(configuration), logger(logger), publishers(publishers), tick_connection(Glib::signal_timeout().connect(sigc::mem_fun(this, &GameController::tick), 25)), microseconds_since_last_state_save(0) {
-	if (resume) {
+GameController::GameController(Logger &logger, const Configuration &configuration, const std::vector<Publisher *> &publishers, const std::string &resume_filename) :
+		configuration(configuration),
+		logger(logger),
+		publishers(publishers),
+		tick_connection(Glib::signal_timeout().connect(sigc::mem_fun(this, &GameController::tick), 25)),
+		microseconds_since_last_state_save(0) {
+	if (!resume_filename.empty()) {
 		std::ifstream ifs;
 		ifs.exceptions(std::ios_base::badbit);
-		ifs.open(configuration.save_filename, std::ios_base::in | std::ios_base::binary);
+		ifs.open(resume_filename, std::ios_base::in | std::ios_base::binary);
 		if (!state.ParseFromIstream(&ifs)) {
-			throw std::runtime_error(Glib::locale_from_utf8(Glib::ustring::compose(u8"Protobuf error loading saved game state from file \"%1\"!", Glib::filename_to_utf8(configuration.save_filename))));
+			throw std::runtime_error(Glib::locale_from_utf8(Glib::ustring::compose(u8"Protobuf error loading saved game state from file \"%1\"!", Glib::filename_to_utf8(resume_filename))));
 		}
 		ifs.close();
 		set_command(SSL_Referee::HALT);

@@ -2,6 +2,7 @@
 #include "logger.h"
 #include <algorithm>
 #include <glibmm/convert.h>
+#include <glibmm/datetime.h>
 #include <glibmm/keyfile.h>
 #include <glibmm/ustring.h>
 
@@ -24,7 +25,9 @@ Configuration::Configuration(const std::string &filename) {
 
 	yellow_card_seconds = static_cast<unsigned int>(kf.get_integer(u8"global", u8"YELLOW_CARD_TIME"));
 
-	save_filename = kf.has_key(u8"files", u8"SAVE") ? Glib::filename_from_utf8(kf.get_string(u8"files", u8"SAVE")) : "";
+	if (kf.has_key(u8"files", u8"SAVE")) {
+		save_filename = Glib::filename_from_utf8(Glib::ustring::compose(kf.get_string(u8"files", u8"SAVE"), Glib::DateTime::create_now_local().format(u8"%Y%m%dT%H%M%S")));
+	}
 	log_filename = kf.has_key(u8"files", u8"LOG") ? Glib::filename_from_utf8(kf.get_string(u8"files", u8"LOG")) : "";
 
 	address = kf.get_string(u8"ip", u8"ADDRESS");

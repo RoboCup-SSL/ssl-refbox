@@ -42,9 +42,10 @@ namespace {
 		Glib::OptionEntry resume_entry;
 		resume_entry.set_long_name(u8"resume");
 		resume_entry.set_short_name('r');
-		resume_entry.set_description(u8"Resumes an in-progress game by loading the saved state file (specified as SAVE in configuration).");
-		bool resume = false;
-		option_group.add_entry(resume_entry, resume);
+		resume_entry.set_description(u8"Resumes an in-progress game by loading a saved state file.");
+		resume_entry.set_arg_description(u8"SAVEFILE");
+		std::string resume_filename;
+		option_group.add_entry_filename(resume_entry, resume_filename);
 
 		option_context.set_main_group(option_group);
 		Gtk::Main kit(argc, argv, option_context);
@@ -70,7 +71,7 @@ namespace {
 		}
 
 		// Construct the game controller that ties everything together.
-		GameController controller(logger, configuration, publishers, resume);
+		GameController controller(logger, configuration, publishers, resume_filename);
 
 		// Create and display a main window.
 		MainWindow main_window(controller);
