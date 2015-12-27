@@ -1,5 +1,6 @@
 build/
 client/testclient
+rcon-client/rconclient
 scoreboard/scoreboard
 *.o
 rcon.pb.cc
