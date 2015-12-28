@@ -22,6 +22,13 @@ class MainWindow : public Gtk::Window {
 		MainWindow(GameController &controller);
 
 	private:
+		// Information about a game control button.
+		struct GameControlButtonInfo {
+			Gtk::Button MainWindow::*button;
+			int new_stage;
+			int new_command;
+		};
+
 		void on_timeout_time_changed();
 		void on_game_clock_changed();
 		void on_yellow_card_time_changed();
@@ -36,7 +43,13 @@ class MainWindow : public Gtk::Window {
 		bool on_goalie_yellow_commit();
 		bool on_goalie_blue_commit();
 
+		void on_game_control_button_clicked(const GameControlButtonInfo *button);
+		void on_half_time_button_clicked();
+
 		void update_sensitivities();
+
+		// Information about the game control buttons.
+		static const GameControlButtonInfo game_control_button_info[];
 
 		// The game controller.
 		GameController &controller;

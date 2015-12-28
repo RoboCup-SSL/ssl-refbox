@@ -26,29 +26,27 @@ class GameController : public NonCopyable {
 		GameController(Logger &logger, const Configuration &configuration, const std::vector<Publisher *> &publishers, const std::string &resume_filename);
 		~GameController();
 
+		bool can_enter_stage(SSL_Referee::Stage stage) const;
 		void enter_stage(SSL_Referee::Stage stage);
-		void start_half_time();
+		SSL_Referee::Stage next_half_time() const;
 
-		void halt();
-		void stop();
-		void force_start();
-		void normal_start();
+		bool can_set_command(SSL_Referee::Command command) const;
+		void set_command(SSL_Referee::Command command);
 
 		void set_teamname(SaveState::Team team, const Glib::ustring &name);
+
+		bool can_set_goalie() const;
 		void set_goalie(SaveState::Team team, unsigned int goalie);
+
+		bool can_switch_colours() const;
 		void switch_colours();
 
-		void award_goal(SaveState::Team team);
+		bool can_subtract_goal(SaveState::Team team) const;
 		void subtract_goal(SaveState::Team team);
 
 		void cancel_card_or_timeout();
-		void timeout_start(SaveState::Team team);
 
-		void prepare_kickoff(SaveState::Team team);
-		void direct_free_kick(SaveState::Team team);
-		void indirect_free_kick(SaveState::Team team);
-		void prepare_penalty(SaveState::Team team);
-
+		bool can_issue_card() const;
 		void yellow_card(SaveState::Team team);
 		void red_card(SaveState::Team team);
 
@@ -60,7 +58,6 @@ class GameController : public NonCopyable {
 		uint64_t microseconds_since_last_state_save;
 
 		bool tick();
-		void set_command(SSL_Referee::Command command, bool no_signal = false);
 		void advance_from_pre();
 };
 
