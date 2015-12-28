@@ -34,6 +34,11 @@ Configuration::Configuration(const std::string &filename) {
 	legacy_port = kf.has_key(u8"ip", u8"LEGACY_PORT") ? kf.get_string(u8"ip", u8"LEGACY_PORT") : "";
 	protobuf_port = kf.has_key(u8"ip", u8"PROTOBUF_PORT") ? kf.get_string(u8"ip", u8"PROTOBUF_PORT") : "";
 	interface = kf.has_key(u8"ip", u8"INTERFACE") ? kf.get_string(u8"ip", u8"INTERFACE") : "";
+	if (kf.has_key(u8"ip", u8"RCON_PORT")) {
+		rcon_port = static_cast<uint16_t>(kf.get_integer(u8"ip", u8"RCON_PORT"));
+	} else {
+		rcon_port = 0;
+	}
 
 	for (const Glib::ustring &key : kf.get_keys(u8"teams")) {
 		teams.push_back(kf.get_string(u8"teams", key));
@@ -63,6 +68,9 @@ void Configuration::dump(Logger &logger) {
 	}
 	if (!protobuf_port.empty()) {
 		logger.write(Glib::ustring::compose(u8"Configuration: Protobuf port: \"%1\".", protobuf_port));
+	}
+	if (rcon_port) {
+		logger.write(Glib::ustring::compose(u8"Configuration: Remote control port: %1.", rcon_port));
 	}
 	if (!interface.empty()) {
 		logger.write(Glib::ustring::compose(u8"Configuration: Network interface: \"%1\".", Glib::locale_to_utf8(interface)));

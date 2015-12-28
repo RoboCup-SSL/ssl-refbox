@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <memory>
 #include <gtkmm/box.h>
 #include <gtkmm/button.h>
 #include <gtkmm/buttonbox.h>
@@ -16,10 +17,12 @@
 #include <sigc++/connection.h>
 
 class GameController;
+class RConServer;
 
 class MainWindow : public Gtk::Window {
 	public:
 		MainWindow(GameController &controller);
+		~MainWindow();
 
 	private:
 		// Information about a game control button.
@@ -46,6 +49,8 @@ class MainWindow : public Gtk::Window {
 		void on_game_control_button_clicked(const GameControlButtonInfo *button);
 		void on_half_time_button_clicked();
 
+		void on_enable_rcon_clicked();
+
 		void update_sensitivities();
 
 		// Information about the game control buttons.
@@ -53,6 +58,9 @@ class MainWindow : public Gtk::Window {
 
 		// The game controller.
 		GameController &controller;
+
+		// The remote control server.
+		std::unique_ptr<RConServer> rcon_server;
 
 		sigc::connection goalie_yellow_commit_connection, goalie_blue_commit_connection;
 
@@ -62,6 +70,7 @@ class MainWindow : public Gtk::Window {
 		Gtk::MenuBar menu_bar;
 		Gtk::Menu config_menu;
 		Gtk::CheckMenuItem ignore_rules_menu_item;
+		Gtk::CheckMenuItem enable_rcon_menu_item;
 
 		Gtk::HBox halt_stop_hbox;
 		Gtk::Button halt_but;

@@ -246,16 +246,52 @@ bool GameController::can_set_command(SSL_Referee::Command command) const {
 		case SSL_Referee::GOAL_BLUE:
 			// You can award goals whenever you are stopped.
 			return is_stopped;
+
+		case SSL_Referee::BALL_PLACEMENT_YELLOW:
+		case SSL_Referee::BALL_PLACEMENT_BLUE:
+			// You can ask for ball placement whenever you are stopped.
+			return is_stopped;
 	}
 
 	return false;
 }
 
-void GameController::set_command(SSL_Referee::Command command) {
+bool GameController::command_needs_designated_position(SSL_Referee::Command command) {
+	switch (command) {
+		case SSL_Referee::BALL_PLACEMENT_YELLOW:
+		case SSL_Referee::BALL_PLACEMENT_BLUE:
+			return true;
+
+		case SSL_Referee::HALT:
+		case SSL_Referee::STOP:
+		case SSL_Referee::FORCE_START:
+		case SSL_Referee::NORMAL_START:
+		case SSL_Referee::PREPARE_KICKOFF_YELLOW:
+		case SSL_Referee::PREPARE_KICKOFF_BLUE:
+		case SSL_Referee::DIRECT_FREE_YELLOW:
+		case SSL_Referee::DIRECT_FREE_BLUE:
+		case SSL_Referee::INDIRECT_FREE_YELLOW:
+		case SSL_Referee::INDIRECT_FREE_BLUE:
+		case SSL_Referee::PREPARE_PENALTY_YELLOW:
+		case SSL_Referee::PREPARE_PENALTY_BLUE:
+		case SSL_Referee::TIMEOUT_YELLOW:
+		case SSL_Referee::TIMEOUT_BLUE:
+		case SSL_Referee::GOAL_YELLOW:
+		case SSL_Referee::GOAL_BLUE:
+			return false;
+	}
+
+	return false;
+}
+
+void GameController::set_command(SSL_Referee::Command command, float designated_x, float designated_y) {
 	SSL_Referee *ref = state.mutable_referee();
 
 	// Record what’s happening.
 	logger.write(Glib::ustring::compose(u8"Setting command %1", SSL_Referee::Command_descriptor()->FindValueByNumber(command)->name()));
+
+	// Clear any prior designated position.
+	ref->clear_designated_position();
 
 	// Implement any special side effects.
 	switch (command) {
@@ -302,6 +338,13 @@ void GameController::set_command(SSL_Referee::Command command) {
 					TeamMeta::ALL[team].set_penalty_goals(state, TeamMeta::ALL[team].penalty_goals(state) + 1);
 				}
 			}
+			break;
+
+		case SSL_Referee::BALL_PLACEMENT_YELLOW:
+		case SSL_Referee::BALL_PLACEMENT_BLUE:
+			// Communicate the designated position.
+			ref->mutable_designated_position()->set_x(designated_x);
+			ref->mutable_designated_position()->set_y(designated_y);
 			break;
 
 		case SSL_Referee::HALT:

@@ -21,6 +21,7 @@ class GameController : public NonCopyable {
 	public:
 		SaveState state;
 		const Configuration &configuration;
+		Logger &logger;
 		sigc::signal<void> signal_timeout_time_changed, signal_game_clock_changed, signal_yellow_card_time_changed, signal_other_changed;
 
 		GameController(Logger &logger, const Configuration &configuration, const std::vector<Publisher *> &publishers, const std::string &resume_filename);
@@ -31,7 +32,8 @@ class GameController : public NonCopyable {
 		SSL_Referee::Stage next_half_time() const;
 
 		bool can_set_command(SSL_Referee::Command command) const;
-		void set_command(SSL_Referee::Command command);
+		static bool command_needs_designated_position(SSL_Referee::Command command);
+		void set_command(SSL_Referee::Command command, float designated_x = 0.0f, float designated_y = 0.0f);
 
 		void set_teamname(SaveState::Team team, const Glib::ustring &name);
 
@@ -51,7 +53,6 @@ class GameController : public NonCopyable {
 		void red_card(SaveState::Team team);
 
 	private:
-		Logger &logger;
 		const std::vector<Publisher *> &publishers;
 		sigc::connection tick_connection;
 		MicrosecondCounter timer;

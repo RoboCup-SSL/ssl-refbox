@@ -1,6 +1,7 @@
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H
 
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <glibmm/ustring.h>
@@ -37,6 +38,7 @@ class Configuration {
 		std::string legacy_port;
 		std::string protobuf_port;
 		std::string interface;
+		uint16_t rcon_port;
 
 		// [teams] section
 		std::vector<Glib::ustring> teams;

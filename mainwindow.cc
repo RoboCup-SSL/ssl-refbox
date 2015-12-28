@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "configuration.h"
 #include "gamecontroller.h"
+#include "rconsrv.h"
 #include <cstddef>
 #include <cstdint>
 #include <iomanip>
@@ -104,6 +105,7 @@ MainWindow::MainWindow(GameController &controller) :
 		controller(controller),
 
 		ignore_rules_menu_item(u8"_Ignore Rules", true),
+		enable_rcon_menu_item(u8"Enable _Remote Control", true),
 
 		halt_but(u8"Halt (KP_Point)"),
 		stop_but(u8"Stop Game (KP_0)"),
@@ -187,7 +189,9 @@ MainWindow::MainWindow(GameController &controller) :
 	// Menu
 	Gtk::Menu::MenuList &menulist = config_menu.items();
 	menulist.push_back(ignore_rules_menu_item);
+	menulist.push_back(enable_rcon_menu_item);
 	menu_bar.items().push_back(Gtk::Menu_Helpers::MenuElem(u8"_Config", config_menu));
+	enable_rcon_menu_item.set_sensitive(controller.configuration.rcon_port);
 
 	// Connecting the one million signals
 	controller.signal_timeout_time_changed.connect(sigc::mem_fun(this, &MainWindow::on_timeout_time_changed));
@@ -196,6 +200,7 @@ MainWindow::MainWindow(GameController &controller) :
 	controller.signal_other_changed.connect(sigc::mem_fun(this, &MainWindow::on_other_changed));
 
 	ignore_rules_menu_item.signal_toggled().connect(sigc::mem_fun(this, &MainWindow::update_sensitivities));
+	enable_rcon_menu_item.signal_toggled().connect(sigc::mem_fun(this, &MainWindow::on_enable_rcon_clicked));
 
 	for (const GameControlButtonInfo &i : game_control_button_info) {
 		(this->*i.button).signal_clicked().connect(sigc::bind(sigc::mem_fun(this, &MainWindow::on_game_control_button_clicked), &i));
@@ -351,6 +356,8 @@ MainWindow::MainWindow(GameController &controller) :
 	show_all();
 }
 
+MainWindow::~MainWindow() = default;
+
 void MainWindow::on_timeout_time_changed() {
 	yellow_timeout_time_text.set_text(format_time_deciseconds(controller.state.referee().yellow().timeout_time()));
 	blue_timeout_time_text.set_text(format_time_deciseconds(controller.state.referee().blue().timeout_time()));
@@ -500,6 +507,14 @@ void MainWindow::on_game_control_button_clicked(const GameControlButtonInfo *but
 
 void MainWindow::on_half_time_button_clicked() {
 	controller.enter_stage(controller.next_half_time());
+}
+
+void MainWindow::on_enable_rcon_clicked() {
+	if (enable_rcon_menu_item.get_active()) {
+		rcon_server.reset(new RConServer(controller));
+	} else {
+		rcon_server.reset();
+	}
 }
 
 void MainWindow::update_sensitivities() {
