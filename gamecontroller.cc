@@ -111,13 +111,11 @@ void GameController::enter_stage(SSL_Referee::Stage stage) {
 	// The exceptions are game half entries, where a NORMAL START accompanies the entry in an atomic transition from kickoff.
 	bool is_half = stage == SSL_Referee::NORMAL_FIRST_HALF || stage == SSL_Referee::NORMAL_SECOND_HALF || stage == SSL_Referee::EXTRA_FIRST_HALF || stage == SSL_Referee::EXTRA_SECOND_HALF;
 	if (!is_half) {
+		// set_command will save the game state and emit a change signal.
 		set_command(SSL_Referee::HALT, true);
 	}
-
-	// We should save the game state now.
-	save_game(state, configuration.save_filename);
-
-	signal_other_changed.emit();
+	// In case of starting a game half, the function that called
+	// advance_from_pre will also call set_command.
 }
 
 void GameController::start_half_time() {
