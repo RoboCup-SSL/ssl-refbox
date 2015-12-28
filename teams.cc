@@ -21,14 +21,7 @@ SaveState::Team TeamMeta::command_team(SSL_Referee::Command command) {
 	}
 }
 
-TeamMeta::TeamMeta() :
-		GOAL_COMMAND(team() == SaveState::TEAM_YELLOW ? SSL_Referee::GOAL_YELLOW : SSL_Referee::GOAL_BLUE),
-		TIMEOUT_COMMAND(team() == SaveState::TEAM_YELLOW ? SSL_Referee::TIMEOUT_YELLOW : SSL_Referee::TIMEOUT_BLUE),
-		PREPARE_KICKOFF_COMMAND(team() == SaveState::TEAM_YELLOW ? SSL_Referee::PREPARE_KICKOFF_YELLOW : SSL_Referee::PREPARE_KICKOFF_BLUE),
-		DIRECT_FREE_COMMAND(team() == SaveState::TEAM_YELLOW ? SSL_Referee::DIRECT_FREE_YELLOW : SSL_Referee::DIRECT_FREE_BLUE),
-		INDIRECT_FREE_COMMAND(team() == SaveState::TEAM_YELLOW ? SSL_Referee::INDIRECT_FREE_YELLOW : SSL_Referee::INDIRECT_FREE_BLUE),
-		PREPARE_PENALTY_COMMAND(team() == SaveState::TEAM_YELLOW ? SSL_Referee::PREPARE_PENALTY_YELLOW : SSL_Referee::PREPARE_PENALTY_BLUE),
-		COLOUR(team() == SaveState::TEAM_YELLOW ? u8"yellow" : u8"blue") {
+TeamMeta::TeamMeta() : COLOUR(team() == SaveState::TEAM_YELLOW ? u8"yellow" : u8"blue") {
 }
 
 SaveState::Team TeamMeta::team() const {

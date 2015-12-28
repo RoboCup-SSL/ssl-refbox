@@ -71,6 +71,32 @@ namespace {
 	}
 }
 
+const MainWindow::GameControlButtonInfo MainWindow::game_control_button_info[] = {
+	{ &MainWindow::halt_but, -1, SSL_Referee::HALT },
+	{ &MainWindow::stop_but, -1, SSL_Referee::STOP },
+	{ &MainWindow::force_start_but, -1, SSL_Referee::FORCE_START },
+	{ &MainWindow::normal_start_but, -1, SSL_Referee::NORMAL_START },
+	{ &MainWindow::yellow_kickoff_but, -1, SSL_Referee::PREPARE_KICKOFF_YELLOW },
+	{ &MainWindow::blue_kickoff_but, -1, SSL_Referee::PREPARE_KICKOFF_BLUE },
+	{ &MainWindow::yellow_freekick_but, -1, SSL_Referee::DIRECT_FREE_YELLOW },
+	{ &MainWindow::blue_freekick_but, -1, SSL_Referee::DIRECT_FREE_BLUE },
+	{ &MainWindow::yellow_indirect_freekick_but, -1, SSL_Referee::INDIRECT_FREE_YELLOW },
+	{ &MainWindow::blue_indirect_freekick_but, -1, SSL_Referee::INDIRECT_FREE_BLUE },
+	{ &MainWindow::yellow_penalty_but, -1, SSL_Referee::PREPARE_PENALTY_YELLOW },
+	{ &MainWindow::blue_penalty_but, -1, SSL_Referee::PREPARE_PENALTY_BLUE },
+	{ &MainWindow::yellow_timeout_start_but, -1, SSL_Referee::TIMEOUT_YELLOW },
+	{ &MainWindow::blue_timeout_start_but, -1, SSL_Referee::TIMEOUT_BLUE },
+	{ &MainWindow::yellow_goal_but, -1, SSL_Referee::GOAL_YELLOW },
+	{ &MainWindow::blue_goal_but, -1, SSL_Referee::GOAL_BLUE },
+
+	{ &MainWindow::firsthalf_start_but, SSL_Referee::NORMAL_FIRST_HALF_PRE, -1 },
+	{ &MainWindow::secondhalf_start_but, SSL_Referee::NORMAL_SECOND_HALF_PRE, -1 },
+	{ &MainWindow::overtime1_start_but, SSL_Referee::EXTRA_FIRST_HALF_PRE, -1 },
+	{ &MainWindow::overtime2_start_but, SSL_Referee::EXTRA_SECOND_HALF_PRE, -1 },
+	{ &MainWindow::penaltyshootout_start_but, SSL_Referee::PENALTY_SHOOTOUT, -1 },
+	{ &MainWindow::gameover_start_but, SSL_Referee::POST_GAME, -1 },
+};
+
 MainWindow::MainWindow(GameController &controller) :
 		Gtk::Window(),
 		controller(controller),
@@ -169,10 +195,9 @@ MainWindow::MainWindow(GameController &controller) :
 
 	ignore_rules_menu_item.signal_toggled().connect(sigc::mem_fun(this, &MainWindow::update_sensitivities));
 
-	halt_but.signal_clicked().connect(sigc::mem_fun(controller, &GameController::halt));   
-	stop_but.signal_clicked().connect(sigc::mem_fun(controller, &GameController::stop));
-	force_start_but.signal_clicked().connect(sigc::mem_fun(controller, &GameController::force_start));
-	normal_start_but.signal_clicked().connect(sigc::mem_fun(controller, &GameController::normal_start));
+	for (const GameControlButtonInfo &i : game_control_button_info) {
+		(this->*i.button).signal_clicked().connect(sigc::bind(sigc::mem_fun(this, &MainWindow::on_game_control_button_clicked), &i));
+	}
 
 	switch_colours_but.signal_clicked().connect(sigc::mem_fun(controller, &GameController::switch_colours));
 	teamname_yellow.signal_changed().connect(sigc::mem_fun(this, &MainWindow::on_teamname_yellow_changed));
@@ -180,34 +205,16 @@ MainWindow::MainWindow(GameController &controller) :
 
 	cancel_but.signal_clicked().connect(sigc::mem_fun(controller, &GameController::cancel_card_or_timeout));
 
-	yellow_goal_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::award_goal), SaveState::TEAM_YELLOW));
-	blue_goal_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::award_goal), SaveState::TEAM_BLUE));
 	yellow_subgoal_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::subtract_goal), SaveState::TEAM_YELLOW));
 	blue_subgoal_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::subtract_goal), SaveState::TEAM_BLUE));
 
-	firsthalf_start_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::enter_stage), SSL_Referee::NORMAL_FIRST_HALF_PRE));
-	secondhalf_start_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::enter_stage), SSL_Referee::NORMAL_SECOND_HALF_PRE));
-	overtime1_start_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::enter_stage), SSL_Referee::EXTRA_FIRST_HALF_PRE));
-	overtime2_start_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::enter_stage), SSL_Referee::EXTRA_SECOND_HALF_PRE));
-	penaltyshootout_start_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::enter_stage), SSL_Referee::PENALTY_SHOOTOUT));
-	gameover_start_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::enter_stage), SSL_Referee::POST_GAME));
-	halftime_start_but.signal_clicked().connect(sigc::mem_fun(controller, &GameController::start_half_time));
+	halftime_start_but.signal_clicked().connect(sigc::mem_fun(this, &MainWindow::on_half_time_button_clicked));
 
-	yellow_timeout_start_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::timeout_start), SaveState::TEAM_YELLOW));
 	yellow_goalie_spin.signal_value_changed().connect(sigc::mem_fun(this, &MainWindow::on_goalie_yellow_changed));
-	yellow_kickoff_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::prepare_kickoff), SaveState::TEAM_YELLOW));
-	yellow_freekick_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::direct_free_kick), SaveState::TEAM_YELLOW));
-	yellow_penalty_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::prepare_penalty), SaveState::TEAM_YELLOW));
-	yellow_indirect_freekick_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::indirect_free_kick), SaveState::TEAM_YELLOW));
 	yellow_yellowcard_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::yellow_card), SaveState::TEAM_YELLOW));
 	yellow_redcard_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::red_card), SaveState::TEAM_YELLOW));
 
-	blue_timeout_start_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::timeout_start), SaveState::TEAM_BLUE));
 	blue_goalie_spin.signal_value_changed().connect(sigc::mem_fun(this, &MainWindow::on_goalie_blue_changed));
-	blue_kickoff_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::prepare_kickoff), SaveState::TEAM_BLUE));
-	blue_freekick_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::direct_free_kick), SaveState::TEAM_BLUE));
-	blue_penalty_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::prepare_penalty), SaveState::TEAM_BLUE));
-	blue_indirect_freekick_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::indirect_free_kick), SaveState::TEAM_BLUE));
 	blue_yellowcard_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::yellow_card), SaveState::TEAM_BLUE));
 	blue_redcard_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::red_card), SaveState::TEAM_BLUE));
 
@@ -480,18 +487,24 @@ bool MainWindow::on_goalie_blue_commit() {
 	return false;
 }
 
+void MainWindow::on_game_control_button_clicked(const GameControlButtonInfo *button) {
+	if (button->new_stage != -1) {
+		controller.enter_stage(static_cast<SSL_Referee::Stage>(button->new_stage));
+	}
+	if (button->new_command != -1) {
+		controller.set_command(static_cast<SSL_Referee::Command>(button->new_command));
+	}
+}
+
+void MainWindow::on_half_time_button_clicked() {
+	controller.enter_stage(controller.next_half_time());
+}
+
 void MainWindow::update_sensitivities() {
 	// Extract the things we might need.
 	const SaveState &ss = controller.state;
 	const SSL_Referee &ref = ss.referee();
-	bool is_normal_half = ref.stage() == SSL_Referee::NORMAL_FIRST_HALF || ref.stage() == SSL_Referee::NORMAL_SECOND_HALF || ref.stage() == SSL_Referee::EXTRA_FIRST_HALF || ref.stage() == SSL_Referee::EXTRA_SECOND_HALF;
-	bool is_break = ref.stage() == SSL_Referee::NORMAL_HALF_TIME || ref.stage() == SSL_Referee::EXTRA_TIME_BREAK || ref.stage() == SSL_Referee::EXTRA_HALF_TIME || ref.stage() == SSL_Referee::PENALTY_SHOOTOUT_BREAK;
-	bool is_pre = ref.stage() == SSL_Referee::NORMAL_FIRST_HALF_PRE || ref.stage() == SSL_Referee::NORMAL_SECOND_HALF_PRE || ref.stage() == SSL_Referee::EXTRA_FIRST_HALF_PRE || ref.stage() == SSL_Referee::EXTRA_SECOND_HALF_PRE;
-	bool is_stopped = ref.command() == SSL_Referee::STOP || ref.command() == SSL_Referee::GOAL_YELLOW || ref.command() == SSL_Referee::GOAL_BLUE;
 	bool is_timeout_running = ref.command() == SSL_Referee::TIMEOUT_YELLOW || ref.command() == SSL_Referee::TIMEOUT_BLUE;
-	bool is_prepare_kickoff = ref.command() == SSL_Referee::PREPARE_KICKOFF_YELLOW || ref.command() == SSL_Referee::PREPARE_KICKOFF_BLUE;
-	bool is_prepare_penalty = ref.command() == SSL_Referee::PREPARE_PENALTY_YELLOW || ref.command() == SSL_Referee::PREPARE_PENALTY_BLUE;
-	bool is_pshootout = ref.stage() == SSL_Referee::PENALTY_SHOOTOUT;
 
 	// In post-game, lock down *EVERYTHING*, even the Ignore Rules command.
 	if (ref.stage() == SSL_Referee::POST_GAME) {
@@ -502,24 +515,38 @@ void MainWindow::update_sensitivities() {
 	// Check if we are ignoring rules.
 	bool ign = ignore_rules_menu_item.get_active();
 
-	// You can HALT any time you are not already halted.
-	halt_but.set_sensitive(ign || ref.command() != SSL_Referee::HALT);
-
-	// You can STOP any time you are not already stopped except in post-game.
-	stop_but.set_sensitive(ign || (!is_stopped && ref.stage() != SSL_Referee::POST_GAME));
-
-	// You can FORCE START any time you are stopped in a normal half or a break (for robot testing).
-	force_start_but.set_sensitive(ign || ((is_normal_half || is_break) && is_stopped));
-
-	// You can NORMAL START when you are preparing a prepared play (kickoff or penalty kick).
-	normal_start_but.set_sensitive(ign || is_prepare_kickoff || is_prepare_penalty);
+	// Update sensitivities of the game control buttons based on whether the game controller allows the actions.
+	for (const GameControlButtonInfo &i : game_control_button_info) {
+		bool ok = true;
+		if (i.new_stage != -1) {
+			ok = ok && controller.can_enter_stage(static_cast<SSL_Referee::Stage>(i.new_stage));
+		}
+		if (i.new_command != -1) {
+			ok = ok && controller.can_set_command(static_cast<SSL_Referee::Command>(i.new_command));
+		}
+		ok = ok || ign;
+		(this->*i.button).set_sensitive(ok);
+	}
+	{
+		SSL_Referee::Stage stage = controller.next_half_time();
+		halftime_start_but.set_sensitive(ign || (stage != SSL_Referee::POST_GAME && controller.can_enter_stage(stage)));
+	}
+	{
+		Gtk::Button *card_buts[] = { &yellow_yellowcard_but, &blue_yellowcard_but, &yellow_redcard_but, &blue_redcard_but };
+		bool ok = ign || controller.can_issue_card();
+		for (Gtk::Button *but : card_buts) {
+			but->set_sensitive(ok);
+		}
+	}
+	yellow_subgoal_but.set_sensitive(ign || controller.can_subtract_goal(SaveState::TEAM_YELLOW));
+	blue_subgoal_but.set_sensitive(ign || controller.can_subtract_goal(SaveState::TEAM_BLUE));
+	yellow_goalie_spin.set_sensitive(ign || controller.can_set_goalie());
+	blue_goalie_spin.set_sensitive(ign || controller.can_set_goalie());
+	switch_colours_but.set_sensitive(ign || controller.can_switch_colours());
 
 	// You can edit the game names when you are halted except post-game.
 	teamname_yellow.set_sensitive(ign || (ref.stage() != SSL_Referee::POST_GAME && ref.command() == SSL_Referee::HALT));
 	teamname_blue.set_sensitive(ign || (ref.stage() != SSL_Referee::POST_GAME && ref.command() == SSL_Referee::HALT));
-
-	// You can switch colours when you are halted in a break or pre-half.
-	switch_colours_but.set_sensitive(ign || (ref.command() == SSL_Referee::HALT && (is_break || is_pre)));
 
 	// You can cancel a card whenever there is one outstanding.
 	// You can cancel a timeout only when the timeout is running, not if it is in a nested HALT.
@@ -538,65 +565,6 @@ void MainWindow::update_sensitivities() {
 	} else {
 		cancel_but.set_sensitive(false);
 		cancel_but.set_label(u8"Cancel\n");
-	}
-
-	// You can award goals whenever you are stopped.
-	yellow_goal_but.set_sensitive(ign || is_stopped);
-	blue_goal_but.set_sensitive(ign || is_stopped);
-
-	// You can subtract goals whenever you are stopped and the team has points.
-	yellow_subgoal_but.set_sensitive(ign || (is_stopped && ref.yellow().score()));
-	blue_subgoal_but.set_sensitive(ign || (is_stopped && ref.blue().score()));
-
-	// You can get to half time whenever you are stopped in a normal half.
-	halftime_start_but.set_sensitive(ign || (is_normal_half && is_stopped));
-
-	// You can only get to first half when you are ignoring rules; otherwise, you start in first half and can never get back there later.
-	firsthalf_start_but.set_sensitive(ign);
-
-	// You can get to second half when you are in normal half time.
-	secondhalf_start_but.set_sensitive(ign || ref.stage() == SSL_Referee::NORMAL_HALF_TIME);
-
-	// You can get to overtime 1 when you are in extra time break.
-	overtime1_start_but.set_sensitive(ign || ref.stage() == SSL_Referee::EXTRA_TIME_BREAK);
-
-	// You can get to overtime 2 when you are in extra time half time.
-	overtime2_start_but.set_sensitive(ign || ref.stage() == SSL_Referee::EXTRA_HALF_TIME);
-
-	// You can get to penalty shootout when you are in penalty shootout break.
-	penaltyshootout_start_but.set_sensitive(ign || ref.stage() == SSL_Referee::PENALTY_SHOOTOUT_BREAK);
-
-	// You can get to post-game whenever you are stopped or halted except in post-game.
-	// This might be needed at any time throughout the game, due to the stop-at-ten-points rule.
-	gameover_start_but.set_sensitive(ign || (ref.stage() != SSL_Referee::POST_GAME && (is_stopped || ref.command() == SSL_Referee::HALT)));
-
-	// A team can start a timeout whenever the game is stopped and not in a break or penalty shootout.
-	// A team can *resume* a timeout whenever the game is halted and that team already had a timeout in progress before the halt.
-	yellow_timeout_start_but.set_sensitive(ign || (!is_break && !is_pshootout && is_stopped) || (ref.command() == SSL_Referee::HALT && ss.has_timeout() && ss.timeout().team() == SaveState::TEAM_YELLOW));
-	blue_timeout_start_but.set_sensitive(ign || (!is_break && !is_pshootout && is_stopped) || (ref.command() == SSL_Referee::HALT && ss.has_timeout() && ss.timeout().team() == SaveState::TEAM_BLUE));
-
-	// A team can change goalies whenever the game is stopped or halted except in post-game.
-	yellow_goalie_spin.set_sensitive(ign || (ref.stage() != SSL_Referee::POST_GAME && (ref.command() == SSL_Referee::HALT || is_stopped)));
-	blue_goalie_spin.set_sensitive(ign || (ref.stage() != SSL_Referee::POST_GAME && (ref.command() == SSL_Referee::HALT || is_stopped)));
-
-	// A team can take a kickoff whenever the game is stopped and not in a break or penalty shootout.
-	yellow_kickoff_but.set_sensitive(ign || (!is_break && !is_pshootout && is_stopped));
-	blue_kickoff_but.set_sensitive(ign || (!is_break && !is_pshootout && is_stopped));
-
-	// A team can take a free or penalty kick whenever the game is stopped in a normal half.
-	Gtk::Button *kick_buts[] = { &yellow_freekick_but, &blue_freekick_but, &yellow_indirect_freekick_but, &blue_indirect_freekick_but };
-	for (Gtk::Button *but : kick_buts) {
-		but->set_sensitive(ign || (is_normal_half && is_stopped));
-	}
-
-	// A team can take a penalty kick whenever the game is stopped in a normal half or during penalty shootout.
-	yellow_penalty_but.set_sensitive(ign || ((is_normal_half || is_pshootout) && is_stopped));
-	blue_penalty_but.set_sensitive(ign || ((is_normal_half || is_pshootout) && is_stopped));
-
-	// A team can be given a yellow or red card whenever the game is stopped.
-	Gtk::Button *card_buts[] = { &yellow_yellowcard_but, &blue_yellowcard_but, &yellow_redcard_but, &blue_redcard_but };
-	for (Gtk::Button *but : card_buts) {
-		but->set_sensitive(ign || is_stopped);
 	}
 }
 

@@ -11,7 +11,6 @@ class TeamMeta {
 
 		static SaveState::Team command_team(SSL_Referee::Command command);
 
-		const SSL_Referee::Command GOAL_COMMAND, TIMEOUT_COMMAND, PREPARE_KICKOFF_COMMAND, DIRECT_FREE_COMMAND, INDIRECT_FREE_COMMAND, PREPARE_PENALTY_COMMAND;
 		const Glib::ustring COLOUR;
 
 		TeamMeta();

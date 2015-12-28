@@ -71,6 +71,52 @@ GameController::~GameController() {
 	}
 }
 
+bool GameController::can_enter_stage(SSL_Referee::Stage stage) const {
+	const SSL_Referee &ref = state.referee();
+	bool is_stopped = ref.command() == SSL_Referee::STOP || ref.command() == SSL_Referee::GOAL_YELLOW || ref.command() == SSL_Referee::GOAL_BLUE;
+	bool is_normal_half = ref.stage() == SSL_Referee::NORMAL_FIRST_HALF || ref.stage() == SSL_Referee::NORMAL_SECOND_HALF || ref.stage() == SSL_Referee::EXTRA_FIRST_HALF || ref.stage() == SSL_Referee::EXTRA_SECOND_HALF;
+
+	switch (stage) {
+		case SSL_Referee::NORMAL_FIRST_HALF_PRE:
+		case SSL_Referee::NORMAL_FIRST_HALF:
+		case SSL_Referee::NORMAL_SECOND_HALF:
+		case SSL_Referee::EXTRA_FIRST_HALF:
+		case SSL_Referee::EXTRA_SECOND_HALF:
+			// You can only get to first half pre-game or any running game half when you are ignoring rules; otherwise, you start in first half pre-game and enter other halves via the Normal Start command.
+			return false;
+
+		case SSL_Referee::NORMAL_SECOND_HALF_PRE:
+			// You can get to second half when you are in normal half time.
+			return ref.stage() == SSL_Referee::NORMAL_HALF_TIME;
+
+		case SSL_Referee::EXTRA_FIRST_HALF_PRE:
+			// You can get to overtime 1 when you are in extra time break.
+			return ref.stage() == SSL_Referee::EXTRA_TIME_BREAK;
+
+		case SSL_Referee::EXTRA_SECOND_HALF_PRE:
+			// You can get to overtime 2 when you are in extra time half time.
+			return ref.stage() == SSL_Referee::EXTRA_HALF_TIME;
+
+		case SSL_Referee::PENALTY_SHOOTOUT:
+			// You can get to penalty shootout when you are in penalty shootout break.
+			return ref.stage() == SSL_Referee::PENALTY_SHOOTOUT_BREAK;
+
+		case SSL_Referee::POST_GAME:
+			// You can get to post-game whenever you are stopped or halted except in post-game.
+			// This might be needed at any time throughout the game, due to the stop-at-ten-points rule.
+			return ref.stage() != SSL_Referee::POST_GAME && (is_stopped || ref.command() == SSL_Referee::HALT);
+
+		case SSL_Referee::NORMAL_HALF_TIME:
+		case SSL_Referee::EXTRA_TIME_BREAK:
+		case SSL_Referee::EXTRA_HALF_TIME:
+		case SSL_Referee::PENALTY_SHOOTOUT_BREAK:
+			// You can get to half time whenever you are stopped in the proper normal half.
+			return is_normal_half && is_stopped && stage == next_half_time();
+	}
+
+	return false;
+}
+
 void GameController::enter_stage(SSL_Referee::Stage stage) {
 	SSL_Referee &ref = *state.mutable_referee();
 
@@ -112,60 +158,180 @@ void GameController::enter_stage(SSL_Referee::Stage stage) {
 	bool is_half = stage == SSL_Referee::NORMAL_FIRST_HALF || stage == SSL_Referee::NORMAL_SECOND_HALF || stage == SSL_Referee::EXTRA_FIRST_HALF || stage == SSL_Referee::EXTRA_SECOND_HALF;
 	if (!is_half) {
 		// set_command will save the game state and emit a change signal.
-		set_command(SSL_Referee::HALT, true);
+		set_command(SSL_Referee::HALT);
 	}
 	// In case of starting a game half, the function that called
 	// advance_from_pre will also call set_command.
 }
 
-void GameController::start_half_time() {
-	SSL_Referee &ref = *state.mutable_referee();
+SSL_Referee::Stage GameController::next_half_time() const {
+	const SSL_Referee &ref = state.referee();
 
 	// Which stage to go into depends on which stage we are already in.
 	switch (ref.stage()) {
 		case SSL_Referee::NORMAL_FIRST_HALF_PRE:
 		case SSL_Referee::NORMAL_FIRST_HALF:
-			enter_stage(SSL_Referee::NORMAL_HALF_TIME);
-			break;
+			return SSL_Referee::NORMAL_HALF_TIME;
 		case SSL_Referee::NORMAL_HALF_TIME:
 		case SSL_Referee::NORMAL_SECOND_HALF_PRE:
 		case SSL_Referee::NORMAL_SECOND_HALF:
-			enter_stage(SSL_Referee::EXTRA_TIME_BREAK);
-			break;
+			return SSL_Referee::EXTRA_TIME_BREAK;
 		case SSL_Referee::EXTRA_TIME_BREAK:
 		case SSL_Referee::EXTRA_FIRST_HALF_PRE:
 		case SSL_Referee::EXTRA_FIRST_HALF:
-			enter_stage(SSL_Referee::EXTRA_HALF_TIME);
-			break;
+			return SSL_Referee::EXTRA_HALF_TIME;
 		case SSL_Referee::EXTRA_HALF_TIME:
 		case SSL_Referee::EXTRA_SECOND_HALF_PRE:
 		case SSL_Referee::EXTRA_SECOND_HALF:
 		case SSL_Referee::PENALTY_SHOOTOUT_BREAK:
 		case SSL_Referee::PENALTY_SHOOTOUT:
-			enter_stage(SSL_Referee::PENALTY_SHOOTOUT_BREAK);
-			break;
+			return SSL_Referee::PENALTY_SHOOTOUT_BREAK;
 		case SSL_Referee::POST_GAME:
+			return SSL_Referee::POST_GAME;
+	}
+
+	return SSL_Referee::POST_GAME;
+}
+
+bool GameController::can_set_command(SSL_Referee::Command command) const {
+	const SSL_Referee &ref = state.referee();
+	bool is_normal_half = ref.stage() == SSL_Referee::NORMAL_FIRST_HALF || ref.stage() == SSL_Referee::NORMAL_SECOND_HALF || ref.stage() == SSL_Referee::EXTRA_FIRST_HALF || ref.stage() == SSL_Referee::EXTRA_SECOND_HALF;
+	bool is_break = ref.stage() == SSL_Referee::NORMAL_HALF_TIME || ref.stage() == SSL_Referee::EXTRA_TIME_BREAK || ref.stage() == SSL_Referee::EXTRA_HALF_TIME || ref.stage() == SSL_Referee::PENALTY_SHOOTOUT_BREAK;
+	bool is_stopped = ref.command() == SSL_Referee::STOP || ref.command() == SSL_Referee::GOAL_YELLOW || ref.command() == SSL_Referee::GOAL_BLUE;
+	bool is_prepare_kickoff = ref.command() == SSL_Referee::PREPARE_KICKOFF_YELLOW || ref.command() == SSL_Referee::PREPARE_KICKOFF_BLUE;
+	bool is_prepare_penalty = ref.command() == SSL_Referee::PREPARE_PENALTY_YELLOW || ref.command() == SSL_Referee::PREPARE_PENALTY_BLUE;
+	bool is_pshootout = ref.stage() == SSL_Referee::PENALTY_SHOOTOUT;
+	switch (command) {
+		case SSL_Referee::HALT:
+			// You can HALT any time you are not already halted.
+			return ref.command() != SSL_Referee::HALT;
+
+		case SSL_Referee::STOP:
+			// You can STOP any time you are not already stopped except in post-game.
+			return !is_stopped && ref.stage() != SSL_Referee::POST_GAME;
+
+		case SSL_Referee::FORCE_START:
+			// You can FORCE START any time you are stopped in a normal half or a break (for robot testing).
+			return (is_normal_half || is_break) && is_stopped;
+
+		case SSL_Referee::NORMAL_START:
+			// You can NORMAL START when you are preparing a prepared play (kickoff or penalty kick).
+			return is_prepare_kickoff || is_prepare_penalty;
+
+		case SSL_Referee::PREPARE_KICKOFF_YELLOW:
+		case SSL_Referee::PREPARE_KICKOFF_BLUE:
+			// A team can take a kickoff whenever the game is stopped and not in a break or penalty shootout.
+			return !is_break && !is_pshootout && is_stopped;
+
+		case SSL_Referee::DIRECT_FREE_YELLOW:
+		case SSL_Referee::DIRECT_FREE_BLUE:
+		case SSL_Referee::INDIRECT_FREE_YELLOW:
+		case SSL_Referee::INDIRECT_FREE_BLUE:
+			// A team can take a free kick whenever the game is stopped in a normal half.
+			return is_normal_half && is_stopped;
+
+		case SSL_Referee::PREPARE_PENALTY_YELLOW:
+		case SSL_Referee::PREPARE_PENALTY_BLUE:
+			// A team can take a penalty kick whenever the game is stopped in a normal half or during penalty shootout.
+			return (is_normal_half || is_pshootout) && is_stopped;
+
+		// A team can start a timeout whenever the game is stopped and not in a break or penalty shootout.
+		// A team can *resume* a timeout whenever the game is halted and that team already had a timeout in progress before the halt.
+		case SSL_Referee::TIMEOUT_YELLOW:
+			return (!is_break && !is_pshootout && is_stopped) || (ref.command() == SSL_Referee::HALT && state.has_timeout() && state.timeout().team() == SaveState::TEAM_YELLOW);
+		case SSL_Referee::TIMEOUT_BLUE:
+			return (!is_break && !is_pshootout && is_stopped) || (ref.command() == SSL_Referee::HALT && state.has_timeout() && state.timeout().team() == SaveState::TEAM_BLUE);
+
+		case SSL_Referee::GOAL_YELLOW:
+		case SSL_Referee::GOAL_BLUE:
+			// You can award goals whenever you are stopped.
+			return is_stopped;
+	}
+
+	return false;
+}
+
+void GameController::set_command(SSL_Referee::Command command) {
+	SSL_Referee *ref = state.mutable_referee();
+
+	// Record what’s happening.
+	logger.write(Glib::ustring::compose(u8"Setting command %1", SSL_Referee::Command_descriptor()->FindValueByNumber(command)->name()));
+
+	// Implement any special side effects.
+	switch (command) {
+		case SSL_Referee::STOP:
+			state.clear_timeout();
+			break;
+
+		case SSL_Referee::FORCE_START:
+		case SSL_Referee::NORMAL_START:
+			advance_from_pre();
+			break;
+
+		case SSL_Referee::TIMEOUT_YELLOW:
+		case SSL_Referee::TIMEOUT_BLUE:
+			// Only update any of the accounting if there is not already a record of an in-progress timeout.
+			// This allows to issue HALT during a timeout, then resume the running timeout, without eating up another of the team’s timeouts and without affecting the Cancel button.
+			// If that happens, during HALT there will still be a record of a running timeout.
+			{
+				SaveState::Team team = (command == SSL_Referee::TIMEOUT_YELLOW) ? SaveState::TEAM_YELLOW : SaveState::TEAM_BLUE;
+				SSL_Referee::TeamInfo &ti = TeamMeta::ALL[team].team_info(*ref);
+				if (!(state.has_timeout() && state.timeout().team() == team)) {
+					// Do not debit a timeout if the team has no timeouts left, as we would wrap the counter.
+					// Assume the referee is granting an extra timeout at their discretion.
+					if (ti.timeouts()) {
+						ti.set_timeouts(ti.timeouts() - 1);
+					}
+					state.mutable_timeout()->set_team(team);
+					state.mutable_timeout()->set_left_before(ti.timeout_time());
+				}
+			}
+			break;
+
+		case SSL_Referee::GOAL_YELLOW:
+		case SSL_Referee::GOAL_BLUE:
+			{
+				SaveState::Team team = (command == SSL_Referee::GOAL_YELLOW) ? SaveState::TEAM_YELLOW : SaveState::TEAM_BLUE;
+				SSL_Referee::TeamInfo &ti = TeamMeta::ALL[team].team_info(*ref);
+
+				// Increase the team’s score.
+				ti.set_score(ti.score() + 1);
+
+				// Increase the team’s number of penalty goals if in a penalty shootout.
+				if (ref->stage() == SSL_Referee::PENALTY_SHOOTOUT) {
+					TeamMeta::ALL[team].set_penalty_goals(state, TeamMeta::ALL[team].penalty_goals(state) + 1);
+				}
+			}
+			break;
+
+		case SSL_Referee::HALT:
+		case SSL_Referee::PREPARE_KICKOFF_YELLOW:
+		case SSL_Referee::PREPARE_KICKOFF_BLUE:
+		case SSL_Referee::DIRECT_FREE_YELLOW:
+		case SSL_Referee::DIRECT_FREE_BLUE:
+		case SSL_Referee::INDIRECT_FREE_YELLOW:
+		case SSL_Referee::INDIRECT_FREE_BLUE:
+		case SSL_Referee::PREPARE_PENALTY_YELLOW:
+		case SSL_Referee::PREPARE_PENALTY_BLUE:
+			// No side effects.
 			break;
 	}
-}
 
-void GameController::halt() {
-	set_command(SSL_Referee::HALT);
-}
+	// Set the new command.
+	ref->set_command(command);
 
-void GameController::stop() {
-	state.clear_timeout();
-	set_command(SSL_Referee::STOP);
-}
+	// Increment the command counter.
+	ref->set_command_counter(ref->command_counter() + 1);
 
-void GameController::force_start() {
-	advance_from_pre();
-	set_command(SSL_Referee::FORCE_START);
-}
+	// Record the command timestamp.
+	std::chrono::microseconds diff = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - std::chrono::system_clock::from_time_t(0));
+	ref->set_command_timestamp(static_cast<uint64_t>(diff.count()));
 
-void GameController::normal_start() {
-	advance_from_pre();
-	set_command(SSL_Referee::NORMAL_START);
+	// We should save the game state now.
+	save_game(state, configuration.save_filename);
+
+	// Notify listeners of the state change.
+	signal_other_changed.emit();
 }
 
 void GameController::set_teamname(SaveState::Team team, const Glib::ustring &name) {
@@ -173,9 +339,24 @@ void GameController::set_teamname(SaveState::Team team, const Glib::ustring &nam
 	TeamMeta::ALL[team].team_info(ref).set_name(name.raw());
 }
 
+bool GameController::can_set_goalie() const {
+	// You can change goalies whenever the game is stopped or halted except in post-game.
+	const SSL_Referee &ref = state.referee();
+	bool is_stopped = ref.command() == SSL_Referee::STOP || ref.command() == SSL_Referee::GOAL_YELLOW || ref.command() == SSL_Referee::GOAL_BLUE;
+	return ref.stage() != SSL_Referee::POST_GAME && (ref.command() == SSL_Referee::HALT || is_stopped);
+}
+
 void GameController::set_goalie(SaveState::Team team, unsigned int goalie) {
 	SSL_Referee &ref = *state.mutable_referee();
 	TeamMeta::ALL[team].team_info(ref).set_goalie(goalie);
+}
+
+bool GameController::can_switch_colours() const {
+	// You can switch colours when you are halted in a break or pre-half.
+	const SSL_Referee &ref = state.referee();
+	bool is_break = ref.stage() == SSL_Referee::NORMAL_HALF_TIME || ref.stage() == SSL_Referee::EXTRA_TIME_BREAK || ref.stage() == SSL_Referee::EXTRA_HALF_TIME || ref.stage() == SSL_Referee::PENALTY_SHOOTOUT_BREAK;
+	bool is_pre = ref.stage() == SSL_Referee::NORMAL_FIRST_HALF_PRE || ref.stage() == SSL_Referee::NORMAL_SECOND_HALF_PRE || ref.stage() == SSL_Referee::EXTRA_FIRST_HALF_PRE || ref.stage() == SSL_Referee::EXTRA_SECOND_HALF_PRE;
+	return ref.command() == SSL_Referee::HALT && (is_break || is_pre);
 }
 
 void GameController::switch_colours() {
@@ -198,20 +379,10 @@ void GameController::switch_colours() {
 	signal_other_changed.emit();
 }
 
-void GameController::award_goal(SaveState::Team team) {
-	SSL_Referee &ref = *state.mutable_referee();
-	SSL_Referee::TeamInfo &ti = TeamMeta::ALL[team].team_info(ref);
-
-	// Increase the team’s score.
-	ti.set_score(ti.score() + 1);
-
-	// Increase the team’s number of penalty goals if in a penalty shootout.
-	if (ref.stage() == SSL_Referee::PENALTY_SHOOTOUT) {
-		TeamMeta::ALL[team].set_penalty_goals(state, TeamMeta::ALL[team].penalty_goals(state) + 1);
-	}
-
-	// Issue the command.
-	set_command(TeamMeta::ALL[team].GOAL_COMMAND);
+bool GameController::can_subtract_goal(SaveState::Team team) const {
+	// You can subtract goals whenever you are stopped and the team has points.
+	const SSL_Referee &ref = state.referee();
+	return (ref.command() == SSL_Referee::STOP || ref.command() == SSL_Referee::GOAL_YELLOW || ref.command() == SSL_Referee::GOAL_BLUE) && TeamMeta::ALL[team].team_info(ref).score();
 }
 
 void GameController::subtract_goal(SaveState::Team team) {
@@ -241,7 +412,7 @@ void GameController::cancel_card_or_timeout() {
 		SSL_Referee::TeamInfo &ti = TeamMeta::ALL[team].team_info(ref);
 		ti.set_timeouts(ti.timeouts() + 1);
 		ti.set_timeout_time(state.timeout().left_before());
-		stop();
+		set_command(SSL_Referee::STOP);
 	} else if (state.has_last_card()) {
 		// A card is active; cancel it.
 		SSL_Referee::TeamInfo &ti = TeamMeta::ALL[state.last_card().team()].team_info(ref);
@@ -266,40 +437,9 @@ void GameController::cancel_card_or_timeout() {
 	return;
 }
 
-void GameController::timeout_start(SaveState::Team team) {
-	SSL_Referee &ref = *state.mutable_referee();
-	SSL_Referee::TeamInfo &ti = TeamMeta::ALL[team].team_info(ref);
-
-	// Only update any of the accounting if there is not already a record of an in-progress timeout.
-	// This allows to issue HALT during a timeout, then resume the running timeout, without eating up another of the team’s timeouts and without affecting the Cancel button.
-	// If that happens, during HALT there will still be a record of a running timeout.
-	if (!(state.has_timeout() && state.timeout().team() == team)) {
-		// Do not debit a timeout if the team has no timeouts left, as we would wrap the counter.
-		// Assume the referee is granting an extra timeout at their discretion.
-		if (ti.timeouts()) {
-			ti.set_timeouts(ti.timeouts() - 1);
-		}
-		state.mutable_timeout()->set_team(team);
-		state.mutable_timeout()->set_left_before(ti.timeout_time());
-	}
-
-	set_command(TeamMeta::ALL[team].TIMEOUT_COMMAND);
-}
-
-void GameController::prepare_kickoff(SaveState::Team team) {
-	set_command(TeamMeta::ALL[team].PREPARE_KICKOFF_COMMAND);
-}
-
-void GameController::direct_free_kick(SaveState::Team team) {
-	set_command(TeamMeta::ALL[team].DIRECT_FREE_COMMAND);
-}
-
-void GameController::indirect_free_kick(SaveState::Team team) {
-	set_command(TeamMeta::ALL[team].INDIRECT_FREE_COMMAND);
-}
-
-void GameController::prepare_penalty(SaveState::Team team) {
-	set_command(TeamMeta::ALL[team].PREPARE_PENALTY_COMMAND);
+bool GameController::can_issue_card() const {
+	const SSL_Referee &ref = state.referee();
+	return ref.command() == SSL_Referee::STOP || ref.command() == SSL_Referee::GOAL_YELLOW || ref.command() == SSL_Referee::GOAL_BLUE;
 }
 
 void GameController::yellow_card(SaveState::Team team) {
@@ -451,31 +591,6 @@ bool GameController::tick() {
 	}
 
 	return true;
-}
-
-void GameController::set_command(SSL_Referee::Command command, bool no_signal) {
-	SSL_Referee *ref = state.mutable_referee();
-
-	// Record what’s happening.
-	logger.write(Glib::ustring::compose(u8"Setting command %1", SSL_Referee::Command_descriptor()->FindValueByNumber(command)->name()));
-
-	// Set the new command.
-	ref->set_command(command);
-
-	// Increment the command counter.
-	ref->set_command_counter(ref->command_counter() + 1);
-
-	// Record the command timestamp.
-	std::chrono::microseconds diff = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - std::chrono::system_clock::from_time_t(0));
-	ref->set_command_timestamp(static_cast<uint64_t>(diff.count()));
-
-	// We should save the game state now.
-	save_game(state, configuration.save_filename);
-
-	// Emit a signal if requested.
-	if (!no_signal) {
-		signal_other_changed.emit();
-	}
 }
 
 void GameController::advance_from_pre() {
