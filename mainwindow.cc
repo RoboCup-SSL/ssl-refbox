@@ -75,7 +75,7 @@ MainWindow::MainWindow(GameController &controller) :
 		Gtk::Window(),
 		controller(controller),
 
-		ignore_rules_menu_item(u8"Ignore Rules"),
+		ignore_rules_menu_item(u8"_Ignore Rules", true),
 
 		halt_but(u8"Halt (KP_Point)"),
 		stop_but(u8"Stop Game (KP_0)"),
