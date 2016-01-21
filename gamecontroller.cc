@@ -201,6 +201,7 @@ bool GameController::can_set_command(SSL_Referee::Command command) const {
 	bool is_prepare_kickoff = ref.command() == SSL_Referee::PREPARE_KICKOFF_YELLOW || ref.command() == SSL_Referee::PREPARE_KICKOFF_BLUE;
 	bool is_prepare_penalty = ref.command() == SSL_Referee::PREPARE_PENALTY_YELLOW || ref.command() == SSL_Referee::PREPARE_PENALTY_BLUE;
 	bool is_pshootout = ref.stage() == SSL_Referee::PENALTY_SHOOTOUT;
+	bool is_ball_placement = ref.command() == SSL_Referee::BALL_PLACEMENT_YELLOW || ref.command() == SSL_Referee::BALL_PLACEMENT_BLUE;
 	switch (command) {
 		case SSL_Referee::HALT:
 			// You can HALT any time you are not already halted.
@@ -227,8 +228,8 @@ bool GameController::can_set_command(SSL_Referee::Command command) const {
 		case SSL_Referee::DIRECT_FREE_BLUE:
 		case SSL_Referee::INDIRECT_FREE_YELLOW:
 		case SSL_Referee::INDIRECT_FREE_BLUE:
-			// A team can take a free kick whenever the game is stopped in a normal half.
-			return is_normal_half && is_stopped;
+			// A team can take a free kick whenever the game is in a normal half and stopped or after a successfull autonomous ball placement.
+			return is_normal_half && (is_stopped || is_ball_placement);
 
 		case SSL_Referee::PREPARE_PENALTY_YELLOW:
 		case SSL_Referee::PREPARE_PENALTY_BLUE:
@@ -247,10 +248,11 @@ bool GameController::can_set_command(SSL_Referee::Command command) const {
 			// You can award goals whenever you are stopped.
 			return is_stopped;
 
+		// You can ask for ball placement whenever you are stopped or the other team failed to place the ball
 		case SSL_Referee::BALL_PLACEMENT_YELLOW:
+			return is_stopped || ref.command() == SSL_Referee::BALL_PLACEMENT_BLUE;
 		case SSL_Referee::BALL_PLACEMENT_BLUE:
-			// You can ask for ball placement whenever you are stopped.
-			return is_stopped;
+			return is_stopped || ref.command() == SSL_Referee::BALL_PLACEMENT_YELLOW;
 	}
 
 	return false;
@@ -645,4 +647,3 @@ void GameController::advance_from_pre() {
 		default: break;
 	}
 }
-
