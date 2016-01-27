@@ -221,8 +221,8 @@ bool GameController::can_set_command(SSL_Referee::Command command) const {
 
 		case SSL_Referee::PREPARE_KICKOFF_YELLOW:
 		case SSL_Referee::PREPARE_KICKOFF_BLUE:
-			// A team can take a kickoff whenever the game is stopped and not in a break or penalty shootout.
-			return !is_break && !is_pshootout && is_stopped;
+			// A team can take a kickoff whenever the game is stopped or in ball placement and not in a break or penalty shootout.
+			return !is_break && !is_pshootout && (is_stopped || is_ball_placement);
 
 		case SSL_Referee::DIRECT_FREE_YELLOW:
 		case SSL_Referee::DIRECT_FREE_BLUE:
@@ -233,8 +233,8 @@ bool GameController::can_set_command(SSL_Referee::Command command) const {
 
 		case SSL_Referee::PREPARE_PENALTY_YELLOW:
 		case SSL_Referee::PREPARE_PENALTY_BLUE:
-			// A team can take a penalty kick whenever the game is stopped in a normal half or during penalty shootout.
-			return (is_normal_half || is_pshootout) && is_stopped;
+			// A team can take a penalty kick whenever the game is stopped or in ball placement in a normal half or during penalty shootout.
+			return (is_normal_half || is_pshootout) && (is_stopped || is_ball_placement);
 
 		// A team can start a timeout whenever the game is stopped and not in a break or penalty shootout.
 		// A team can *resume* a timeout whenever the game is halted and that team already had a timeout in progress before the halt.
