@@ -4,6 +4,7 @@
 #include "logger.h"
 #include "rcon.pb.h"
 #include <cstring>
+#include <giomm/error.h>
 #include <giomm/inetsocketaddress.h>
 #include <giomm/socketaddress.h>
 #include <glibmm/ustring.h>
@@ -179,37 +180,45 @@ void RConServer::Connection::start_read_fully(void *buffer, std::size_t length, 
 }
 
 void RConServer::Connection::finished_read_fully_partial(Glib::RefPtr<Gio::AsyncResult> &result, void *rptr, std::size_t left, const sigc::slot<void, bool> &slot) {
-	gssize bytes_read = sock->get_input_stream()->read_finish(result);
-	if (bytes_read > 0) {
-		unsigned char *rptr_ch = static_cast<unsigned char *>(rptr);
-		rptr_ch += bytes_read;
-		left -= bytes_read;
-		if (left) {
-			sock->get_input_stream()->read_async(rptr_ch, left, sigc::bind(sigc::mem_fun(this, &RConServer::Connection::finished_read_fully_partial), rptr_ch, left, slot));
+	try {
+		gssize bytes_read = sock->get_input_stream()->read_finish(result);
+		if (bytes_read > 0) {
+			unsigned char *rptr_ch = static_cast<unsigned char *>(rptr);
+			rptr_ch += bytes_read;
+			left -= bytes_read;
+			if (left) {
+				sock->get_input_stream()->read_async(rptr_ch, left, sigc::bind(sigc::mem_fun(this, &RConServer::Connection::finished_read_fully_partial), rptr_ch, left, slot));
+			} else {
+				slot(true);
+			}
 		} else {
-			slot(true);
+			slot(false);
 		}
-	} else {
+	} catch (const Gio::Error &) {
 		slot(false);
 	}
 }
 
 void RConServer::Connection::start_write_fully(const void *data, std::size_t length, const sigc::slot<void, bool> &slot) {
-	sock->get_output_stream()->write_async(data, length, sigc::bind(sigc::mem_fun(this, &RConServer::Connection::finished_write_fully_partial), data, length, slot));
+	sock->get_output_stream()->write_async(data, 1, sigc::bind(sigc::mem_fun(this, &RConServer::Connection::finished_write_fully_partial), data, length, slot));
 }
 
 void RConServer::Connection::finished_write_fully_partial(Glib::RefPtr<Gio::AsyncResult> &result, const void *wptr, std::size_t left, const sigc::slot<void, bool> &slot) {
-	gssize bytes_written = sock->get_output_stream()->write_finish(result);
-	if (bytes_written > 0) {
-		const unsigned char *wptr_ch = static_cast<const unsigned char *>(wptr);
-		wptr_ch += bytes_written;
-		left -= bytes_written;
-		if (left) {
-			sock->get_output_stream()->write_async(wptr_ch, left, sigc::bind(sigc::mem_fun(this, &RConServer::Connection::finished_write_fully_partial), wptr_ch, left, slot));
+	try {
+		gssize bytes_written = sock->get_output_stream()->write_finish(result);
+		if (bytes_written > 0) {
+			const unsigned char *wptr_ch = static_cast<const unsigned char *>(wptr);
+			wptr_ch += bytes_written;
+			left -= bytes_written;
+			if (left) {
+				sock->get_output_stream()->write_async(wptr_ch, left, sigc::bind(sigc::mem_fun(this, &RConServer::Connection::finished_write_fully_partial), wptr_ch, left, slot));
+			} else {
+				slot(true);
+			}
 		} else {
-			slot(true);
+			slot(false);
 		}
-	} else {
+	} catch (const Gio::Error &) {
 		slot(false);
 	}
 }
