@@ -34,11 +34,17 @@ class RConServer : public NonCopyable, public sigc::trackable {
 				std::vector<unsigned char> buffer;
 
 				void start_read_length();
-				void finished_read_length(const Glib::RefPtr<Gio::AsyncResult> &result);
-				void finished_read_data(const Glib::RefPtr<Gio::AsyncResult> &result);
-				void finished_write_reply(const Glib::RefPtr<Gio::AsyncResult> &result);
+				void finished_read_length(bool ok);
+				void finished_read_data(bool ok);
+				void finished_write_reply(bool ok);
 
 				void execute_request(const SSL_RefereeRemoteControlRequest &request, SSL_RefereeRemoteControlReply &reply);
+
+				void start_read_fully(void *buffer, std::size_t length, const sigc::slot<void, bool> &slot);
+				void finished_read_fully_partial(Glib::RefPtr<Gio::AsyncResult> &result, void *rptr, std::size_t left, const sigc::slot<void, bool> &slot);
+
+				void start_write_fully(const void *data, std::size_t length, const sigc::slot<void, bool> &slot);
+				void finished_write_fully_partial(Glib::RefPtr<Gio::AsyncResult> &result, const void *wptr, std::size_t left, const sigc::slot<void, bool> &slot);
 		};
 
 		GameController &controller;

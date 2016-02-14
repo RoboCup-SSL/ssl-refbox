@@ -78,16 +78,15 @@ void RConServer::Connection::set_connection_list_iterator(std::list<Connection>:
 }
 
 void RConServer::Connection::start_read_length() {
-	sock->get_input_stream()->read_all_async(&length, sizeof(length), sigc::mem_fun(this, &RConServer::Connection::finished_read_length));
+	start_read_fully(&length, sizeof(length), sigc::mem_fun(this, &RConServer::Connection::finished_read_length));
 }
 
-void RConServer::Connection::finished_read_length(const Glib::RefPtr<Gio::AsyncResult> &result) {
-	std::size_t bytes_read;
-	if (sock->get_input_stream()->read_all_finish(result, bytes_read) && bytes_read == sizeof(length)) {
+void RConServer::Connection::finished_read_length(bool ok) {
+	if (ok) {
 		length = ntohl(length);
 		if (length <= MAX_PACKET_SIZE) {
 			buffer.resize(length);
-			sock->get_input_stream()->read_all_async(&buffer[0], buffer.size(), sigc::mem_fun(this, &RConServer::Connection::finished_read_data));
+			start_read_fully(&buffer[0], buffer.size(), sigc::mem_fun(this, &RConServer::Connection::finished_read_data));
 		} else {
 			server.controller.logger.write(Glib::ustring::compose(u8"Packet size %1 too large", length));
 			server.connections.erase(connection_list_iterator);
@@ -97,9 +96,8 @@ void RConServer::Connection::finished_read_length(const Glib::RefPtr<Gio::AsyncR
 	}
 }
 
-void RConServer::Connection::finished_read_data(const Glib::RefPtr<Gio::AsyncResult> &result) {
-	std::size_t bytes_read;
-	if (sock->get_input_stream()->read_all_finish(result, bytes_read) && bytes_read == buffer.size()) {
+void RConServer::Connection::finished_read_data(bool ok) {
+	if (ok) {
 		SSL_RefereeRemoteControlRequest request;
 		if (request.ParseFromArray(&buffer[0], static_cast<int>(buffer.size()))) {
 			SSL_RefereeRemoteControlReply reply;
@@ -109,7 +107,7 @@ void RConServer::Connection::finished_read_data(const Glib::RefPtr<Gio::AsyncRes
 			reply.SerializeWithCachedSizesToArray(&buffer[sizeof(length)]);
 			length = htonl(length);
 			std::memcpy(&buffer[0], &length, sizeof(length));
-			sock->get_output_stream()->write_all_async(&buffer[0], buffer.size(), sigc::mem_fun(this, &RConServer::Connection::finished_write_reply));
+			start_write_fully(&buffer[0], buffer.size(), sigc::mem_fun(this, &RConServer::Connection::finished_write_reply));
 		} else {
 			server.controller.logger.write(u8"Protobuf parsing failed");
 			server.connections.erase(connection_list_iterator);
@@ -119,9 +117,8 @@ void RConServer::Connection::finished_read_data(const Glib::RefPtr<Gio::AsyncRes
 	}
 }
 
-void RConServer::Connection::finished_write_reply(const Glib::RefPtr<Gio::AsyncResult> &result) {
-	std::size_t bytes_written;
-	if (sock->get_output_stream()->write_all_finish(result, bytes_written) && bytes_written == buffer.size()) {
+void RConServer::Connection::finished_write_reply(bool ok) {
+	if (ok) {
 		start_read_length();
 	} else {
 		server.connections.erase(connection_list_iterator);
@@ -174,5 +171,45 @@ void RConServer::Connection::execute_request(const SSL_RefereeRemoteControlReque
 		} else {
 			reply.set_outcome(SSL_RefereeRemoteControlReply::BAD_CARD);
 		}
+	}
+}
+
+void RConServer::Connection::start_read_fully(void *buffer, std::size_t length, const sigc::slot<void, bool> &slot) {
+	sock->get_input_stream()->read_async(buffer, length, sigc::bind(sigc::mem_fun(this, &RConServer::Connection::finished_read_fully_partial), buffer, length, slot));
+}
+
+void RConServer::Connection::finished_read_fully_partial(Glib::RefPtr<Gio::AsyncResult> &result, void *rptr, std::size_t left, const sigc::slot<void, bool> &slot) {
+	gssize bytes_read = sock->get_input_stream()->read_finish(result);
+	if (bytes_read > 0) {
+		unsigned char *rptr_ch = static_cast<unsigned char *>(rptr);
+		rptr_ch += bytes_read;
+		left -= bytes_read;
+		if (left) {
+			sock->get_input_stream()->read_async(rptr_ch, left, sigc::bind(sigc::mem_fun(this, &RConServer::Connection::finished_read_fully_partial), rptr_ch, left, slot));
+		} else {
+			slot(true);
+		}
+	} else {
+		slot(false);
+	}
+}
+
+void RConServer::Connection::start_write_fully(const void *data, std::size_t length, const sigc::slot<void, bool> &slot) {
+	sock->get_output_stream()->write_async(data, length, sigc::bind(sigc::mem_fun(this, &RConServer::Connection::finished_write_fully_partial), data, length, slot));
+}
+
+void RConServer::Connection::finished_write_fully_partial(Glib::RefPtr<Gio::AsyncResult> &result, const void *wptr, std::size_t left, const sigc::slot<void, bool> &slot) {
+	gssize bytes_written = sock->get_output_stream()->write_finish(result);
+	if (bytes_written > 0) {
+		const unsigned char *wptr_ch = static_cast<const unsigned char *>(wptr);
+		wptr_ch += bytes_written;
+		left -= bytes_written;
+		if (left) {
+			sock->get_output_stream()->write_async(wptr_ch, left, sigc::bind(sigc::mem_fun(this, &RConServer::Connection::finished_write_fully_partial), wptr_ch, left, slot));
+		} else {
+			slot(true);
+		}
+	} else {
+		slot(false);
 	}
 }
