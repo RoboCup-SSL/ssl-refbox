@@ -148,7 +148,7 @@ MainWindow::MainWindow(GameController &controller) :
 		yellow_timeouts_left_label(u8"Timeouts left: "),
 		yellow_goalie_label(u8"Goalie: "),
 		yellow_kickoff_but(u8"Kickoff (KP_1)"),
-		yellow_freekick_but(u8"Freekick (KP_7)"),
+		yellow_freekick_but(u8"Direct (KP_7)"),
 		yellow_penalty_but(u8"Penalty"),
 		yellow_indirect_freekick_but(u8"Indirect (KP_4)"),
 
@@ -158,7 +158,7 @@ MainWindow::MainWindow(GameController &controller) :
 		blue_timeouts_left_label(u8"Timeouts left: "),
 		blue_goalie_label(u8"Goalie: "),
 		blue_kickoff_but(u8"Kickoff (KP_3)"),
-		blue_freekick_but(u8"Freekick (KP_9)"),
+		blue_freekick_but(u8"Direct (KP_9)"),
 		blue_penalty_but(u8"Penalty"),
 		blue_indirect_freekick_but(u8"Indirect (KP_6)") {
 	set_default_size(600, 700);
