@@ -181,6 +181,39 @@ MainWindow::MainWindow(GameController &controller) :
 	yellow_goal_but.add_accelerator(u8"activate", get_accel_group(), GDK_KP_Divide, Gdk::ModifierType(0), Gtk::AccelFlags(0));
 	blue_goal_but.add_accelerator(u8"activate", get_accel_group(), GDK_KP_Multiply, Gdk::ModifierType(0), Gtk::AccelFlags(0));
 
+	// Add Tooltips
+	halt_but.set_tooltip_text(u8"Robots must completely stop moving\nStage, card, and timeout timers freeze");
+	force_start_but.set_tooltip_text(u8"Both teams may approach the ball");
+	normal_start_but.set_tooltip_text(u8"Selected team may approach the ball");
+	teamname_yellow.set_tooltip_text(u8"Name of yellow team");
+	teamname_blue.set_tooltip_text(u8"Name of blue team");
+	switch_colours_but.set_tooltip_text(u8"Teams switch marker colours");
+	yellow_goal_but.set_tooltip_text(u8"Award goal to yellow");
+	yellow_subgoal_but.set_tooltip_text(u8"Remove goal from yellow");
+	blue_goal_but.set_tooltip_text(u8"Award goal to blue");
+	blue_subgoal_but.set_tooltip_text(u8"Remove goal from blue");
+	firsthalf_start_but.set_tooltip_text(u8"Prepare for first half");
+	halftime_start_but.set_tooltip_text(u8"Start half-time");
+	secondhalf_start_but.set_tooltip_text(u8"Prepare for second half");
+	overtime1_start_but.set_tooltip_text(u8"Prepare for first overtime half");
+	overtime2_start_but.set_tooltip_text(u8"Prepare for second overtime half");
+	penaltyshootout_start_but.set_tooltip_text(u8"Start penalty shootout");
+	gameover_start_but.set_tooltip_text(u8"End game");
+	yellow_goalie_spin.set_tooltip_text(u8"Robot number of yellow goalie");
+	yellow_kickoff_but.set_tooltip_text(u8"Prepare for yellow kickoff");
+	yellow_freekick_but.set_tooltip_text(u8"Execute yellow direct free kick, corner kick, or goal kick");
+	yellow_penalty_but.set_tooltip_text(u8"Prepare for yellow penalty kick");
+	yellow_indirect_freekick_but.set_tooltip_text(u8"Execute yellow indirect free kick or throw-in");
+	yellow_yellowcard_but.set_tooltip_text(u8"Show yellow card to yellow");
+	yellow_redcard_but.set_tooltip_text(u8"Show red card to yellow");
+	blue_goalie_spin.set_tooltip_text(u8"Robot number of blue goalie");
+	blue_kickoff_but.set_tooltip_text(u8"Prepare for blue kickoff");
+	blue_freekick_but.set_tooltip_text(u8"Execute blue direct free kick, corner kick, or goal kick");
+	blue_penalty_but.set_tooltip_text(u8"Prepare for blue penalty kick");
+	blue_indirect_freekick_but.set_tooltip_text(u8"Execute blue indirect free kick or throw-in");
+	blue_yellowcard_but.set_tooltip_text(u8"Show yellow card to blue");
+	blue_redcard_but.set_tooltip_text(u8"Show red card to blue");
+
 	// Goalie fields should not be editable because if the user types a number on the numpad, it will be treated as an accelerator for a command instead
 	// This does not change the visual style, but it rejects all keyboard edits, so users will learn not to use the keyboard and will not accidentally hit a command key
 	yellow_goalie_spin.set_editable(false);
@@ -444,8 +477,27 @@ void MainWindow::on_other_changed() {
 	}
 
 	// Update timeout start button texts based on whether a timeout is already running.
-	yellow_timeout_start_but.set_label(state.has_timeout() && state.timeout().team() == SaveState::TEAM_YELLOW ? u8"Timeout Resume" : u8"Timeout Start");
-	blue_timeout_start_but.set_label(state.has_timeout() && state.timeout().team() == SaveState::TEAM_BLUE ? u8"Timeout Resume" : u8"Timeout Start");
+	if (state.has_timeout() && state.timeout().team() == SaveState::TEAM_YELLOW) {
+		yellow_timeout_start_but.set_label(u8"Timeout Resume");
+		yellow_timeout_start_but.set_tooltip_text(u8"Resume timer for currently running timeout");
+	} else {
+		yellow_timeout_start_but.set_label(u8"Timeout Start");
+		yellow_timeout_start_but.set_tooltip_text(u8"Start timeout for yellow");
+	}
+	if (state.has_timeout() && state.timeout().team() == SaveState::TEAM_BLUE) {
+		blue_timeout_start_but.set_label(u8"Timeout Resume");
+		blue_timeout_start_but.set_tooltip_text(u8"Resume timer for currently running timeout");
+	} else {
+		blue_timeout_start_but.set_label(u8"Timeout Start");
+		blue_timeout_start_but.set_tooltip_text(u8"Start timeout for blue");
+	}
+
+	// Update tooltip on stop button based on whether a timeout is running.
+	if (state.has_timeout()) {
+		stop_but.set_tooltip_text(u8"End current timeout and return to game\nRobots must keep distance from the ball");
+	} else {
+		stop_but.set_tooltip_text(u8"Robots must keep distance from the ball");
+	}
 
 	// Update timeout counts.
 	yellow_timeouts_left_text.set_text(Glib::ustring::format(ref.yellow().timeouts()));
@@ -572,16 +624,20 @@ void MainWindow::update_sensitivities() {
 		if (controller.state.has_last_card()) {
 			cancel_but.set_sensitive();
 			cancel_but.set_label(u8"Cancel\nlast card");
+			cancel_but.set_tooltip_text(u8"Destroy last-issued yellow or red card\nas if card was never issued");
 		} else if (is_timeout_running) {
 			cancel_but.set_sensitive();
 			cancel_but.set_label(u8"Cancel\ncurrent timeout");
+			cancel_but.set_tooltip_text(u8"Cancel timeout currently running as if\ntimeout was never taken; restore previous\ntimeouts left and remaining time");
 		} else {
 			cancel_but.set_sensitive(false);
 			cancel_but.set_label(u8"Cancel\n");
+			cancel_but.set_has_tooltip(false);
 		}
 	} else {
 		cancel_but.set_sensitive(false);
 		cancel_but.set_label(u8"Cancel\n");
+		cancel_but.set_has_tooltip(false);
 	}
 }
 
