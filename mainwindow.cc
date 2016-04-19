@@ -236,11 +236,11 @@ MainWindow::MainWindow(GameController &controller) :
 	yellow_team_table.attach(yellow_timeouts_left_text, 1, 2, 2, 3, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND | Gtk::FILL);
 	yellow_team_table.attach(yellow_goalie_label, 0, 1, 3, 4, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND | Gtk::FILL);
 	yellow_team_table.attach(yellow_goalie_spin, 1, 2, 3, 4, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND | Gtk::FILL);
-	yellow_team_table.attach(yellow_kickoff_but, 0, 1, 4, 5, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND | Gtk::FILL);
+	yellow_team_table.attach(yellow_freekick_but, 0, 1, 4, 5, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND | Gtk::FILL);
+	yellow_team_table.attach(yellow_indirect_freekick_but, 0, 1, 5, 6, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND | Gtk::FILL);
+	yellow_team_table.attach(yellow_kickoff_but, 0, 1, 6, 7, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND | Gtk::FILL);
 	yellow_team_table.attach(yellow_penalty_but, 1, 2, 4, 5, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND | Gtk::FILL);
-	yellow_team_table.attach(yellow_freekick_but, 0, 1, 5, 6, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND | Gtk::FILL);
-	yellow_team_table.attach(yellow_indirect_freekick_but, 1, 2, 5, 6, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND | Gtk::FILL);
-	yellow_team_table.attach(yellow_yellowcard_but, 0, 1, 6, 7, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND | Gtk::FILL);
+	yellow_team_table.attach(yellow_yellowcard_but, 1, 2, 5, 6, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND | Gtk::FILL);
 	yellow_team_table.attach(yellow_redcard_but, 1, 2, 6, 7, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND | Gtk::FILL);
 
 	yellow_frame.add(yellow_team_table);
@@ -258,11 +258,11 @@ MainWindow::MainWindow(GameController &controller) :
 	blue_team_table.attach(blue_timeouts_left_text, 1, 2, 2, 3, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND | Gtk::FILL);
 	blue_team_table.attach(blue_goalie_label, 0, 1, 3, 4, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND | Gtk::FILL);
 	blue_team_table.attach(blue_goalie_spin, 1, 2, 3, 4, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND | Gtk::FILL);
-	blue_team_table.attach(blue_kickoff_but, 0, 1, 4, 5, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND | Gtk::FILL);
+	blue_team_table.attach(blue_freekick_but, 0, 1, 4, 5, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND | Gtk::FILL);
+	blue_team_table.attach(blue_indirect_freekick_but, 0, 1, 5, 6, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND | Gtk::FILL);
+	blue_team_table.attach(blue_kickoff_but, 0, 1, 6, 7, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND | Gtk::FILL);
 	blue_team_table.attach(blue_penalty_but, 1, 2, 4, 5, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND | Gtk::FILL);
-	blue_team_table.attach(blue_freekick_but, 0, 1, 5, 6, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND | Gtk::FILL);
-	blue_team_table.attach(blue_indirect_freekick_but, 1, 2, 5, 6, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND | Gtk::FILL);
-	blue_team_table.attach(blue_yellowcard_but, 0, 1, 6, 7, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND | Gtk::FILL);
+	blue_team_table.attach(blue_yellowcard_but, 1, 2, 5, 6, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND | Gtk::FILL);
 	blue_team_table.attach(blue_redcard_but, 1, 2, 6, 7, Gtk::EXPAND | Gtk::FILL, Gtk::EXPAND | Gtk::FILL);
 
 	blue_frame.add(blue_team_table);
