@@ -10,11 +10,21 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-#define MULTICAST_INTERFACE "enp7s0"
 #define MULTICAST_ADDRESS "224.5.23.1"
 #define MULTICAST_PORT "10003"
 
-int main() {
+namespace {
+	void usage(const char* appName) {
+		std::cerr << "Usage:\n" << appName << " multicast_interface" << std::endl;
+		std::exit(EXIT_FAILURE);
+	}
+}
+
+int main(int argc, char** argv) {
+	if (argc != 2) {
+		usage(argv[0]);
+	}
+
 	// Get a socket address to bind to.
 	addrinfo hints;
 	std::memset(&hints, 0, sizeof(hints));
@@ -30,7 +40,7 @@ int main() {
 	}
 
 	// Look up the index of the network interface from its name.
-	unsigned int ifindex = if_nametoindex(MULTICAST_INTERFACE);
+	unsigned int ifindex = if_nametoindex(argv[1]);
 	if (!ifindex) {
 		std::cerr << std::strerror(errno) << '\n';
 		return 1;
