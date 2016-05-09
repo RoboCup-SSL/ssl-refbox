@@ -202,6 +202,10 @@ bool GameController::can_set_command(SSL_Referee::Command command) const {
 	bool is_prepare_penalty = ref.command() == SSL_Referee::PREPARE_PENALTY_YELLOW || ref.command() == SSL_Referee::PREPARE_PENALTY_BLUE;
 	bool is_pshootout = ref.stage() == SSL_Referee::PENALTY_SHOOTOUT;
 	bool is_ball_placement = ref.command() == SSL_Referee::BALL_PLACEMENT_YELLOW || ref.command() == SSL_Referee::BALL_PLACEMENT_BLUE;
+	bool is_team_name_empty = false;
+	for (const TeamMeta &team : TeamMeta::ALL) {
+		is_team_name_empty |= team.team_info(ref).name().empty();
+	}
 	switch (command) {
 		case SSL_Referee::HALT:
 			// You can HALT any time you are not already halted.
@@ -216,8 +220,8 @@ bool GameController::can_set_command(SSL_Referee::Command command) const {
 			return (is_normal_half || is_break) && is_stopped;
 
 		case SSL_Referee::NORMAL_START:
-			// You can NORMAL START when you are preparing a prepared play (kickoff or penalty kick).
-			return is_prepare_kickoff || is_prepare_penalty;
+			// You can NORMAL START when you are preparing a prepared play (kickoff or penalty kick), except if a required team name is missing.
+			return (is_prepare_kickoff || is_prepare_penalty) && !(configuration.team_names_required && is_team_name_empty);
 
 		case SSL_Referee::PREPARE_KICKOFF_YELLOW:
 		case SSL_Referee::PREPARE_KICKOFF_BLUE:
@@ -382,6 +386,7 @@ void GameController::set_command(SSL_Referee::Command command, float designated_
 void GameController::set_teamname(SaveState::Team team, const Glib::ustring &name) {
 	SSL_Referee &ref = *state.mutable_referee();
 	TeamMeta::ALL[team].team_info(ref).set_name(name.raw());
+	signal_teamname_changed.emit();
 }
 
 bool GameController::can_set_goalie() const {

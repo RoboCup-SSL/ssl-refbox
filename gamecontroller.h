@@ -22,7 +22,7 @@ class GameController : public NonCopyable {
 		SaveState state;
 		const Configuration &configuration;
 		Logger &logger;
-		sigc::signal<void> signal_timeout_time_changed, signal_game_clock_changed, signal_yellow_card_time_changed, signal_other_changed;
+		sigc::signal<void> signal_timeout_time_changed, signal_game_clock_changed, signal_yellow_card_time_changed, signal_teamname_changed, signal_other_changed;
 
 		GameController(Logger &logger, const Configuration &configuration, const std::vector<Publisher *> &publishers, const std::string &resume_filename);
 		~GameController();

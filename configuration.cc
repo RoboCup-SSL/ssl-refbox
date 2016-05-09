@@ -24,6 +24,7 @@ Configuration::Configuration(const std::string &filename) {
 	shootout_break_seconds = kf.get_integer(u8"shootout", u8"BREAK");
 
 	yellow_card_seconds = static_cast<unsigned int>(kf.get_integer(u8"global", u8"YELLOW_CARD_TIME"));
+	team_names_required = kf.get_boolean(u8"global", u8"TEAM_NAMES_REQUIRED");
 
 	if (kf.has_key(u8"files", u8"SAVE")) {
 		save_filename = Glib::filename_from_utf8(Glib::ustring::compose(kf.get_string(u8"files", u8"SAVE"), Glib::DateTime::create_now_local().format(u8"%Y%m%dT%H%M%S")));

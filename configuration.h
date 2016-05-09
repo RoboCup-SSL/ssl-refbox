@@ -28,6 +28,7 @@ class Configuration {
 
 		// [global] section
 		unsigned int yellow_card_seconds;
+		bool team_names_required;
 
 		// [files] section
 		std::string save_filename;

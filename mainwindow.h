@@ -35,6 +35,7 @@ class MainWindow : public Gtk::Window {
 		void on_timeout_time_changed();
 		void on_game_clock_changed();
 		void on_yellow_card_time_changed();
+		void on_teamname_changed();
 		void on_other_changed();
 
 		void on_teamname_yellow_changed();

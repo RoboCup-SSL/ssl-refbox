@@ -230,6 +230,7 @@ MainWindow::MainWindow(GameController &controller) :
 	controller.signal_timeout_time_changed.connect(sigc::mem_fun(this, &MainWindow::on_timeout_time_changed));
 	controller.signal_game_clock_changed.connect(sigc::mem_fun(this, &MainWindow::on_game_clock_changed));
 	controller.signal_yellow_card_time_changed.connect(sigc::mem_fun(this, &MainWindow::on_yellow_card_time_changed));
+	controller.signal_teamname_changed.connect(sigc::mem_fun(this, &MainWindow::on_teamname_changed));
 	controller.signal_other_changed.connect(sigc::mem_fun(this, &MainWindow::on_other_changed));
 
 	ignore_rules_menu_item.signal_toggled().connect(sigc::mem_fun(this, &MainWindow::update_sensitivities));
@@ -383,6 +384,7 @@ MainWindow::MainWindow(GameController &controller) :
 	on_timeout_time_changed();
 	on_game_clock_changed();
 	on_yellow_card_time_changed();
+	on_teamname_changed();
 	on_other_changed();
 	update_sensitivities();
 
@@ -423,6 +425,11 @@ void MainWindow::on_yellow_card_time_changed() {
 			}
 		}
 	}
+}
+
+void MainWindow::on_teamname_changed() {
+	// Sensitivities may be affected because we may be operating in a mode where we prevent starting the game if a team name is missing.
+	update_sensitivities();
 }
 
 void MainWindow::on_other_changed() {
