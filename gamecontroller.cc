@@ -457,12 +457,12 @@ GameController::CancelType GameController::cancel_type() const {
 	if (ref.stage() == SSL_Referee::POST_GAME) {
 		// You can never cancel anything in post-game.
 		return CancelType::NONE;
-	} else if (state.has_last_card()) {
-		// You can cancel a card whenever there is one outstanding.
-		return CancelType::CARD;
 	} else if (ref.command() == SSL_Referee::TIMEOUT_YELLOW || ref.command() == SSL_Referee::TIMEOUT_BLUE) {
 		// You can cancel a timeout only when the timeout is running, not if it is in a nested HALT.
 		return CancelType::TIMEOUT;
+	} else if (state.has_last_card()) {
+		// You can cancel a card whenever there is one outstanding.
+		return CancelType::CARD;
 	} else {
 		// There is nothing available to cancel right now.
 		return CancelType::NONE;
