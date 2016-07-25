@@ -642,6 +642,12 @@ void MainWindow::update_sensitivities() {
 			cancel_but.set_label(u8"Cancel\ncurrent timeout");
 			cancel_but.set_tooltip_text(u8"Cancel timeout currently running as if\ntimeout was never taken; restore previous\ntimeouts left and remaining time");
 			break;
+
+		case GameController::CancelType::TIMEOUT_END:
+			cancel_but.set_sensitive();
+			cancel_but.set_label(u8"Cancel\nend of timeout");
+			cancel_but.set_tooltip_text(u8"Cancel ending timeout most recently ended\nas if timeout was never ended; resume timeout");
+			break;
 	}
 }
 

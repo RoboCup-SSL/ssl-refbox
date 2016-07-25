@@ -23,6 +23,7 @@ class GameController : public NonCopyable {
 			NONE,
 			CARD,
 			TIMEOUT,
+			TIMEOUT_END,
 		};
 
 		SaveState state;
@@ -39,7 +40,7 @@ class GameController : public NonCopyable {
 
 		bool can_set_command(SSL_Referee::Command command) const;
 		static bool command_needs_designated_position(SSL_Referee::Command command);
-		void set_command(SSL_Referee::Command command, float designated_x = 0.0f, float designated_y = 0.0f);
+		void set_command(SSL_Referee::Command command, float designated_x = 0.0f, float designated_y = 0.0f, bool cancelling_timeout_end = false);
 
 		void set_teamname(SaveState::Team team, const Glib::ustring &name);
 

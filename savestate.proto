@@ -45,4 +45,8 @@ message SaveState {
 	// Only present if in a timeout.
 	// However, this is still present if we are in the HALT state and that state was reached from inside a timeout, so we can pop back to the timeout if needed.
 	optional TimeoutInfo timeout = 6;
+
+	// The last timeout that was running.
+	// Only present after the timeout ends with the Stop command up until the next command is issued.
+	optional TimeoutInfo last_timeout = 7;
 }

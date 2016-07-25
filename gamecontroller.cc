@@ -290,7 +290,7 @@ bool GameController::command_needs_designated_position(SSL_Referee::Command comm
 	return false;
 }
 
-void GameController::set_command(SSL_Referee::Command command, float designated_x, float designated_y) {
+void GameController::set_command(SSL_Referee::Command command, float designated_x, float designated_y, bool cancelling_timeout_end) {
 	SSL_Referee *ref = state.mutable_referee();
 
 	// Record what’s happening.
@@ -299,9 +299,19 @@ void GameController::set_command(SSL_Referee::Command command, float designated_
 	// Clear any prior designated position.
 	ref->clear_designated_position();
 
+	// Clear any last timeout information, unless we need it.
+	// It is easier to do this here, before a command might set it, than later.
+	if (!cancelling_timeout_end) {
+		state.clear_last_timeout();
+	}
+
 	// Implement any special side effects.
 	switch (command) {
 		case SSL_Referee::STOP:
+			// Remember which team had the timeout, if any, so exiting the timeout can be cancelled.
+			if (state.has_timeout()) {
+				*state.mutable_last_timeout() = state.timeout();
+			}
 			state.clear_timeout();
 			break;
 
@@ -318,7 +328,13 @@ void GameController::set_command(SSL_Referee::Command command, float designated_
 			{
 				SaveState::Team team = (command == SSL_Referee::TIMEOUT_YELLOW) ? SaveState::TEAM_YELLOW : SaveState::TEAM_BLUE;
 				SSL_Referee::TeamInfo &ti = TeamMeta::ALL[team].team_info(*ref);
-				if (!(state.has_timeout() && state.timeout().team() == team)) {
+				if (cancelling_timeout_end) {
+					// We have been asked to cancel the previously ended timeout.
+					// Do this by just moving the timeout information back from last_timeout.
+					// We need to keep the old left_before value as well, so that Timeout, Stop, Cancel End, Cancel Timeout refunds the full time, not just the time taken in the second part.
+					*state.mutable_timeout() = state.last_timeout();
+					state.clear_last_timeout();
+				} else if (!(state.has_timeout() && state.timeout().team() == team)) {
 					// Do not debit a timeout if the team has no timeouts left, as we would wrap the counter.
 					// Assume the referee is granting an extra timeout at their discretion.
 					if (ti.timeouts()) {
@@ -460,6 +476,9 @@ GameController::CancelType GameController::cancel_type() const {
 	} else if (ref.command() == SSL_Referee::TIMEOUT_YELLOW || ref.command() == SSL_Referee::TIMEOUT_BLUE) {
 		// You can cancel a timeout only when the timeout is running, not if it is in a nested HALT.
 		return CancelType::TIMEOUT;
+	} else if (state.has_last_timeout()) {
+		// You can cancel ending a timeout when the last team who took a timeout is remembered.
+		return CancelType::TIMEOUT_END;
 	} else if (state.has_last_card()) {
 		// You can cancel a card whenever there is one outstanding.
 		return CancelType::CARD;
@@ -507,6 +526,15 @@ void GameController::cancel() {
 				ti.set_timeouts(ti.timeouts() + 1);
 				ti.set_timeout_time(state.timeout().left_before());
 				set_command(SSL_Referee::STOP);
+				// Do not allow cancelling the end of the cancelled timeout, because that way lies madness!
+				state.clear_last_timeout();
+			}
+			break;
+
+		case CancelType::TIMEOUT_END:
+			// Resume the timeout that was most recently running without debiting another timeout from the team’s budget.
+			{
+				set_command((state.last_timeout().team() == SaveState::TEAM_YELLOW) ? SSL_Referee::TIMEOUT_YELLOW : SSL_Referee::TIMEOUT_BLUE, 0.0f, 0.0f, true);
 			}
 			break;
 	}
