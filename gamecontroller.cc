@@ -452,39 +452,66 @@ void GameController::subtract_goal(SaveState::Team team) {
 	signal_other_changed.emit();
 }
 
-void GameController::cancel_card_or_timeout() {
+GameController::CancelType GameController::cancel_type() const {
+	const SSL_Referee &ref = state.referee();
+	if (ref.stage() == SSL_Referee::POST_GAME) {
+		// You can never cancel anything in post-game.
+		return CancelType::NONE;
+	} else if (state.has_last_card()) {
+		// You can cancel a card whenever there is one outstanding.
+		return CancelType::CARD;
+	} else if (ref.command() == SSL_Referee::TIMEOUT_YELLOW || ref.command() == SSL_Referee::TIMEOUT_BLUE) {
+		// You can cancel a timeout only when the timeout is running, not if it is in a nested HALT.
+		return CancelType::TIMEOUT;
+	} else {
+		// There is nothing available to cancel right now.
+		return CancelType::NONE;
+	}
+}
+
+void GameController::cancel() {
 	SSL_Referee &ref = *state.mutable_referee();
 
-	if (ref.command() == SSL_Referee::TIMEOUT_YELLOW || ref.command() == SSL_Referee::TIMEOUT_BLUE) {
-		// A timeout is active; cancel it.
-		SaveState::Team team = TeamMeta::command_team(ref.command());
-		logger.write(Glib::ustring::compose(u8"Cancelling %1 timeout.", TeamMeta::ALL[team].COLOUR));
-		SSL_Referee::TeamInfo &ti = TeamMeta::ALL[team].team_info(ref);
-		ti.set_timeouts(ti.timeouts() + 1);
-		ti.set_timeout_time(state.timeout().left_before());
-		set_command(SSL_Referee::STOP);
-	} else if (state.has_last_card()) {
-		// A card is active; cancel it.
-		SSL_Referee::TeamInfo &ti = TeamMeta::ALL[state.last_card().team()].team_info(ref);
-		switch (state.last_card().card()) {
-			case SaveState::CARD_YELLOW:
-				if (ti.yellow_card_times_size()) {
-					logger.write(Glib::ustring::compose(u8"Cancelling yellow card for %1.", TeamMeta::ALL[state.last_card().team()].COLOUR));
-					ti.mutable_yellow_card_times()->RemoveLast();
-					ti.set_yellow_cards(ti.yellow_cards() - 1);
-				}
-				break;
+	switch (cancel_type()) {
+		case CancelType::NONE:
+			break;
 
-			case SaveState::CARD_RED:
-				logger.write(Glib::ustring::compose(u8"Cancelling red card for %1.", TeamMeta::ALL[state.last_card().team()].COLOUR));
-				ti.set_red_cards(ti.red_cards() - 1);
-				break;
-		}
-		state.clear_last_card();
+		case CancelType::CARD:
+			// A card is active; cancel it.
+			{
+				SSL_Referee::TeamInfo &ti = TeamMeta::ALL[state.last_card().team()].team_info(ref);
+				switch (state.last_card().card()) {
+					case SaveState::CARD_YELLOW:
+						if (ti.yellow_card_times_size()) {
+							logger.write(Glib::ustring::compose(u8"Cancelling yellow card for %1.", TeamMeta::ALL[state.last_card().team()].COLOUR));
+							ti.mutable_yellow_card_times()->RemoveLast();
+							ti.set_yellow_cards(ti.yellow_cards() - 1);
+						}
+						break;
+
+					case SaveState::CARD_RED:
+						logger.write(Glib::ustring::compose(u8"Cancelling red card for %1.", TeamMeta::ALL[state.last_card().team()].COLOUR));
+						ti.set_red_cards(ti.red_cards() - 1);
+						break;
+				}
+				state.clear_last_card();
+			}
+			break;
+
+		case CancelType::TIMEOUT:
+			// A timeout is active; cancel it.
+			{
+				SaveState::Team team = TeamMeta::command_team(ref.command());
+				logger.write(Glib::ustring::compose(u8"Cancelling %1 timeout.", TeamMeta::ALL[team].COLOUR));
+				SSL_Referee::TeamInfo &ti = TeamMeta::ALL[team].team_info(ref);
+				ti.set_timeouts(ti.timeouts() + 1);
+				ti.set_timeout_time(state.timeout().left_before());
+				set_command(SSL_Referee::STOP);
+			}
+			break;
 	}
 
 	signal_other_changed.emit();
-	return;
 }
 
 bool GameController::can_issue_card() const {

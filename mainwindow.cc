@@ -244,7 +244,7 @@ MainWindow::MainWindow(GameController &controller) :
 	teamname_yellow.signal_changed().connect(sigc::mem_fun(this, &MainWindow::on_teamname_yellow_changed));
 	teamname_blue.signal_changed().connect(sigc::mem_fun(this, &MainWindow::on_teamname_blue_changed));
 
-	cancel_but.signal_clicked().connect(sigc::mem_fun(controller, &GameController::cancel_card_or_timeout));
+	cancel_but.signal_clicked().connect(sigc::mem_fun(controller, &GameController::cancel));
 
 	yellow_subgoal_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::subtract_goal), SaveState::TEAM_YELLOW));
 	blue_subgoal_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::subtract_goal), SaveState::TEAM_BLUE));
@@ -580,7 +580,6 @@ void MainWindow::update_sensitivities() {
 	// Extract the things we might need.
 	const SaveState &ss = controller.state;
 	const SSL_Referee &ref = ss.referee();
-	bool is_timeout_running = ref.command() == SSL_Referee::TIMEOUT_YELLOW || ref.command() == SSL_Referee::TIMEOUT_BLUE;
 
 	// In post-game, lock down *EVERYTHING*, even the Ignore Rules command.
 	if (ref.stage() == SSL_Referee::POST_GAME) {
@@ -624,27 +623,25 @@ void MainWindow::update_sensitivities() {
 	teamname_yellow.set_sensitive(ign || (ref.stage() != SSL_Referee::POST_GAME && ref.command() == SSL_Referee::HALT));
 	teamname_blue.set_sensitive(ign || (ref.stage() != SSL_Referee::POST_GAME && ref.command() == SSL_Referee::HALT));
 
-	// You can cancel a card whenever there is one outstanding.
-	// You can cancel a timeout only when the timeout is running, not if it is in a nested HALT.
-	// You can never cancel anything in post-game.
-	if (ref.stage() != SSL_Referee::POST_GAME) {
-		if (controller.state.has_last_card()) {
-			cancel_but.set_sensitive();
-			cancel_but.set_label(u8"Cancel\nlast card");
-			cancel_but.set_tooltip_text(u8"Destroy last-issued yellow or red card\nas if card was never issued");
-		} else if (is_timeout_running) {
-			cancel_but.set_sensitive();
-			cancel_but.set_label(u8"Cancel\ncurrent timeout");
-			cancel_but.set_tooltip_text(u8"Cancel timeout currently running as if\ntimeout was never taken; restore previous\ntimeouts left and remaining time");
-		} else {
+	// Update the cancel button’s sensitivity, label, and tooltip based on what can be cancelled.
+	switch (controller.cancel_type()) {
+		case GameController::CancelType::NONE:
 			cancel_but.set_sensitive(false);
 			cancel_but.set_label(u8"Cancel\n");
 			cancel_but.set_has_tooltip(false);
-		}
-	} else {
-		cancel_but.set_sensitive(false);
-		cancel_but.set_label(u8"Cancel\n");
-		cancel_but.set_has_tooltip(false);
+			break;
+
+		case GameController::CancelType::CARD:
+			cancel_but.set_sensitive();
+			cancel_but.set_label(u8"Cancel\nlast card");
+			cancel_but.set_tooltip_text(u8"Destroy last-issued yellow or red card\nas if card was never issued");
+			break;
+
+		case GameController::CancelType::TIMEOUT:
+			cancel_but.set_sensitive();
+			cancel_but.set_label(u8"Cancel\ncurrent timeout");
+			cancel_but.set_tooltip_text(u8"Cancel timeout currently running as if\ntimeout was never taken; restore previous\ntimeouts left and remaining time");
+			break;
 	}
 }
 

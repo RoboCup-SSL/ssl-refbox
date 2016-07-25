@@ -19,6 +19,12 @@ class Publisher;
 
 class GameController : public NonCopyable {
 	public:
+		enum class CancelType {
+			NONE,
+			CARD,
+			TIMEOUT,
+		};
+
 		SaveState state;
 		const Configuration &configuration;
 		Logger &logger;
@@ -46,7 +52,8 @@ class GameController : public NonCopyable {
 		bool can_subtract_goal(SaveState::Team team) const;
 		void subtract_goal(SaveState::Team team);
 
-		void cancel_card_or_timeout();
+		CancelType cancel_type() const;
+		void cancel();
 
 		bool can_issue_card() const;
 		void yellow_card(SaveState::Team team);
