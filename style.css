@@ -1,0 +1,9 @@
+.warning {
+	color: red;
+}
+
+.floating-figure {
+	float: right;
+	border: 0.1em solid;
+	padding: 0.25em;
+}
