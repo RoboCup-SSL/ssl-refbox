@@ -48,7 +48,9 @@ class GameController : public NonCopyable {
 		void set_goalie(SaveState::Team team, unsigned int goalie);
 
 		bool can_switch_colours() const;
+		bool can_switch_sides() const;
 		void switch_colours();
+		void switch_sides(bool blueTeamOnPositiveHalf);
 
 		bool can_subtract_goal(SaveState::Team team) const;
 		void subtract_goal(SaveState::Team team);

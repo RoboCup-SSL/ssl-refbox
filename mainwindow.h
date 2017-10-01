@@ -52,6 +52,8 @@ class MainWindow : public Gtk::Window {
 
 		void on_enable_rcon_clicked();
 
+		void on_switch_sides();
+
 		void update_sensitivities();
 
 		// Information about the game control buttons.
@@ -90,6 +92,11 @@ class MainWindow : public Gtk::Window {
 		Gtk::ComboBoxText teamname_yellow;
 		Gtk::ComboBoxText teamname_blue;
 		Gtk::Button switch_colours_but;
+
+		Gtk::HBox teamSide_hbox;
+		Gtk::RadioButtonGroup teamSide_group;
+		Gtk::RadioButton teamSide_yellow;
+		Gtk::RadioButton teamSide_blue;
 
 		Gtk::HBox game_status_hbox;
 		Gtk::VBox game_status_vbox;
