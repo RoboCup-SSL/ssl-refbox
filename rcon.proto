@@ -1,3 +1,4 @@
+syntax = "proto2";
 import "referee.proto";
 
 // The TCP half-connection from controller to referee box carries a sequence of
