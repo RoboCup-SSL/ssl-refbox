@@ -40,6 +40,7 @@ GameController::GameController(Logger &logger, const Configuration &configuratio
 		ref.set_command(SSL_Referee::HALT);
 		ref.set_command_counter(0);
 		ref.set_command_timestamp(static_cast<uint64_t>(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())) * 1000000UL);
+		ref.set_blueteamonpositivehalf(false);
 
 		for (unsigned int teami = 0; teami < 2; ++teami) {
 			SaveState::Team team = static_cast<SaveState::Team>(teami);
@@ -425,6 +426,10 @@ bool GameController::can_switch_colours() const {
 	return ref.command() == SSL_Referee::HALT && (is_break || is_pre);
 }
 
+bool GameController::can_switch_sides() const {
+	return can_switch_colours();
+}
+
 void GameController::switch_colours() {
 	logger.write(u8"Switching colours.");
 	SSL_Referee &ref = *state.mutable_referee();
@@ -441,6 +446,16 @@ void GameController::switch_colours() {
 	if (state.has_timeout()) {
 		state.mutable_timeout()->set_team(TeamMeta::ALL[state.timeout().team()].other());
 	}
+
+	signal_other_changed.emit();
+}
+
+void GameController::switch_sides(bool blueTeamOnPositiveHalf) {
+	logger.write(Glib::ustring::compose(u8"Switching sides: %1 Team on positive half", blueTeamOnPositiveHalf ? "Blue" : "Yellow"));
+
+	SSL_Referee &ref = *state.mutable_referee();
+
+	ref.set_blueteamonpositivehalf(blueTeamOnPositiveHalf);
 
 	signal_other_changed.emit();
 }
