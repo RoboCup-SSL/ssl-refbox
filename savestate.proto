@@ -1,3 +1,4 @@
+syntax = "proto2";
 import "referee.proto";
 
 // The type of data saved in the saved state file.

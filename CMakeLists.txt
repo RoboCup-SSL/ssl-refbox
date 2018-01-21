@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.6)
 project(ssl_refbox)
 
 add_definitions(-std=gnu++0x -Wall -Wextra -Wundef -O2 -g)
+add_definitions(-DPROTOBUF_INLINE_NOT_IN_HEADERS=0)
+
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR})
 
 find_package(PkgConfig)
