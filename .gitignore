@@ -3,13 +3,9 @@ client/testclient
 rcon-client/rconclient
 scoreboard/scoreboard
 *.o
-rcon.pb.cc
-rcon.pb.h
+*.pb.cc
+*.pb.h
 referee.log
 referee.sav
-referee.pb.cc
-referee.pb.h
-savestate.pb.cc
-savestate.pb.h
 sslrefbox
 tags
