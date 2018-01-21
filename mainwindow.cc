@@ -119,6 +119,8 @@ MainWindow::MainWindow(GameController &controller) :
 		teamname_yellow(true),
 		teamname_blue(true),
 		switch_colours_but(u8"<-->"),
+		teamSide_yellow(teamSide_group, u8"Yellow on positive half"),
+		teamSide_blue(teamSide_group, u8"Blue on positive half"),
 
 		game_control_frame(u8"Game Status"),
 		stage_label(u8"??.??:?? left"),
@@ -188,6 +190,8 @@ MainWindow::MainWindow(GameController &controller) :
 	teamname_yellow.set_tooltip_text(u8"Name of yellow team");
 	teamname_blue.set_tooltip_text(u8"Name of blue team");
 	switch_colours_but.set_tooltip_text(u8"Teams switch marker colours");
+	teamSide_yellow.set_tooltip_text(u8"The yellow team plays on the positive half of the field");
+	teamSide_blue.set_tooltip_text(u8"The blue team plays on the positive half of the field");
 	yellow_goal_but.set_tooltip_text(u8"Award goal to yellow");
 	yellow_subgoal_but.set_tooltip_text(u8"Remove goal from yellow");
 	blue_goal_but.set_tooltip_text(u8"Award goal to blue");
@@ -241,6 +245,7 @@ MainWindow::MainWindow(GameController &controller) :
 	}
 
 	switch_colours_but.signal_clicked().connect(sigc::mem_fun(controller, &GameController::switch_colours));
+	teamSide_yellow.signal_clicked().connect(sigc::mem_fun(this, &MainWindow::on_switch_sides));
 	teamname_yellow.signal_changed().connect(sigc::mem_fun(this, &MainWindow::on_teamname_yellow_changed));
 	teamname_blue.signal_changed().connect(sigc::mem_fun(this, &MainWindow::on_teamname_blue_changed));
 
@@ -338,7 +343,11 @@ MainWindow::MainWindow(GameController &controller) :
 	teamname_hbox.pack_start(switch_colours_but, Gtk::PACK_SHRINK);
 	teamname_hbox.pack_start(teamname_blue,   Gtk::PACK_EXPAND_WIDGET, 10);
 
+	teamSide_hbox.pack_start(teamSide_yellow, Gtk::PACK_EXPAND_WIDGET, 10);
+	teamSide_hbox.pack_start(teamSide_blue, Gtk::PACK_EXPAND_WIDGET, 10);
+
 	goal_vbox.add(teamname_hbox);
+	goal_vbox.add(teamSide_hbox);
 	goal_frame.add(goal_vbox);
 
 	game_control_box.set_homogeneous(true);
@@ -375,7 +384,7 @@ MainWindow::MainWindow(GameController &controller) :
 	big_vbox.pack_start(menu_bar, Gtk::PACK_SHRINK);
 	big_vbox.pack_start(halt_stop_hbox, Gtk::PACK_SHRINK, 10);
 	big_vbox.pack_start(start_hbox, Gtk::PACK_SHRINK, 10);
-	big_vbox.pack_start(goal_frame, Gtk::PACK_EXPAND_WIDGET, 10);   
+	big_vbox.pack_start(goal_frame, Gtk::PACK_EXPAND_WIDGET, 10);
 	big_vbox.pack_start(game_control_frame, Gtk::PACK_SHRINK, 10);
 	big_vbox.pack_start(team_hbox, Gtk::PACK_SHRINK, 10);
 
@@ -576,6 +585,10 @@ void MainWindow::on_enable_rcon_clicked() {
 	}
 }
 
+void MainWindow::on_switch_sides() {
+    controller.switch_sides(teamSide_blue.get_active());
+}
+
 void MainWindow::update_sensitivities() {
 	// Extract the things we might need.
 	const SaveState &ss = controller.state;
@@ -618,6 +631,8 @@ void MainWindow::update_sensitivities() {
 	yellow_goalie_spin.set_sensitive(ign || controller.can_set_goalie());
 	blue_goalie_spin.set_sensitive(ign || controller.can_set_goalie());
 	switch_colours_but.set_sensitive(ign || controller.can_switch_colours());
+	teamSide_blue.set_sensitive(ign || controller.can_switch_sides());
+	teamSide_yellow.set_sensitive(ign || controller.can_switch_sides());
 
 	// You can edit the game names when you are halted except post-game.
 	teamname_yellow.set_sensitive(ign || (ref.stage() != SSL_Referee::POST_GAME && ref.command() == SSL_Referee::HALT));
