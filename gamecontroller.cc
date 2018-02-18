@@ -291,7 +291,7 @@ bool GameController::command_needs_designated_position(SSL_Referee::Command comm
 	return false;
 }
 
-void GameController::set_command(SSL_Referee::Command command, float designated_x, float designated_y, bool cancelling_timeout_end) {
+void GameController::set_command(SSL_Referee::Command command, float designated_x, float designated_y, bool cancelling_timeout_end, const SSL_Referee_Game_Event *game_event) {
 	SSL_Referee *ref = state.mutable_referee();
 
 	// Record what’s happening.
@@ -392,6 +392,11 @@ void GameController::set_command(SSL_Referee::Command command, float designated_
 	// Record the command timestamp.
 	std::chrono::microseconds diff = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - std::chrono::system_clock::from_time_t(0));
 	ref->set_command_timestamp(static_cast<uint64_t>(diff.count()));
+
+    // copy game event from request
+	if(game_event != NULL) {
+		ref->mutable_gameevent()->CopyFrom(*game_event);
+	}
 
 	// We should save the game state now.
 	save_game(state, configuration.save_filename);
