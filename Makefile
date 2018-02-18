@@ -16,6 +16,7 @@ build_cmake: $(buildDir)/CMakeLists.txt.copy
 
 clean:
 	$(MAKE) -C $(buildDir) clean
+	rm *.o *.pb.h *.pb.cc
 
 cleanup_cache:
 	rm -rf $(buildDir) && mkdir $(buildDir)
