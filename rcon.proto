@@ -1,6 +1,6 @@
 syntax = "proto2";
 import "referee.proto";
-import "gameEvent.proto";
+import "game_event.proto";
 
 // The TCP half-connection from controller to referee box carries a sequence of
 // these messages, sent on demand, each preceded by its length in bytes as a

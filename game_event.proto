@@ -1,3 +1,5 @@
+syntax = "proto2";
+
 // a game event that caused a referee command
 message SSL_Referee_Game_Event {
 
@@ -65,6 +67,13 @@ message SSL_Referee_Game_Event {
 
         // Law 12: The ball entered the goal directly after an indirect kick was performed
         INDIRECT_GOAL = 20;
+
+        // Law 9.2: Ball placement
+        BALL_PLACEMENT_FAILED = 21;
+
+        // Law 10: A goal is only scored if the ball has not exceeded a robot height (150mm) between the last
+        // kick of an attacker and the time the ball crossed the goal line.
+        CHIP_ON_GOAL = 22;
     }
 
     // the game event type that happened
