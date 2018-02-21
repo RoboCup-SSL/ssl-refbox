@@ -1,10 +1,9 @@
 # ssl-refbox
 RoboCup Small Size League Referee Box
 
+## install
 
-to install:
-
-1: clone the repro somewhere
+1: clone the repro somewhere you will be able to access easily
 
 2: enter the directory of the git repro and open a terminal there.
 
@@ -18,4 +17,4 @@ to install:
 
 7: compile the project: "make"
 
-8: the run the refbox, go back in the repro root and run ./ssl-refbox in a terminal
+8: to run the refbox, go back in the repro root and run ./ssl-refbox in a terminal
