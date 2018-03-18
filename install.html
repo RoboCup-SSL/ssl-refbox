@@ -10,25 +10,16 @@
 <h1>SSL Referee Box—Installation</h1>
 <p>This page explains compiling and installing the referee box.</p>
 
-<h2>Linux—Debian, Ubuntu, etc.</h2>
+<h2>Linux</h2>
 <p>Use the following checklist to build the referee box:</p>
 <ol>
-<li><code>sudo apt-get install g++ git libgtkmm-2.4-dev libprotobuf-dev protobuf-compiler</code></li>
+<li><code>sudo ./installDeps.sh</code></li>
 <li><code>git clone https://github.com/RoboCup-SSL/ssl-refbox.git</code></li>
 <li><code>cd ssl-refbox</code></li>
 <li><code>make</code></li>
 </ol>
 
-<p>You can now run the referee box with the command <code>./referee</code>.</p>
-
-<h2>Linux—Gentoo</h2>
-<p>Use the following checklist to build the referee box:</p>
-<ol>
-<li><code>sudo emerge dev-cpp/gtkmm:2.4 dev-libs/protobuf dev-vcs/git</code></li>
-<li><code>git clone https://github.com/RoboCup-SSL/ssl-refbox.git</code></li>
-<li><code>cd ssl-refbox</code></li>
-<li><code>make</code></li>
-</ol>
+<p>You can now run the referee box with the command <code>./sslrefbox</code>.</p>
 
 <h2>Windows</h2>
 <p class="warning">Warning: these instructions are very old and may no longer be accurate. We recommend running the referee box under Linux if possible.</p>
