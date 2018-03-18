@@ -17,7 +17,7 @@ if (EXISTS ${PROTOBUF_PROTOC_EXECUTABLE})
 else ()
     message(FATAL_ERROR "Could not find PROTOBUF Compiler")
 endif ()
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS rcon.proto referee.proto savestate.proto)
+protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS game_event.proto rcon.proto referee.proto savestate.proto)
 
 include_directories(
         ${PROJECT_BINARY_DIR}

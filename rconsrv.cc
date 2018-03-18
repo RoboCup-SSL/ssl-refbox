@@ -157,7 +157,8 @@ void RConServer::Connection::execute_request(const SSL_RefereeRemoteControlReque
 		}
 	} else if (request.has_command()) {
 		if (server.controller.can_set_command(request.command())) {
-			server.controller.set_command(request.command(), request.designated_position().x(), request.designated_position().y());
+			const SSL_Referee_Game_Event *game_event = request.has_gameevent() ? &request.gameevent() : NULL;
+			server.controller.set_command(request.command(), request.designated_position().x(), request.designated_position().y(), false, game_event);
 		} else {
 			reply.set_outcome(SSL_RefereeRemoteControlReply::BAD_COMMAND);
 		}
