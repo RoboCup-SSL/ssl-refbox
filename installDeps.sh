@@ -18,3 +18,6 @@ if which apt-get 2>/dev/null >/dev/null; then
   apt-get $FLAGS install cmake g++ git libgtkmm-2.4-dev libprotobuf-dev protobuf-compiler
 fi
 
+if which emerge 2>/dev/null >/dev/null; then
+  emerge dev-cpp/gtkmm:2.4 dev-libs/protobuf dev-vcs/git
+fi
