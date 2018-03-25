@@ -616,7 +616,17 @@ bool GameController::tick() {
 
 	// Check if this is a half-time-like stage.
 	SSL_Referee::Stage stage = ref.stage();
-	bool half_time_like = stage == SSL_Referee::NORMAL_HALF_TIME || stage == SSL_Referee::EXTRA_TIME_BREAK || stage == SSL_Referee::EXTRA_HALF_TIME || stage == SSL_Referee::PENALTY_SHOOTOUT_BREAK;
+	bool half_time_like = stage == SSL_Referee::NORMAL_HALF_TIME
+                      || stage == SSL_Referee::EXTRA_TIME_BREAK
+                      || stage == SSL_Referee::EXTRA_HALF_TIME
+                      || stage == SSL_Referee::PENALTY_SHOOTOUT_BREAK;
+
+	bool stopped_game = command == SSL_Referee::HALT
+                    || command == SSL_Referee::STOP
+                    || command == SSL_Referee::BALL_PLACEMENT_BLUE
+                    || command == SSL_Referee::BALL_PLACEMENT_YELLOW
+                    || command == SSL_Referee::GOAL_BLUE
+                    || command == SSL_Referee::GOAL_YELLOW;
 
 	// Check if this is a pre-game stage.
 	bool pre_game = stage == SSL_Referee::NORMAL_FIRST_HALF_PRE || stage == SSL_Referee::NORMAL_SECOND_HALF_PRE || stage == SSL_Referee::EXTRA_FIRST_HALF_PRE || stage == SSL_Referee::EXTRA_SECOND_HALF_PRE;
@@ -634,7 +644,7 @@ bool GameController::tick() {
 		if (new_tenths != old_tenths) {
 			signal_timeout_time_changed.emit();
 		}
-	} else if (command != SSL_Referee::HALT || half_time_like) {
+	} else if (!stopped_game || half_time_like) {
 		// Otherwise, as long as we are not in halt OR we are in a half-time-like stage, the stage clock runs, if this particular stage *has* a stage clock.
 		// There are two game clocks, the stage time left clock and the stage time taken clock.
 		// The stage time left clock may or may not exist; the stage time taken clock always exists.
