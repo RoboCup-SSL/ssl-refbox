@@ -154,13 +154,15 @@ void RConServer::Connection::execute_request(const SSL_RefereeRemoteControlReque
 			server.controller.enter_stage(request.stage());
 		} else {
 			reply.set_outcome(SSL_RefereeRemoteControlReply::BAD_STAGE);
+			return;
 		}
 	} else if (request.has_command()) {
 		if (server.controller.can_set_command(request.command())) {
-			const SSL_Referee_Game_Event *game_event = request.has_gameevent() ? &request.gameevent() : NULL;
-			server.controller.set_command(request.command(), request.designated_position().x(), request.designated_position().y(), false, game_event);
+
+			server.controller.set_command(request.command(), request.designated_position().x(), request.designated_position().y(), false);
 		} else {
 			reply.set_outcome(SSL_RefereeRemoteControlReply::BAD_COMMAND);
+			return;
 		}
 	} else if (request.has_card()) {
 		if (server.controller.can_issue_card()) {
@@ -172,7 +174,12 @@ void RConServer::Connection::execute_request(const SSL_RefereeRemoteControlReque
 			}
 		} else {
 			reply.set_outcome(SSL_RefereeRemoteControlReply::BAD_CARD);
+			return;
 		}
+	}
+
+	if(request.has_gameevent()) {
+		server.controller.set_game_event(&request.gameevent());
 	}
 }
 
