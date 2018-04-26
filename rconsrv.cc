@@ -36,16 +36,19 @@ namespace {
 RConServer::RConServer(GameController &controller) :
 		controller(controller),
 		listener(Gio::SocketService::create()),
-		connections()
+		connections(),
+		logger(controller.logger)
 {
 	listener->add_inet_port(controller.configuration.rcon_port);
 	listener->signal_incoming().connect(sigc::mem_fun(this, &RConServer::on_incoming));
 	listener->start();
+	logger.write("Start listening for remote control commands");
 }
 
 RConServer::~RConServer() {
 	listener->stop();
 	listener->close();
+	logger.write("Stop listening for remote control commands");
 }
 
 bool RConServer::on_incoming(const Glib::RefPtr<Gio::SocketConnection> &sock, const Glib::RefPtr<Glib::Object> &) {
