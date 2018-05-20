@@ -2,6 +2,7 @@
 #define RCONSRV_H
 
 #include "noncopyable.h"
+#include "logger.h"
 #include <list>
 #include <giomm/asyncresult.h>
 #include <giomm/socketconnection.h>
@@ -18,6 +19,7 @@ class RConServer : public NonCopyable, public sigc::trackable {
 	public:
 		RConServer(GameController &controller);
 		~RConServer();
+        Logger &logger;
 
 	private:
 		class Connection : public NonCopyable, public sigc::trackable {

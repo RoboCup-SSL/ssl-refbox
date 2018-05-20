@@ -29,6 +29,7 @@ class Configuration {
 		// [global] section
 		unsigned int yellow_card_seconds;
 		bool team_names_required;
+		bool rcon_enabled_by_default;
 
 		// [files] section
 		std::string save_filename;

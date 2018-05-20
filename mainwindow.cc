@@ -230,6 +230,11 @@ MainWindow::MainWindow(GameController &controller) :
 	menu_bar.items().push_back(Gtk::Menu_Helpers::MenuElem(u8"_Config", config_menu));
 	enable_rcon_menu_item.set_sensitive(controller.configuration.rcon_port);
 
+	if(controller.configuration.rcon_enabled_by_default) {
+        rcon_server.reset(new RConServer(controller));
+        enable_rcon_menu_item.set_active(true);
+    }
+
 	// Connecting the one million signals
 	controller.signal_timeout_time_changed.connect(sigc::mem_fun(this, &MainWindow::on_timeout_time_changed));
 	controller.signal_game_clock_changed.connect(sigc::mem_fun(this, &MainWindow::on_game_clock_changed));
