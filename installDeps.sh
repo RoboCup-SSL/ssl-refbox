@@ -21,3 +21,7 @@ fi
 if which emerge 2>/dev/null >/dev/null; then
   emerge dev-cpp/gtkmm:2.4 dev-libs/protobuf dev-vcs/git
 fi
+
+if which pacman 2>/dev/null >/dev/null; then
+  pacman --noconfirm -S cmake gcc git protobuf gtkmm
+fi
