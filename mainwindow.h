@@ -54,6 +54,8 @@ class MainWindow : public Gtk::Window {
 
 		void on_switch_sides();
 
+		void on_toggle_allow_ball_placement();
+
 		void update_sensitivities();
 
 		// Information about the game control buttons.
@@ -114,6 +116,7 @@ class MainWindow : public Gtk::Window {
 		Gtk::HBox blue_goal_box;
 		Gtk::Button blue_goal_but;
 		Gtk::Button blue_subgoal_but;
+		Gtk::ToggleButton allow_ball_placement_but;
 
 		Gtk::VBox game_stage_control_left_vbox;
 		Gtk::VBox game_stage_control_right_vbox;
