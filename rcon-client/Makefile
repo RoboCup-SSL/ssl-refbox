@@ -9,7 +9,7 @@ override LDLIBS := $(shell $(PKG_CONFIG) --libs-only-l gtkmm-2.4 protobuf)
 world : rconclient
 
 # Gather lists of files of various types.
-protos := rcon.proto referee.proto
+protos := rcon.proto referee.proto game_event.proto
 proto_sources := $(patsubst %.proto,%.pb.cc,$(protos))
 proto_headers := $(patsubst %.proto,%.pb.h,$(protos))
 proto_objs := $(patsubst %.proto,%.pb.o,$(protos))
