@@ -133,7 +133,7 @@ MainWindow::MainWindow(GameController &controller) :
 		yellow_subgoal_but(u8"−"),
 		blue_goal_but(u8"Goal Blue!\n(KP_Mult)"),
 		blue_subgoal_but(u8"−"),
-		allow_ball_placement_but(u8"Allow Placement\n(KP_Plus)"),
+		pause_game_but(u8"Pause Game\n(KP_Plus)"),
 
 		next_stage_label_left(u8"Change stage to:"),
 		next_stage_label_right(u8""),
@@ -167,8 +167,6 @@ MainWindow::MainWindow(GameController &controller) :
 	set_default_size(600, 700);
 	set_title(u8"Small Size League - Referee Box");
 
-	allow_ball_placement_but.set_active(true);
-
 	// Add Accelerator Buttons
 	stop_but.add_accelerator(u8"activate", get_accel_group(), GDK_KP_0, Gdk::ModifierType(0), Gtk::AccelFlags(0));
 	yellow_kickoff_but.add_accelerator(u8"activate", get_accel_group(), GDK_KP_1, Gdk::ModifierType(0), Gtk::AccelFlags(0));
@@ -186,7 +184,7 @@ MainWindow::MainWindow(GameController &controller) :
 	yellow_goal_but.add_accelerator(u8"activate", get_accel_group(), GDK_KP_Divide, Gdk::ModifierType(0), Gtk::AccelFlags(0));
 	blue_goal_but.add_accelerator(u8"activate", get_accel_group(), GDK_KP_Multiply, Gdk::ModifierType(0), Gtk::AccelFlags(0));
 
-	allow_ball_placement_but.add_accelerator(u8"activate", get_accel_group(), GDK_KP_Add, Gdk::ModifierType(0), Gtk::AccelFlags(0));
+	pause_game_but.add_accelerator(u8"activate", get_accel_group(), GDK_KP_Add, Gdk::ModifierType(0), Gtk::AccelFlags(0));
 
 	// Add Tooltips
 	halt_but.set_tooltip_text(u8"Robots must completely stop moving\nStage, card, and timeout timers freeze");
@@ -201,7 +199,7 @@ MainWindow::MainWindow(GameController &controller) :
 	yellow_subgoal_but.set_tooltip_text(u8"Remove goal from yellow");
 	blue_goal_but.set_tooltip_text(u8"Award goal to blue");
 	blue_subgoal_but.set_tooltip_text(u8"Remove goal from blue");
-	allow_ball_placement_but.set_tooltip_text(u8"Allow ball placement commands from autoRef");
+	pause_game_but.set_tooltip_text(u8"Withhold commands from autoRef for game continuation");
 	firsthalf_start_but.set_tooltip_text(u8"Prepare for first half");
 	halftime_start_but.set_tooltip_text(u8"Start half-time");
 	secondhalf_start_but.set_tooltip_text(u8"Prepare for second half");
@@ -265,7 +263,7 @@ MainWindow::MainWindow(GameController &controller) :
 	yellow_subgoal_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::subtract_goal), SaveState::TEAM_YELLOW));
 	blue_subgoal_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::subtract_goal), SaveState::TEAM_BLUE));
 
-	allow_ball_placement_but.signal_clicked().connect(sigc::mem_fun(this, &MainWindow::on_toggle_allow_ball_placement));
+	pause_game_but.signal_clicked().connect(sigc::mem_fun(this, &MainWindow::on_toggle_pause_game));
 
 	halftime_start_but.signal_clicked().connect(sigc::mem_fun(this, &MainWindow::on_half_time_button_clicked));
 
@@ -324,7 +322,7 @@ MainWindow::MainWindow(GameController &controller) :
 
 	// Start stop
 	halt_stop_hbox.pack_start(halt_but, Gtk::PACK_EXPAND_WIDGET, 5);
-	halt_stop_hbox.pack_start(allow_ball_placement_but, Gtk::PACK_EXPAND_WIDGET, 5);
+	halt_stop_hbox.pack_start(pause_game_but, Gtk::PACK_EXPAND_WIDGET, 5);
 	halt_stop_hbox.pack_start(stop_but, Gtk::PACK_EXPAND_WIDGET, 5);
 	start_hbox.pack_start(force_start_but, Gtk::PACK_EXPAND_WIDGET, 5);
 	start_hbox.pack_start(normal_start_but, Gtk::PACK_EXPAND_WIDGET, 5);
@@ -603,12 +601,16 @@ void MainWindow::on_switch_sides() {
 	controller.switch_sides(teamSide_blue.get_active());
 }
 
-void MainWindow::on_toggle_allow_ball_placement() {
-	if(allow_ball_placement_but.get_active()) {
-		rcon_server->set_commands_on_hold({});
-	} else {
+void MainWindow::on_toggle_pause_game() {
+	if(pause_game_but.get_active()) {
 		rcon_server->set_commands_on_hold(
-				{SSL_Referee_Command_BALL_PLACEMENT_YELLOW, SSL_Referee_Command_BALL_PLACEMENT_BLUE});
+				{SSL_Referee_Command_DIRECT_FREE_BLUE, SSL_Referee_Command_DIRECT_FREE_YELLOW,
+				 SSL_Referee_Command_INDIRECT_FREE_BLUE, SSL_Referee_Command_INDIRECT_FREE_YELLOW,
+				 SSL_Referee_Command_PREPARE_KICKOFF_BLUE, SSL_Referee_Command_PREPARE_KICKOFF_YELLOW,
+				 SSL_Referee_Command_PREPARE_PENALTY_BLUE, SSL_Referee_Command_PREPARE_PENALTY_YELLOW,
+				 SSL_Referee_Command_FORCE_START});
+	} else {
+		rcon_server->set_commands_on_hold({});
 	}
 }
 
