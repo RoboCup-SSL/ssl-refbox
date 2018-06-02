@@ -12,40 +12,40 @@
 namespace {
 	// Make sure these stay in the same order as the enums!
 	const Glib::ustring STAGE_NAMES[] = {
-		u8"Pre-Game",
-		u8"First Half",
-		u8"Half Time",
-		u8"Pre-Second Half",
-		u8"Second Half",
-		u8"Half Time",
-		u8"Pre-Overtime First Half",
-		u8"Overtime First Half",
-		u8"Half Time",
-		u8"Pre-Overtime Second Half",
-		u8"Overtime Second Half",
-		u8"Half Time",
-		u8"Penalty Shootout",
-		u8"Post-Game",
+			u8"Pre-Game",
+			u8"First Half",
+			u8"Half Time",
+			u8"Pre-Second Half",
+			u8"Second Half",
+			u8"Half Time",
+			u8"Pre-Overtime First Half",
+			u8"Overtime First Half",
+			u8"Half Time",
+			u8"Pre-Overtime Second Half",
+			u8"Overtime Second Half",
+			u8"Half Time",
+			u8"Penalty Shootout",
+			u8"Post-Game",
 	};
 	const Glib::ustring COMMAND_NAMES[] = {
-		u8"Halted",
-		u8"Stopped",
-		u8"Running",
-		u8"Running",
-		u8"Prestart (KY)",
-		u8"Prestart (KB)",
-		u8"Prestart (PY)",
-		u8"Prestart (PB)",
-		u8"Running",
-		u8"Running",
-		u8"Running",
-		u8"Running",
-		u8"Timeout (Y)",
-		u8"Timeout (B)",
-		u8"Stopped",
-		u8"Stopped",
-		u8"Placing (Y)",
-		u8"Placing (B)",
+			u8"Halted",
+			u8"Stopped",
+			u8"Running",
+			u8"Running",
+			u8"Prestart (KY)",
+			u8"Prestart (KB)",
+			u8"Prestart (PY)",
+			u8"Prestart (PB)",
+			u8"Running",
+			u8"Running",
+			u8"Running",
+			u8"Running",
+			u8"Timeout (Y)",
+			u8"Timeout (B)",
+			u8"Stopped",
+			u8"Stopped",
+			u8"Placing (Y)",
+			u8"Placing (B)",
 	};
 
 	Glib::ustring format_time_deciseconds(uint64_t micros) {
@@ -75,29 +75,29 @@ namespace {
 }
 
 const MainWindow::GameControlButtonInfo MainWindow::game_control_button_info[] = {
-	{ &MainWindow::halt_but, -1, SSL_Referee::HALT },
-	{ &MainWindow::stop_but, -1, SSL_Referee::STOP },
-	{ &MainWindow::force_start_but, -1, SSL_Referee::FORCE_START },
-	{ &MainWindow::normal_start_but, -1, SSL_Referee::NORMAL_START },
-	{ &MainWindow::yellow_kickoff_but, -1, SSL_Referee::PREPARE_KICKOFF_YELLOW },
-	{ &MainWindow::blue_kickoff_but, -1, SSL_Referee::PREPARE_KICKOFF_BLUE },
-	{ &MainWindow::yellow_freekick_but, -1, SSL_Referee::DIRECT_FREE_YELLOW },
-	{ &MainWindow::blue_freekick_but, -1, SSL_Referee::DIRECT_FREE_BLUE },
-	{ &MainWindow::yellow_indirect_freekick_but, -1, SSL_Referee::INDIRECT_FREE_YELLOW },
-	{ &MainWindow::blue_indirect_freekick_but, -1, SSL_Referee::INDIRECT_FREE_BLUE },
-	{ &MainWindow::yellow_penalty_but, -1, SSL_Referee::PREPARE_PENALTY_YELLOW },
-	{ &MainWindow::blue_penalty_but, -1, SSL_Referee::PREPARE_PENALTY_BLUE },
-	{ &MainWindow::yellow_timeout_start_but, -1, SSL_Referee::TIMEOUT_YELLOW },
-	{ &MainWindow::blue_timeout_start_but, -1, SSL_Referee::TIMEOUT_BLUE },
-	{ &MainWindow::yellow_goal_but, -1, SSL_Referee::GOAL_YELLOW },
-	{ &MainWindow::blue_goal_but, -1, SSL_Referee::GOAL_BLUE },
+		{ &MainWindow::halt_but, -1, SSL_Referee::HALT },
+		{ &MainWindow::stop_but, -1, SSL_Referee::STOP },
+		{ &MainWindow::force_start_but, -1, SSL_Referee::FORCE_START },
+		{ &MainWindow::normal_start_but, -1, SSL_Referee::NORMAL_START },
+		{ &MainWindow::yellow_kickoff_but, -1, SSL_Referee::PREPARE_KICKOFF_YELLOW },
+		{ &MainWindow::blue_kickoff_but, -1, SSL_Referee::PREPARE_KICKOFF_BLUE },
+		{ &MainWindow::yellow_freekick_but, -1, SSL_Referee::DIRECT_FREE_YELLOW },
+		{ &MainWindow::blue_freekick_but, -1, SSL_Referee::DIRECT_FREE_BLUE },
+		{ &MainWindow::yellow_indirect_freekick_but, -1, SSL_Referee::INDIRECT_FREE_YELLOW },
+		{ &MainWindow::blue_indirect_freekick_but, -1, SSL_Referee::INDIRECT_FREE_BLUE },
+		{ &MainWindow::yellow_penalty_but, -1, SSL_Referee::PREPARE_PENALTY_YELLOW },
+		{ &MainWindow::blue_penalty_but, -1, SSL_Referee::PREPARE_PENALTY_BLUE },
+		{ &MainWindow::yellow_timeout_start_but, -1, SSL_Referee::TIMEOUT_YELLOW },
+		{ &MainWindow::blue_timeout_start_but, -1, SSL_Referee::TIMEOUT_BLUE },
+		{ &MainWindow::yellow_goal_but, -1, SSL_Referee::GOAL_YELLOW },
+		{ &MainWindow::blue_goal_but, -1, SSL_Referee::GOAL_BLUE },
 
-	{ &MainWindow::firsthalf_start_but, SSL_Referee::NORMAL_FIRST_HALF_PRE, -1 },
-	{ &MainWindow::secondhalf_start_but, SSL_Referee::NORMAL_SECOND_HALF_PRE, -1 },
-	{ &MainWindow::overtime1_start_but, SSL_Referee::EXTRA_FIRST_HALF_PRE, -1 },
-	{ &MainWindow::overtime2_start_but, SSL_Referee::EXTRA_SECOND_HALF_PRE, -1 },
-	{ &MainWindow::penaltyshootout_start_but, SSL_Referee::PENALTY_SHOOTOUT, -1 },
-	{ &MainWindow::gameover_start_but, SSL_Referee::POST_GAME, -1 },
+		{ &MainWindow::firsthalf_start_but, SSL_Referee::NORMAL_FIRST_HALF_PRE, -1 },
+		{ &MainWindow::secondhalf_start_but, SSL_Referee::NORMAL_SECOND_HALF_PRE, -1 },
+		{ &MainWindow::overtime1_start_but, SSL_Referee::EXTRA_FIRST_HALF_PRE, -1 },
+		{ &MainWindow::overtime2_start_but, SSL_Referee::EXTRA_SECOND_HALF_PRE, -1 },
+		{ &MainWindow::penaltyshootout_start_but, SSL_Referee::PENALTY_SHOOTOUT, -1 },
+		{ &MainWindow::gameover_start_but, SSL_Referee::POST_GAME, -1 },
 };
 
 MainWindow::MainWindow(GameController &controller) :
@@ -133,6 +133,7 @@ MainWindow::MainWindow(GameController &controller) :
 		yellow_subgoal_but(u8"−"),
 		blue_goal_but(u8"Goal Blue!\n(KP_Mult)"),
 		blue_subgoal_but(u8"−"),
+		pause_game_but(u8"Pause Game\n(KP_Plus)"),
 
 		next_stage_label_left(u8"Change stage to:"),
 		next_stage_label_right(u8""),
@@ -183,6 +184,8 @@ MainWindow::MainWindow(GameController &controller) :
 	yellow_goal_but.add_accelerator(u8"activate", get_accel_group(), GDK_KP_Divide, Gdk::ModifierType(0), Gtk::AccelFlags(0));
 	blue_goal_but.add_accelerator(u8"activate", get_accel_group(), GDK_KP_Multiply, Gdk::ModifierType(0), Gtk::AccelFlags(0));
 
+	pause_game_but.add_accelerator(u8"activate", get_accel_group(), GDK_KP_Add, Gdk::ModifierType(0), Gtk::AccelFlags(0));
+
 	// Add Tooltips
 	halt_but.set_tooltip_text(u8"Robots must completely stop moving\nStage, card, and timeout timers freeze");
 	force_start_but.set_tooltip_text(u8"Both teams may approach the ball");
@@ -196,6 +199,7 @@ MainWindow::MainWindow(GameController &controller) :
 	yellow_subgoal_but.set_tooltip_text(u8"Remove goal from yellow");
 	blue_goal_but.set_tooltip_text(u8"Award goal to blue");
 	blue_subgoal_but.set_tooltip_text(u8"Remove goal from blue");
+	pause_game_but.set_tooltip_text(u8"Withhold commands from autoRef for game continuation");
 	firsthalf_start_but.set_tooltip_text(u8"Prepare for first half");
 	halftime_start_but.set_tooltip_text(u8"Start half-time");
 	secondhalf_start_but.set_tooltip_text(u8"Prepare for second half");
@@ -231,9 +235,9 @@ MainWindow::MainWindow(GameController &controller) :
 	enable_rcon_menu_item.set_sensitive(controller.configuration.rcon_port);
 
 	if(controller.configuration.rcon_enabled_by_default) {
-        rcon_server.reset(new RConServer(controller));
-        enable_rcon_menu_item.set_active(true);
-    }
+		rcon_server.reset(new RConServer(controller));
+		enable_rcon_menu_item.set_active(true);
+	}
 
 	// Connecting the one million signals
 	controller.signal_timeout_time_changed.connect(sigc::mem_fun(this, &MainWindow::on_timeout_time_changed));
@@ -258,6 +262,8 @@ MainWindow::MainWindow(GameController &controller) :
 
 	yellow_subgoal_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::subtract_goal), SaveState::TEAM_YELLOW));
 	blue_subgoal_but.signal_clicked().connect(sigc::bind(sigc::mem_fun(controller, &GameController::subtract_goal), SaveState::TEAM_BLUE));
+
+	pause_game_but.signal_clicked().connect(sigc::mem_fun(this, &MainWindow::on_toggle_pause_game));
 
 	halftime_start_but.signal_clicked().connect(sigc::mem_fun(this, &MainWindow::on_half_time_button_clicked));
 
@@ -315,10 +321,11 @@ MainWindow::MainWindow(GameController &controller) :
 	team_hbox.pack_start(blue_frame, Gtk::PACK_EXPAND_WIDGET, 20);
 
 	// Start stop
-	halt_stop_hbox.pack_start(halt_but, Gtk::PACK_EXPAND_WIDGET, 20);
-	halt_stop_hbox.pack_start(stop_but, Gtk::PACK_EXPAND_WIDGET, 20);
-	start_hbox.pack_start(force_start_but, Gtk::PACK_EXPAND_WIDGET, 20);
-	start_hbox.pack_start(normal_start_but, Gtk::PACK_EXPAND_WIDGET, 20);
+	halt_stop_hbox.pack_start(halt_but, Gtk::PACK_EXPAND_WIDGET, 5);
+	halt_stop_hbox.pack_start(pause_game_but, Gtk::PACK_EXPAND_WIDGET, 5);
+	halt_stop_hbox.pack_start(stop_but, Gtk::PACK_EXPAND_WIDGET, 5);
+	start_hbox.pack_start(force_start_but, Gtk::PACK_EXPAND_WIDGET, 5);
+	start_hbox.pack_start(normal_start_but, Gtk::PACK_EXPAND_WIDGET, 5);
 
 	// Gamestatus Font, etc
 	Pango::AttrList pango_attr(u8"<span size=\"xx-large\" weight=\"ultrabold\">Halted Running Stopped 0123456789:</span>");
@@ -352,7 +359,7 @@ MainWindow::MainWindow(GameController &controller) :
 	teamSide_hbox.pack_start(teamSide_blue, Gtk::PACK_EXPAND_WIDGET, 10);
 
 	goal_vbox.add(teamname_hbox);
-	goal_vbox.add(teamSide_hbox);
+	goal_vbox.pack_end(teamSide_hbox, Gtk::PACK_EXPAND_WIDGET, 10);
 	goal_frame.add(goal_vbox);
 
 	game_control_box.set_homogeneous(true);
@@ -387,8 +394,8 @@ MainWindow::MainWindow(GameController &controller) :
 	game_control_frame.add(game_status_hbox);
 
 	big_vbox.pack_start(menu_bar, Gtk::PACK_SHRINK);
-	big_vbox.pack_start(halt_stop_hbox, Gtk::PACK_SHRINK, 10);
-	big_vbox.pack_start(start_hbox, Gtk::PACK_SHRINK, 10);
+	big_vbox.pack_start(halt_stop_hbox, Gtk::PACK_SHRINK, 5);
+	big_vbox.pack_start(start_hbox, Gtk::PACK_SHRINK, 5);
 	big_vbox.pack_start(goal_frame, Gtk::PACK_EXPAND_WIDGET, 10);
 	big_vbox.pack_start(game_control_frame, Gtk::PACK_SHRINK, 10);
 	big_vbox.pack_start(team_hbox, Gtk::PACK_SHRINK, 10);
@@ -591,7 +598,20 @@ void MainWindow::on_enable_rcon_clicked() {
 }
 
 void MainWindow::on_switch_sides() {
-    controller.switch_sides(teamSide_blue.get_active());
+	controller.switch_sides(teamSide_blue.get_active());
+}
+
+void MainWindow::on_toggle_pause_game() {
+	if(pause_game_but.get_active()) {
+		rcon_server->set_commands_on_hold(
+				{SSL_Referee_Command_DIRECT_FREE_BLUE, SSL_Referee_Command_DIRECT_FREE_YELLOW,
+				 SSL_Referee_Command_INDIRECT_FREE_BLUE, SSL_Referee_Command_INDIRECT_FREE_YELLOW,
+				 SSL_Referee_Command_PREPARE_KICKOFF_BLUE, SSL_Referee_Command_PREPARE_KICKOFF_YELLOW,
+				 SSL_Referee_Command_PREPARE_PENALTY_BLUE, SSL_Referee_Command_PREPARE_PENALTY_YELLOW,
+				 SSL_Referee_Command_FORCE_START});
+	} else {
+		rcon_server->set_commands_on_hold({});
+	}
 }
 
 void MainWindow::update_sensitivities() {

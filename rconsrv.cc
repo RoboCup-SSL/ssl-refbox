@@ -69,6 +69,7 @@ RConServer::Connection::Connection(RConServer &server, const Glib::RefPtr<Gio::S
 	if (!sock->get_socket()->set_option(IPPROTO_TCP, TCP_NODELAY, 1)) {
 		server.controller.logger.write(u8"Warning: unable to set TCP_NODELAY option");
 	}
+	paused = false;
 	start_read_length();
 }
 
@@ -105,7 +106,12 @@ void RConServer::Connection::finished_read_data(bool ok) {
 		SSL_RefereeRemoteControlRequest request;
 		if (request.ParseFromArray(&buffer[0], static_cast<int>(buffer.size()))) {
 			SSL_RefereeRemoteControlReply reply;
-			execute_request(request, reply);
+			bool delayRequest;
+			execute_request(request, reply, delayRequest);
+			if(delayRequest) {
+				paused = true;
+				return;
+			}
 			length = reply.ByteSize();
 			buffer.resize(sizeof(length) + length);
 			reply.SerializeWithCachedSizesToArray(&buffer[sizeof(length)]);
@@ -129,9 +135,10 @@ void RConServer::Connection::finished_write_reply(bool ok) {
 	}
 }
 
-void RConServer::Connection::execute_request(const SSL_RefereeRemoteControlRequest &request, SSL_RefereeRemoteControlReply &reply) {
+void RConServer::Connection::execute_request(const SSL_RefereeRemoteControlRequest &request, SSL_RefereeRemoteControlReply &reply, bool &delayRequest) {
 	reply.set_message_id(request.message_id());
 	reply.set_outcome(SSL_RefereeRemoteControlReply::OK);
+	delayRequest = false;
 
 	if (request.has_last_command_counter()) {
 		if (request.last_command_counter() != server.controller.state.referee().command_counter()) {
@@ -147,7 +154,7 @@ void RConServer::Connection::execute_request(const SSL_RefereeRemoteControlReque
 	}
 
 	if ((request.has_designated_position() && !request.has_command())
-			|| (request.has_command() && (request.has_designated_position() != server.controller.command_needs_designated_position(request.command())))) {
+	    || (request.has_command() && (request.has_designated_position() != server.controller.command_needs_designated_position(request.command())))) {
 		reply.set_outcome(SSL_RefereeRemoteControlReply::BAD_DESIGNATED_POSITION);
 		return;
 	}
@@ -161,7 +168,11 @@ void RConServer::Connection::execute_request(const SSL_RefereeRemoteControlReque
 		}
 	} else if (request.has_command()) {
 		if (server.controller.can_set_command(request.command())) {
-
+			if(server.commands_on_hold.find(request.command()) != server.commands_on_hold.end()) {
+				delayRequest = true;
+				server.logger.write("Pause incoming command");
+				return;
+			}
 			server.controller.set_command(request.command(), request.designated_position().x(), request.designated_position().y(), false);
 		} else {
 			reply.set_outcome(SSL_RefereeRemoteControlReply::BAD_COMMAND);
@@ -231,5 +242,22 @@ void RConServer::Connection::finished_write_fully_partial(Glib::RefPtr<Gio::Asyn
 		}
 	} catch (const Gio::Error &) {
 		slot(false);
+	}
+}
+
+void RConServer::set_commands_on_hold(const std::set<SSL_Referee_Command> &commands) {
+	if(commands.empty()) {
+		logger.write("Unset commands on hold");
+	} else {
+		logger.write("Set commands on hold");
+	}
+	commands_on_hold = commands;
+	std::list<Connection>::iterator it;
+	for (it = connections.begin(); it != connections.end(); ++it) {
+		if (it->paused) {
+			logger.write("Resume after unsetting commands on hold");
+			it->paused = false;
+			it->finished_read_data(true);
+		}
 	}
 }
